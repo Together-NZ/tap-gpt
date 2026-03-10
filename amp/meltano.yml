@@ -13,8 +13,8 @@ environments:
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: facebook_test
 - name: prod
-state_backend:
-  uri: gs://amp-main-meltano-state-staging
+#state_backend:
+#  uri: gs://amp-main-meltano-state-staging
 plugins:
   extractors:
   - name: tap-facebook
@@ -24,7 +24,7 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights
+    - ads_insights.*
     - ad_account.*
     - ad_sets.*
     - ads.*
