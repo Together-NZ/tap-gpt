@@ -5,11 +5,11 @@ WITH parsed_data AS (
     SELECT
         FORMAT_DATE('%Y-%m-%d', PARSE_DATE('%d/%m/%Y', JSON_VALUE(JSON_EXTRACT(data, "$.Date")))) AS date,
         JSON_VALUE(JSON_EXTRACT(data, "$.Partner ID")) AS partner_id,
-        _sdc_extracted_at,
         JSON_VALUE(JSON_EXTRACT(data, "$.Advertiser ID")) AS advertiser_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Campaign ID")) AS campaign_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Group ID")) AS ad_group_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.Ad Format")) AS ad_format,
+        _sdc_extracted_at,
         JSON_VALUE(JSON_EXTRACT(data, "$.Creative ID")) AS creative_id,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.Frequency")) AS FLOAT64) AS frequency,
         JSON_VALUE(JSON_EXTRACT(data, "$.Advertiser")) AS advertiser,
@@ -90,7 +90,7 @@ WITH parsed_data AS (
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$['06 - Time Weighted Decay Conversion Revenue']")) AS FLOAT64) AS Time_Weighted_Decay_Conversion_Revenue_06
 
     FROM
-        `public-trust-main.ttd_raw.standard_streams`
+        `polestar-main.ttd_raw.standard_streams`
 ),
 ranked_data AS (
     SELECT
@@ -98,7 +98,7 @@ ranked_data AS (
         ROW_NUMBER() OVER (
             PARTITION BY
                 Date, partner_id, advertiser_id, campaign_id, ad_group_id, ad_format, creative_id, 
-                advertiser, deal_id, ad_server_creative_placement_id
+                advertiser,  deal_id, ad_server_creative_placement_id
             ORDER BY 
                 _sdc_extracted_at DESC
         ) AS row_num
@@ -108,7 +108,7 @@ ranked_data AS (
 select * ,
 CASE 
     WHEN LOWER(campaign_name) LIKE '%acast%' OR LOWER(creative) LIKE '%acast%' THEN 'Acast'
-    WHEN LOWER(campaign_name) LIKE '%3now%' OR LOWER(creative) LIKE '%3now%' OR LOWER(campaign_name) LIKE '%three%' OR LOWER(creative) LIKE '%three%' OR LOWER(campaign_name) like '%3 now%' or lower(creative) like '%3 now%'THEN 'Threenow'
+    WHEN LOWER(campaign_name) LIKE '%3now%' OR LOWER(creative) LIKE '%3now%' OR LOWER(campaign_name) LIKE '%three%' OR LOWER(creative) LIKE '%three%' THEN 'Threenow'
     WHEN LOWER(campaign_name) LIKE '%nzme%' OR LOWER(creative) LIKE '%nzme%' THEN 'Nzme'
     WHEN LOWER(campaign_name) LIKE '%tvnz%' OR LOWER(creative) LIKE '%tvnz%' THEN 'Tvnz'
     WHEN LOWER(campaign_name) LIKE '%youtube%' OR LOWER(creative) LIKE '%yt%' or lower(creative) LIKE '%youtube%' or   LOWER(campaign_name) LIKE '%yt%' THEN 'Youtube'
@@ -142,6 +142,7 @@ from ranked_data where row_num = 1
 )
   SELECT 
         ad_server_creative_placement_id,
+        ad_server_name,
         date, -- Keep this as-is for joining purposes
         campaign_name,
         campaign_id,
@@ -166,5 +167,5 @@ from ranked_data where row_num = 1
         SUM(partner_cost_partner_currency) AS media_cost -- Aggregate Partner Cost
     FROM final
     GROUP BY 
-        ad_server_creative_placement_id, date, campaign_name, campaign_id, creative, creative_id, advertiser, advertiser_id,publisher,media_format,
+        ad_server_creative_placement_id, ad_server_name, date, campaign_name, campaign_id, creative, creative_id, advertiser, advertiser_id,publisher,media_format,
         audience_name,ad_format,ad_format_detail,creative_descr,campaign_descr
