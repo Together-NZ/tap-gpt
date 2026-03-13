@@ -7,11 +7,22 @@ WORKDIR /project
 # Install any additional requirements
 COPY ./requirements.txt .
 RUN pip install -r requirements.txt
-
+RUN apt-get update && apt-get install -y openssh-client git
 
 # Copy over Meltano project directory
 COPY . .
-RUN meltano install 
+# Install Meltano plugins (will use meltano.yml)
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    meltano install
+
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    git clone git@github.com:Together-NZ/tap-hivestack.git /tmp/tap-hivestack
+
 RUN pip install httplib2 google-api-python-client google-auth google-auth-oauthlib google-cloud-bigquery pandas db-dtypes
 
 # Ensure plugin venvs have pip + pkg_resources (setuptools)
