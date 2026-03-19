@@ -98,6 +98,7 @@ with models.DAG(
         task_id="set_env_task_dash_search",
         python_callable=set_env_vars_dash_search,
     )
+
     kube_dash = KubernetesPodOperator(
                 name="amp-dash-to-bigquery",
                 task_id="amp-dash_to_bigquery",
@@ -130,7 +131,7 @@ with models.DAG(
             task_id="amp-google-ads-search_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery:google_ads_search_models"],
+            arguments=["--environment=prod", "invoke","dbt-bigquery:google_ads_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -325,6 +326,28 @@ with models.DAG(
     set_env_task_dv360 = PythonOperator(
         task_id="set_env_task_dv360",
         python_callable=set_env_vars_dv360,
+    )
+    kube_meltano_update = KubernetesPodOperator(
+        name="amp-meltano-update",
+        task_id="amp-meltano_update",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "install"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        get_logs = True
+    )
+    kube_dbt_deps = KubernetesPodOperator(
+        name="amp-dbt-deps",
+        task_id="amp-dbt_deps",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery", "deps"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        get_logs = True
     )
     kube_adobe_centralized = KubernetesPodOperator(
             name="amp-adobe-centralized-to-bigquery",
@@ -540,5 +563,5 @@ with models.DAG(
                 )  
                 kube_adobe_centralized >> kube_adobe 
                 task_list.append(kube_adobe)
-    task_list >> set_env_task_dash >> kube_dash
+    kube_meltano_update >> kube_dbt_deps >> task_list >> set_env_task_dash >> kube_dash
             
