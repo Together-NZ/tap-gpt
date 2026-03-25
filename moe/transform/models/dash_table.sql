@@ -8,7 +8,7 @@ WITH dash_table AS (
 
     UNION ALL
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
-           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,SAFE_CAST(total_conversions as FLOAT64) as conversions
+           campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,SAFE_CAST(conversions as FLOAT64) as conversions
     
     FROM `moe-main.dv360_transformed.dv360_standard`  WHERE LOWER(campaign_name) NOT LIKE '%yt%'
     UNION ALL
@@ -48,11 +48,11 @@ WITH dash_table AS (
 from `moe-main.cm360_transformed.cm360_direct_buy`
 UNION ALL
        select media_cost,impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, 
-        CAST(0 AS INT64) AS video_completion,
-        CAST(0 AS INT64) AS video_25_completion,
-        CAST(0 AS INT64) AS video_50_completion,
-        CAST(0 AS INT64) AS video_75_completion,
-        CAST(0 AS INT64) AS video_views,
+        CAST(video_completion AS INT64) AS video_completion,
+        CAST(video_25_completion AS INT64) AS video_25_completion,
+        CAST(video_50_completion AS INT64) AS video_50_completion,
+        CAST(video_75_completion AS INT64) AS video_75_completion,
+        CAST(video_25_completion AS INT64) AS video_views,
     campaign_name,  publisher, campaign_descr, creative_descr, date(date) as date,null as conversions
 FROM `moe-main.reddit_transformed.reddit`
 UNION ALL 
