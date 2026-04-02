@@ -4,6 +4,29 @@ project_id: 4f5340fe-b63b-41b8-8b8a-963749a65dc3
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_DV360_RAW_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REPORT_NAME: amp_report
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
+
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+   
+          PLAN_CODE: uow
 - name: prod
 #state_backend:
 #  uri: gs://volvo-meltano-state-staging
@@ -51,11 +74,8 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-    - ads_insights.*
-    - ad_account.*
-    - ad_sets.*
-    - ads.*
-    - campaigns.*
+
+    - custom_conversions.*
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
@@ -121,12 +141,6 @@ plugins:
       location: australia-southeast1
       method: oauth
     commands:
-      cm360_geely_models:
-        args: run --select +cm360_seralized__geely +cm360_direct_buy__geely
-        description: Run the CM360 ads model
-      cm360_polestar_models:
-        args: run --select +cm360_seralized__polestar +cm360_direct_buy__polestar
-        description: Run the CM360 ads model
       cm360_volvo_models:
         args: run --select +cm360_seralized__volvo +cm360_direct_buy__volvo
         description: Run the CM360 ads model
@@ -150,6 +164,8 @@ plugins:
         args: run --select ga4_goal_a__volvo ga4_goal_channel__volvo
       linkedin_volvo_models:
         args: run --select +linkedin__volvo
+      google_ads_volvo_models:
+        args: run --select +google_ads_search__volvo +google_ads_demand__volvo +google_ads_demand_2__volvo
 
   files:
   - name: files-airflow
