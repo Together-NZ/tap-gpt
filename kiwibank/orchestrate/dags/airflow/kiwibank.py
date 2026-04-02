@@ -30,6 +30,9 @@ default_args = {
 
 
 def get_meltano_env():
+    # Generated function here, create your own secret, the first one stroes the specific ad account id,
+    # second one is the common environment variables for all the projects, may need to refresh tiktok access token
+    # third one is the environment variables for the GA4 project
     meltano_env_unique = Variable.get("meltano_kiwibank_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_analytics_ga4_main", deserialize_json=True)
