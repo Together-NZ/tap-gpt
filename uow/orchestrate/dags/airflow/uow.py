@@ -34,6 +34,7 @@ local_tz = pendulum.timezone("Pacific/Auckland")
 yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
 ga4_start_date = datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
 comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+comparison_end_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -102,8 +103,6 @@ with models.DAG(
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
         env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
-        env["TAP_TIKTOK_START_DATE"] = (datetime.datetime.now(local_tz) - datetime.timedelta(days=1)).strftime("%Y-%m-%d")
-
         return env
     def set_env_vars_google_ads():
         env = get_meltano_env()
@@ -221,7 +220,7 @@ with models.DAG(
         table_name="tiktok",
         source_name="tiktok",
         start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_uowaikato_main",
         project_id=env["PROJECT_ID"])
     def tiktok_comparison_check(**context):
@@ -235,8 +234,9 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    set_env_task_ga4 >> kube_ga4 >> task_tiktok_comparison
+    set_env_task_ga4 >> kube_ga4 
     set_env_task_google_ads >> kube_google_ads
+    kube_tiktok >> task_tiktok_comparison
     [kube_tiktok,kube_google_ads] >> kube_dash >> kube_dash_union >> kube_ga4
 with models.DAG(
     dag_id="uowaikato-meltano-extraction-transformation-dbt",
