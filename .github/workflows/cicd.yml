@@ -13,6 +13,8 @@ on:
       - "README.md"
       - ".github/**"
       - "terraform/**"
+      - "centralize_data/**"
+      - "kiwibank/**"
       #- "**/orchestrate/**"
 
   workflow_dispatch:
@@ -80,6 +82,8 @@ jobs:
             | grep -v 'terraform/' \
             | grep -v 'kiwibank/' \
             | grep -v 'README.md' \
+            | grep -v 'terraform/' \
+            | grep -v 'kiwibank/' \
             | grep -v '.github/' \
             | grep -v '/ci_test.sh' \
             | grep -v '/client_name.py' \
@@ -176,6 +180,7 @@ jobs:
               - "!terraform/**"
               - "!**/orchestrate/**"
               - "!centralize_data/**"
+              - "!kiwibank/**"
 
       # record the folder change if the change are not dag file 
       - name: Get changed folders (PR)
