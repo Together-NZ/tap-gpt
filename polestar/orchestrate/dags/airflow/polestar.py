@@ -11,6 +11,7 @@ from airflow.config_templates.airflow_local_settings import DEFAULT_LOGGING_CONF
 import sys
 import logging
 from google.oauth2.credentials import Credentials
+from comparison_package import ComparisonTrigger
 from google.auth.transport.requests import Request
 import json
 import time
@@ -39,7 +40,7 @@ default_args = {
     'retry_delay': datetime.timedelta(seconds=30),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
-
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 def get_meltano_env():
     # Update meltano_env with dynamic dates
@@ -172,6 +173,30 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
         )
+    env = get_meltano_env()
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="polestar-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_polestar_main",
+        project_id=env["PROJECT_ID"]
+        )
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_facebook >> task_facebook_comparison
     [kube_facebook,kube_cm360,kube_linkedin_ads,kube_ttd] >> kube_dash >> kube_dash_union
     
 with models.DAG(
