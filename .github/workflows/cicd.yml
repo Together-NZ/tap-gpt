@@ -77,6 +77,8 @@ jobs:
         run: |
           FOLDERS=$(git diff --name-only HEAD^ HEAD \
             | grep -v '/orchestrate/' \
+            | grep -v 'terraform/' \
+            | grep -v 'kiwibank/' \
             | grep -v 'README.md' \
             | grep -v '.github/' \
             | grep -v '/ci_test.sh' \
