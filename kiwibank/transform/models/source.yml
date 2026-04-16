@@ -1,0 +1,139 @@
+sources:
+
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: linkedin_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: creatives
+      - name: campaigns
+      - name: campaign_groups
+
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_RAW_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: tiktok_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: hivestack_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
+    tables:
+      - name: kiwibank_report
+      - name: amp_report
+
+  - name: dash_union__everyday_banking_retail_deposit
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__everyday_banking_retail_deposit') }}"
+    tables:
+      - name: dash_table__everyday_banking_retail_deposit
+      - name: dash_union__everyday_banking_retail_deposit
+
+  - name: dash_union_search__everyday_banking_retail_deposit
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__everyday_banking_retail_deposit') }}"
+    tables:
+      - name: dash_table_search__everyday_banking_retail_deposit
+
+  - name: dash_union__credit_card
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__credit_card') }}"
+    tables:
+      - name: dash_table__credit_card
+      - name: dash_union__credit_card
+
+  - name: dash_union_search__credit_card
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__credit_card') }}"
+    tables:
+      - name: dash_table_search__credit_card
+
+  - name: dash_union__fraud_and_scams
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__fraud_and_scams') }}"
+    tables:
+      - name: dash_table__fraud_and_scams
+      - name: dash_union__fraud_and_scams
+
+  - name: dash_union_search__fraud_and_scams
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__fraud_and_scams') }}"
+    tables:
+      - name: dash_table_search__fraud_and_scams
+
+  - name: dash_union__everyday_banking_join_kiwibank
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__everyday_banking_join_kiwibank') }}"
+    tables:
+      - name: dash_table__everyday_banking_join_kiwibank
+      - name: dash_union__everyday_banking_join_kiwibank
+
+  - name: dash_union_search__everyday_banking_join_kiwibank
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__everyday_banking_join_kiwibank') }}"
+    tables:
+      - name: dash_table_search__everyday_banking_join_kiwibank
+
+  - name: dash_union__business_banking
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__business_banking') }}"
+    tables:
+      - name: dash_table__business_banking
+      - name: dash_union__business_banking
+
+  - name: dash_union_search__business_banking
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__business_banking') }}"
+    tables:
+      - name: dash_table_search__business_banking
+
+  - name: dash_union__ao_social_boosting
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__ao_social_boosting') }}"
+    tables:
+      - name: dash_table__ao_social_boosting
+      - name: dash_union__ao_social_boosting
+
+  - name: dash_union_search__ao_social_boosting
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__ao_social_boosting') }}"
+    tables:
+      - name: dash_table_search__ao_social_boosting
+
+  - name: dash_union__home_loan
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__home_loan') }}"
+    tables:
+      - name: dash_table__home_loan
+      - name: dash_union__home_loan
+
+  - name: dash_union_search__home_loan
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__home_loan') }}"
+    tables:
+      - name: dash_table_search__home_loan
