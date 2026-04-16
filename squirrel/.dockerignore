@@ -4,3 +4,7 @@
 **/target
 **/dbt_packages
 **/.DS_Store
+.meltano
+.meltano/
+transform/dbt_packages
+transform/package-lock.yml
