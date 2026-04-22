@@ -621,9 +621,9 @@ with models.DAG(
     set_env_task_facebook >> kube_facebook >> task_facebook_comparison
     set_env_task_snapchat >> kube_snapchat 
     set_env_task_dv360 >> kube_dv360
-    set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
-    
+    kube_cm360 >> kube_ttd
+    kube_cm360 >> kube_dv360
     set_env_task_linkedin >> kube_linkedin >> task_linkedin_comparison
     set_env_task_reddit >> kube_reddit
-    [kube_facebook,kube_snapchat,kube_dv360,kube_reddit,kube_hivestack,kube_cm360,kube_ttd,kube_linkedin] >> kube_dash
+    [kube_facebook,kube_snapchat,kube_dv360,kube_reddit,kube_hivestack,kube_ttd,kube_linkedin] >> kube_dash
     kube_dash>>kube_dash_search >> kube_dash_union >> [kube_dash_union_international,kube_dash_union_domestic]
