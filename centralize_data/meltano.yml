@@ -12,6 +12,7 @@ environments:
 
 plugins:
   extractors:
+  #
   - name: tap-spotifyads
     namespace: tap-spotifyads
     pip_url: git+https://github.com/Together-NZ/tap-spotify-ads.git  setuptools<82.0
