@@ -70,7 +70,7 @@ jobs:
               - "!.github/**"
               - "!terraform/**"
               - "!**/orchestrate/**"
-              - "!centralize_data/**"
+   
 
       # record the folder change if the change are not dag file 
       - name: Get changed folders
@@ -179,7 +179,7 @@ jobs:
               - "!.github/**"
               - "!terraform/**"
               - "!**/orchestrate/**"
-              - "!centralize_data/**"
+       
               - "!kiwibank/**"
 
       # record the folder change if the change are not dag file 
