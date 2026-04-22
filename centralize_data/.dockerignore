@@ -5,7 +5,6 @@
 /.peter
 secret.json
 docker.py
-report.csv
 *.sqlite
 *.db
 transform/dbt_packages
