@@ -336,10 +336,10 @@ select *,
     when lower(replace(sessionManualAdContent,'"','')) like '%english%' then 'English'
     when REGEXP_REPLACE(lower(replace(sessionManualAdContent,'"','')), r'\s+', '') like '%forthepeople%' THEN 'For The People'
     WHEN LOWER(REPLACE(sessionManualAdContent,'"','')) LIKE '%profession%' and LOWER(REPLACE(sessionManualAdContent,'"','')) like '%accounting%' THEN 'Professional Accounting'
-    else 
-       case when array_length(split(sessionManualAdContent,'_')) >=8 then split(sessionManualAdContent,'_')[offset(7)]
-       else sessionManualAdContent
-       end
+    ELSE
+          CASE WHEN ARRAY_LENGTH(SPLIT(sessionManualAdContent, '_')) > 1  
+              THEN SPLIT(sessionManualAdContent, '_')[SAFE_OFFSET(ARRAY_LENGTH(SPLIT(sessionManualAdContent, '_'))-1)] 
+    ELSE sessionManualAdContent END 
     END AS sessionManualAdContent,
               CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_'))>=2 
               THEN SPLIT(campaign_name,'_')[1] 

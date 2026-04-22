@@ -386,12 +386,11 @@ CASE WHEN
     when lower(replace(creative_name,'"','')) like '%english%' then 'English'
     when REGEXP_REPLACE(lower(replace(creative_name,'"','')), r'\s+', '') like '%forthepeople%' THEN 'For The People'
     WHEN LOWER(REPLACE(creative_name,'"','')) LIKE '%profession%' and LOWER(REPLACE(creative_name,'"','')) like '%accounting%' THEN 'Professional Accounting'
-    else 
-       (creative_name,'_')[offset(0)]
-    END AS creative_descr
-
+    ELSE
+       CASE
+         WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) > 1
+         THEN SPLIT(creative_name, '_')[SAFE_OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_')) - 1)]
+         ELSE creative_name
+       END
+END AS creative_descr
  FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
-
-
-
-
