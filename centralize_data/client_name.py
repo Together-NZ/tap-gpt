@@ -19,6 +19,7 @@ CLIENT_NAME={
     "liquorland":"liquorland",
     "moe":"moe",
     "kiwirail":"kiwirail",
+    "kiwibank":"kiwibank",
     "mpi":"mpi",
     "polestar":"polestar",
     "public_trust":"public-trust",
