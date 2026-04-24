@@ -35,7 +35,7 @@ def get_meltano_env():
     # third one is the environment variables for the GA4 project
     meltano_env_unique = Variable.get("meltano_kiwibank_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
-    meltano_env_ga4 = Variable.get("meltano_analytics_ga4_main", deserialize_json=True)
+    meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
     yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
@@ -102,15 +102,13 @@ def set_env_vars_tiktok():
 
 def set_env_vars_google_ads_search(brand):
     env = get_meltano_env()
-    env["BQ_DATASET"] = "google_ads_search"
-    env["BQ_METHOD"] = "batch_job"
     env["DBT_BIGQUERY_METHOD"] = 'oauth'
     env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
     env["DBT_BIGQUERY_DATASET"] = f'google_ads_search_transformed__{brand}'
     return env
 
 
-def set_env_vars_ga4(brand='kiwibank'):
+def set_env_vars_ga4_overall():
     env = get_meltano_env()
     env["BQ_DATASET"] = "ga4_raw"
     env["BQ_METHOD"] = "gcs_stage"
@@ -129,7 +127,12 @@ def set_env_vars_ga4(brand='kiwibank'):
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
     env["TAP_GA4_PROPERTY_ID"] = env.get('TAP_GA4_PROPERTY_ID', '')
     return env
-
+def set_env_vars_ga4_brand(brand):
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = 'oauth'
+    env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
+    env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{brand}'
+    return env
 
 def set_env_vars_dash(brand):
     env = get_meltano_env()
@@ -144,6 +147,13 @@ def set_env_vars_dash_search(brand):
     env["DBT_BIGQUERY_METHOD"] = 'oauth'
     env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
     env["DBT_BIGQUERY_DATASET"] = f'dash_table_search__{brand}'
+    return env
+
+def set_env_vars_cm360():
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = 'oauth'
+    env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
+    env["DBT_BIGQUERY_DATASET"] = 'cm360_transformed'
     return env
 
 
@@ -225,7 +235,33 @@ with models.DAG(
         ),
         env_vars=set_env_vars_tiktok(),
     )
-
+    kube_dash_overall = KubernetesPodOperator(
+        name="kb-dash-to-bq",
+        task_id="kb-dash_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "dash_table"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        get_logs=True
+    )
+    kube_cm360 = KubernetesPodOperator(
+        name="kb-cm360-to-bq",
+        task_id="kb-cm360_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:cm360_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_cm360(),
+        get_logs=True
+    )
+    kube_cm360 >> kube_dv360 
+    [kube_tiktok,kube_facebook,kube_linkedin,kube_dv360,kube_hivestack] >> kube_dash_overall
+    task_list = []
     brands = [
         'everyday_banking_retail_deposit',
         'credit_card',
@@ -234,22 +270,10 @@ with models.DAG(
         'business_banking',
         'ao_social_boosting',
         'home_loan',
+        "unattributed",
     ]
 
     for brand in brands:
-        kube_google_ads = KubernetesPodOperator(
-            name=f"kb-{brand}-google-ads-to-bq",
-            task_id=f"kb-{brand}-google_ads_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke", f"dbt-bigquery:google_ads_{brand}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_google_ads_search(brand),
-            get_logs=True
-        )
-
         kube_dash = KubernetesPodOperator(
             name=f"kb-{brand}-dash-to-bq",
             task_id=f"kb-{brand}-dash_to_bigquery",
@@ -287,7 +311,7 @@ with models.DAG(
             env_vars=set_env_vars_dash(brand),
         )
 
-        [kube_facebook, kube_linkedin, kube_dv360, kube_hivestack, kube_tiktok, kube_google_ads] >> kube_dash >> kube_dash_search >> kube_dash_union
+        kube_dash_overall >> kube_dash >> kube_dash_search >> kube_dash_union
 
 
 # ---------------------------------------------------------------------------
@@ -300,7 +324,7 @@ with models.DAG(
     default_args=default_args
 ) as dag_ga4:
 
-    kube_ga4 = KubernetesPodOperator(
+    kube_ga4_overall = KubernetesPodOperator(
         name="kb-ga4-to-bq",
         task_id="kb-ga4_to_bigquery",
         namespace="composer-user-workloads",
@@ -310,8 +334,9 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_ga4('kiwibank'),
+        env_vars=set_env_vars_ga4_overall(),
     )
+    
 
     brands = [
         'everyday_banking_retail_deposit',
@@ -321,8 +346,9 @@ with models.DAG(
         'business_banking',
         'ao_social_boosting',
         'home_loan',
+        'unattributed',
     ]
-
+    google_ads_task = []
     for brand in brands:
         kube_ga4_brand = KubernetesPodOperator(
             name=f"kb-{brand}-ga4-channel-to-bq",
@@ -330,11 +356,63 @@ with models.DAG(
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "invoke",
-                        f"dbt-bigquery:ga4_goal_channel_{brand}_models"],
+                        f"dbt-bigquery:ga4_{brand}_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
-            env_vars=set_env_vars_ga4(brand),
+            env_vars=set_env_vars_ga4_brand(brand),
+        )
+        
+
+        kube_ga4_overall >> kube_ga4_brand
+        
+
+        kube_google_ads = KubernetesPodOperator(
+                name=f"kb-{brand}-google-ads-to-bq",
+                task_id=f"kb-{brand}-google_ads_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=["--environment=prod", "invoke", f"dbt-bigquery:google_ads_{brand}_models"],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_google_ads_search(brand),
+            )
+
+        kube_dash = KubernetesPodOperator(
+            name=f"kb-{brand}-dash-to-bq",
+            task_id=f"kb-{brand}-dash_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            trigger_rule='all_done',
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table__{brand}"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(brand),
         )
 
-        kube_ga4 >> kube_ga4_brand
+        kube_dash_search = KubernetesPodOperator(
+            name=f"kb-{brand}-dash-search-to-bq",
+            task_id=f"kb-{brand}-dash_search_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table_search__{brand}"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash_search(brand),
+        )
+
+        kube_dash_union = KubernetesPodOperator(
+            name=f"kb-{brand}-dash-union-to-bq",
+            task_id=f"kb-{brand}-dash_union_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{brand}"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(brand),
+        )
+        kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_overall

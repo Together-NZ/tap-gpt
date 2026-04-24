@@ -3,8 +3,7 @@
 ) }}
 WITH final_result AS (
   {{ dash_table_general_process.dash_union_non_search(source_name='dash_union__ao_social_boosting', table_name='dash_table__ao_social_boosting',sub_brands=env_var('SUB_BRANDS', 'null')) }}
-   UNION ALL
-   {{ dash_table_general_process.dash_union_search(source_name='dash_union_search__ao_social_boosting', table_name='dash_table_search__ao_social_boosting',sub_brands=env_var('SUB_BRANDS', 'null')) }}
+   
  )
 SELECT
   COALESCE(t2.present, t1.publisher) AS publisher,

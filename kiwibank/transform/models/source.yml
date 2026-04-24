@@ -137,3 +137,84 @@ sources:
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__home_loan') }}"
     tables:
       - name: dash_table_search__home_loan
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
+  - name: linkedin_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed') }}"
+    tables:
+      - name: linkedin
+
+  - name: tiktok_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed') }}"
+    tables:
+      - name: tiktok
+
+  - name: hivestack_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed') }}"
+    tables:
+      - name: hivestack
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: google_ads__business_banking
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__business_banking') }}"
+    tables:
+      - name: google_ads_demand__business_banking
+      - name: google_ads_search__business_banking
+
+  - name: google_ads__credit_card
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__credit_card') }}"
+    tables:
+      - name: google_ads_demand__credit_card
+      - name: google_ads_search__credit_card
+
+  - name: google_ads__everyday_banking_join_kiwibank
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__everyday_banking_join_kiwibank') }}"
+    tables:
+      - name: google_ads_demand__everyday_banking_join_kiwibank
+      - name: google_ads_search__everyday_banking_join_kiwibank
+
+  - name: google_ads__everyday_banking_retail_deposit
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__everyday_banking_retail_deposit') }}"
+    tables:
+      - name: google_ads_demand__everyday_banking_retail_deposit1
+      - name: google_ads_search__everyday_banking_retail_deposit1
+      - name: google_ads_demand__everyday_banking_retail_deposit2
+      - name: google_ads_search__everyday_banking_retail_deposit2
+
+  - name: google_ads__fraud_and_scams
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__fraud_and_scams') }}"
+    tables:
+      - name: google_ads_demand__fraud_and_scams
+      - name: google_ads_search__fraud_and_scams
+
+  - name: google_ads__home_loan
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__home_loan') }}"
+    tables:
+      - name: google_ads_demand__home_loan
+      - name: google_ads_search__home_loan
