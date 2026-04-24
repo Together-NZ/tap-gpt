@@ -22,6 +22,7 @@ environments:
           DV360_SUFFIX: dbt_test_dv360
           TIKTOK_SUFFIX: dbt_test_tiktok
           PLAN_CODE: uow
+          REPORT_NAME: amp_report
 - name: prod
 plugins:
   extractors:
@@ -53,7 +54,7 @@ plugins:
       refresh_token: ${TAP_LINKEDIN_ADS_REFRESH_TOKEN}
       client_id: ${TAP_LINKEDIN_ADS_CLIENT_ID}
       client_secret: ${TAP_LINKEDIN_ADS_CLIENT_SECRET}
-      accounts: ${TAP_LINKEDIN_ADS_ACCOUNTS}
+      accounts: '519443423'
       user_agent: agent
       start_date: ${START_DATE}
       _catalog_path: ./catalog.json
@@ -83,7 +84,7 @@ plugins:
     - stream-maps
     config:
       start_date: ${START_DATE}
-      advertiser_id: ${TAP_DV360_ADVERTISER_ID}
+      advertiser_id: '6843179935'
       query_standard: dv360_standard.json
       query_youtube: dv360_youtube.json
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
@@ -93,14 +94,11 @@ plugins:
     executable: tap-hivestack
     config:
       api_key: ${TAP_HIVESTACK_API_KEY}
-      report_id: ${TAP_HIVESTACK_REPORT_ID}
+      report_id: '93040'
   - name: tap-tiktok
-    namespace: tap-tiktok
-    pip_url: git+https://github.com/Together-NZ/tap-tiktok.git setuptools<82.0
-    executable: tap-tiktok
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
     config:
-      access_token: ${TAP_TIKTOK_ACCESS_TOKEN}
-      advertiser_id: ${TAP_TIKTOK_ADVERTISER_ID}
       start_date: ${START_DATE}
   loaders:
   - name: target-jsonl
@@ -148,22 +146,26 @@ plugins:
         args: run --select +tiktok
       ga4_models:
         args: run --select +ga4_goal_a +ga4_goal_channel
-      ga4_goal_channel_everyday_banking_retail_deposit_models:
-        args: run --select +ga4_goal_channel__everyday_banking_retail_deposit
-      ga4_goal_channel_credit_card_models:
-        args: run --select +ga4_goal_channel__credit_card
-      ga4_goal_channel_fraud_and_scams_models:
-        args: run --select +ga4_goal_channel__fraud_and_scams
-      ga4_goal_channel_everyday_banking_join_kiwibank_models:
-        args: run --select +ga4_goal_channel__everyday_banking_join_kiwibank
-      ga4_goal_channel_business_banking_models:
-        args: run --select +ga4_goal_channel__business_banking
-      ga4_goal_channel_ao_social_boosting_models:
-        args: run --select +ga4_goal_channel__ao_social_boosting
-      ga4_goal_channel_home_loan_models:
-        args: run --select +ga4_goal_channel__home_loan
+      ga4_ao_social_boosting_models:
+        args: run --select ga4_goal_channel__ao_social_boosting
+      ga4_business_banking_models:
+        args: run --select ga4_goal_channel__business_banking
+      ga4_credit_card_models:
+        args: run --select ga4_goal_channel__credit_card
+      ga4_fraud_and_scams_models:
+        args: run --select ga4_goal_channel__fraud_and_scams
+      ga4_everyday_banking_join_kiwibank_models:
+        args: run --select ga4_goal_channel__everyday_banking_join_kiwibank
+      ga4_everyday_banking_retail_deposit_models:
+        args: run --select ga4_goal_channel__everyday_banking_retail_deposit
+      ga4_home_loan_models:
+        args: run --select ga4_goal_channel__home_loan
+      ga4_unattributed_models:
+        args: run --select ga4_goal_channel__unattributed
+      google_ads_ao_social_boosting_models:
+        args: run --select google_ads_search__ao_social_boosting google_ads_demand__ao_social_boosting
       google_ads_everyday_banking_retail_deposit_models:
-        args: run --select +google_ads_search__everyday_banking_retail_deposit +google_ads_demand__everyday_banking_retail_deposit
+        args: run --select +google_ads_search__everyday_banking_retail_deposit1 +google_ads_demand__everyday_banking_retail_deposit1 +google_ads_search__everyday_banking_retail_deposit2 +google_ads_demand__everyday_banking_retail_deposit2
       google_ads_credit_card_models:
         args: run --select +google_ads_search__credit_card +google_ads_demand__credit_card
       google_ads_fraud_and_scams_models:
@@ -172,8 +174,6 @@ plugins:
         args: run --select +google_ads_search__everyday_banking_join_kiwibank +google_ads_demand__everyday_banking_join_kiwibank
       google_ads_business_banking_models:
         args: run --select +google_ads_search__business_banking +google_ads_demand__business_banking
-      google_ads_ao_social_boosting_models:
-        args: run --select +google_ads_search__ao_social_boosting +google_ads_demand__ao_social_boosting
       google_ads_home_loan_models:
         args: run --select +google_ads_search__home_loan +google_ads_demand__home_loan
   files:

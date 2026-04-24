@@ -14,7 +14,6 @@ on:
       - ".github/**"
       - "terraform/**"
      
-      - "kiwibank/**"
       #- "**/orchestrate/**"
 
   workflow_dispatch:
@@ -80,10 +79,8 @@ jobs:
           FOLDERS=$(git diff --name-only HEAD^ HEAD \
             | grep -v '/orchestrate/' \
             | grep -v 'terraform/' \
-            | grep -v 'kiwibank/' \
             | grep -v 'README.md' \
             | grep -v 'terraform/' \
-            | grep -v 'kiwibank/' \
             | grep -v '.github/' \
             | grep -v '/ci_test.sh' \
             | grep -v '/client_name.py' \
@@ -180,7 +177,6 @@ jobs:
               - "!terraform/**"
               - "!**/orchestrate/**"
        
-              - "!kiwibank/**"
 
       # record the folder change if the change are not dag file 
       - name: Get changed folders (PR)
