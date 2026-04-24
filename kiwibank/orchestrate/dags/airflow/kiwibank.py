@@ -140,7 +140,12 @@ def set_env_vars_dash(brand):
     env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
     env["DBT_BIGQUERY_DATASET"] = f'dash_table__{brand}'
     return env
-
+def set_env_vars_dash_overall():
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = 'oauth'
+    env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
+    env["DBT_BIGQUERY_DATASET"] = 'dash_table'
+    return env
 
 def set_env_vars_dash_search(brand):
     env = get_meltano_env()
@@ -244,7 +249,7 @@ with models.DAG(
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_dash(),
+        env_vars=set_env_vars_dash_overall(),
         get_logs=True
     )
     kube_cm360 = KubernetesPodOperator(
