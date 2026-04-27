@@ -228,18 +228,7 @@ with models.DAG(
         get_logs=True
     )
 
-    kube_tiktok = KubernetesPodOperator(
-        name="kb-tiktok-to-bq",
-        task_id="kb-tiktok_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery",
-                    "dbt-bigquery:tiktok_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_tiktok(),
-    )
+
     kube_dash_overall = KubernetesPodOperator(
         name="kb-dash-to-bq",
         task_id="kb-dash_to_bigquery",
@@ -265,7 +254,7 @@ with models.DAG(
         get_logs=True
     )
     kube_cm360 >> kube_dv360 
-    [kube_tiktok,kube_facebook,kube_linkedin,kube_dv360,kube_hivestack] >> kube_dash_overall
+    [kube_facebook,kube_linkedin,kube_dv360,kube_hivestack] >> kube_dash_overall
     task_list = []
     brands = [
         'everyday_banking_retail_deposit',
@@ -341,7 +330,31 @@ with models.DAG(
         ),
         env_vars=set_env_vars_ga4_overall(),
     )
-    
+    kube_tiktok = KubernetesPodOperator(
+        name="kb-tiktok-to-bq",
+        task_id="kb-tiktok_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery",
+                    "dbt-bigquery:tiktok_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_tiktok(),
+    )
+    kube_dash_overall = KubernetesPodOperator(
+        name="kb-dash-to-bq",
+        task_id="kb-dash_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "dash_table"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash_overall(),
+        get_logs=True
+    )
+    kube_tiktok >> kube_dash_overall
 
     brands = [
         'everyday_banking_retail_deposit',
@@ -369,7 +382,7 @@ with models.DAG(
         )
         
 
-        kube_ga4_overall >> kube_ga4_brand
+        kube_dash_overall>>kube_ga4_overall >> kube_ga4_brand
         
 
         kube_google_ads = KubernetesPodOperator(

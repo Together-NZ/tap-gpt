@@ -16,6 +16,7 @@ environments:
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
           REFERENCE_DV360_RAW_BIGQUERY_DATASET: dbt_test_dv360_raw
           REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           META_SUFFIX: dbt_test_facebook
           LINKEDIN_SUFFIX: dbt_test_linkedin
           HIVESTACK_SUFFIX: dbt_test_hivestack
@@ -84,10 +85,10 @@ plugins:
     - stream-maps
     config:
       start_date: ${START_DATE}
-      advertiser_id: '6843179935'
+      advertiser_id: '8056209584'
       query_standard: dv360_standard.json
       query_youtube: dv360_youtube.json
-      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+      service_account: together-ias@together-internal.iam.gserviceaccount.com
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
@@ -134,6 +135,8 @@ plugins:
       location: australia-southeast1
       method: oauth
     commands:
+      cm360_models:
+        args: run --select +cm360_direct_buy
       facebook_models:
         args: run --select +facebook
       linkedin_models:
@@ -176,6 +179,8 @@ plugins:
         args: run --select +google_ads_search__business_banking +google_ads_demand__business_banking
       google_ads_home_loan_models:
         args: run --select +google_ads_search__home_loan +google_ads_demand__home_loan
+      google_ads_unattributed_models:
+        args: run --select +google_ads_search__unattributed +google_ads_demand__unattributed
   files:
   - name: files-airflow
     variant: meltano
