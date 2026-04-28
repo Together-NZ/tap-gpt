@@ -408,4 +408,6 @@ with models.DAG(
         )
         kube_facebook >> task_facebook_comparison
         kube_linkedin >> task_linkedin_comparison
-        [kube_facebook, kube_dv360, kube_cm360, kube_linkedin, kube_ttd, kube_hivestack] >> kube_dash >> kube_dash_search >> kube_dash_union
+        kube_cm360 >> kube_ttd
+        kube_cm360 >> kube_dv360
+        [kube_facebook, kube_dv360,  kube_linkedin, kube_ttd, kube_hivestack] >> kube_dash >> kube_dash_search >> kube_dash_union
