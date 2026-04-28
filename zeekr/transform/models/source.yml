@@ -49,7 +49,7 @@ sources:
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
     schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
     tables:
-      - name: ttd
+      - name: ttd_transformed
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
@@ -78,7 +78,7 @@ sources:
 models:
 
 
-  - name: ttd
+  - name: ttd_transformed
     config: 
       schema: "{{ env_var('TTD_SUFFIX', '') }}"
     columns:

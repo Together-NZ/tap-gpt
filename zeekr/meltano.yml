@@ -122,7 +122,7 @@ plugins:
       method: oauth
     commands:
       ttd_models:
-        args: run --select ttd
+        args: run --select ttd_transformed
       ga4_models:
         args: run --select ga4_goal_a ga4_goal_channel
       facebook_models:

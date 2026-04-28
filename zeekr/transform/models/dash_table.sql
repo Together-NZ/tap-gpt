@@ -7,7 +7,7 @@ with dash_table AS (
     UNION ALL
     {{ dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook') }}
     UNION ALL
-    {{ dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd') }}
+    {{ dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd_transformed') }}
     UNION ALL
     {{ dash_table_general_process.linkedin(source_name='linkedin_transformed', table_name='linkedin') }}
     UNION ALL
