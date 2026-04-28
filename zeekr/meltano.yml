@@ -1,5 +1,5 @@
 version: 1
-default_environment: dev
+default_environment: prod
 project_id: 4f5340fe-b63b-41b8-8b8a-963749a65dc3
 environments:
 - name: dev
