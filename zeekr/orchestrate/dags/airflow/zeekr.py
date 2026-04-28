@@ -127,7 +127,7 @@ with models.DAG(
             task_id="zeekr-cm360_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run","tap-cm360","target-bigquery","dbt-bigquery:cm360_models"],
+            arguments=["--environment=prod", "invoke","dbt-bigquery:cm360_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
