@@ -239,7 +239,7 @@ with models.DAG(
     kube_cm360 >> kube_ttd
     kube_facebook >> task_facebook_comparison
     kube_linkedin >> task_linkedin_comparison
-    [kube_facebook,kube_linkedin] >> kube_ttd,kube_dash >> kube_dash_search >> kube_dash_union
+    [kube_facebook,kube_linkedin,kube_ttd] >> kube_dash >> kube_dash_search >> kube_dash_union
 with models.DAG(
     dag_id="zeekr-meltano-google_ads",
     schedule_interval="30 13 * * *",
