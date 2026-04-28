@@ -11,6 +11,7 @@ sources:
     tables:
       - name: goal
       - name: ecommerce_goal
+      - name: session_goal
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"

@@ -116,6 +116,9 @@ with models.DAG(
         if goal == 'ecommerce':
             env["GA4_REPORTS"] = "./ecommerce_report.json"
             env["GA4_GOAL"] = 'ecommerce_goal'
+        elif goal == 'session':
+            env["GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
         else:
             env["GA4_REPORTS"] = "./report.json"
             env["GA4_GOAL"] = 'goal'
@@ -145,7 +148,7 @@ with models.DAG(
         task_id="set_env_dash_table_search",
         python_callable=set_env_vars_dash_table_search,
     )
-    kube_google_ads_search = KubernetesPodOperator(
+    kube_google_ads = KubernetesPodOperator(
         name="tepuia-google-ads-search-to-bigquery",
         task_id="tepuia-google_ads_search_to_bigquery",
         namespace="composer-user-workloads",
@@ -185,18 +188,14 @@ with models.DAG(
         get_logs = True
     )
     ga4_task = {}
-    ga4_list = ['ecommerce','goal']
+    ga4_list = ['ecommerce','goal','session']
     for goal in ga4_list:
-        if goal == 'ecommerce':
-            arguments = ["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_ecommerce_models"]
-        else:
-            arguments = ["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_goal_models"]
         kube_ga4 = KubernetesPodOperator(
             name=f"tepuia-{goal}--ga4-to-bigquery",
             task_id=f"tepuia-{goal}-ga4_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=arguments,
+            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{goal}_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -205,20 +204,6 @@ with models.DAG(
             get_logs=True
         )
         kube_dash_union >> kube_ga4
-    kube_google_ads_dv = KubernetesPodOperator(
-        name="tepuia-google-ads-dv-to-bigquery",
-        task_id="tepuia-google_ads_dv_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "google_ads_dv"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_google_ads(),
-        #base_container_name=f"meltano-tepuia-google-ads-dv",
-        get_logs = True
-    )
-
 
     kube_dash = KubernetesPodOperator(
         name="tepuia-dash-to-bigquery",
@@ -234,6 +219,7 @@ with models.DAG(
         #base_container_name=f"meltano-tepuia-dash",
         get_logs = True
         )
+    kube_google_ads >> kube_dash >> kube_dash_table_search >> kube_dash_union
 
     
 with models.DAG(

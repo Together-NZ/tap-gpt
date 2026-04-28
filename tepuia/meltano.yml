@@ -13,6 +13,7 @@ environments:
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
@@ -113,11 +114,14 @@ plugins:
         description: Run Google Ads Search / Demand Gen models
  
       ga4_goal_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
+        args: run --select +ga4_goal_a_goal +ga4_goal_channel_goal
         description: Run GA4 goal models
       ga4_ecommerce_models:
         args: run --select +ga4_goal_ecommerce
         description: Run GA4 ecommerce goal model
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+        description: Run GA4 session goal model
     config:
       project: tepuia-main
       location: australia-southeast1
