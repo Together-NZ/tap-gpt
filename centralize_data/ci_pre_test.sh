@@ -3,6 +3,7 @@ export DBT_BIGQUERY_METHOD='oauth'
 export DBT_BIGQUERY_PROJECT='together-internal'
 
 meltano install
+meltano install dbt-bigquery deps
 meltano invoke dbt-bigquery deps
 meltano --environment=staging invoke dbt-bigquery compile
 
