@@ -19,7 +19,11 @@ sources:
     tables:
       - name: dv360_standard__volvo
       - name: dv360_youtube__volvo
-
+  - name: cm360_transformed__volvo
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__volvo') }}"
+    tables:
+      - name: cm360_direct_buy__volvo
 
   - name: facebook_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
