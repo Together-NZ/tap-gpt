@@ -87,6 +87,7 @@ sources:
     tables:
       - name: cm360_direct_buy
       - name: cm360_seralized
+    
 
 models:
   - name: facebook
