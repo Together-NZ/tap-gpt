@@ -5,7 +5,7 @@ packages:
 
   - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
 
-  - git: https://github.com/Together-NZ/Impact-CI-google_ads_models.git
+  - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
 
   - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
 
