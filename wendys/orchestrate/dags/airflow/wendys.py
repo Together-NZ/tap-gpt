@@ -441,8 +441,9 @@ with models.DAG(
     set_env_task_facebook >> kube_facebook >> task_facebook_comparison
     set_env_task_dv360 >> kube_dv360
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
+    kube_cm360 >> kube_dv360
     set_env_task_hivestack >> kube_hivestack
     set_env_task_snapchat >> kube_snapchat
     #kube_google_ads_search >> kube_dash_search
-    [kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_hivestack,kube_snapchat] >> kube_dash
+    [kube_facebook,kube_dv360,kube_ttd,kube_hivestack,kube_snapchat] >> kube_dash
     kube_dash >> kube_dash_union
