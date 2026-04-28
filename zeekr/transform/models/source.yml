@@ -68,6 +68,12 @@ sources:
     schema: "{{ env_var('REFERENCE_GOOGLE_ADS_DEMAND_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
     tables:
       - name: google_ads_demand
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
 
 models:
 

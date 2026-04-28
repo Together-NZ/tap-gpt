@@ -130,6 +130,8 @@ plugins:
         args: run --select linkedin
       google_ads_models:
         args: run --select google_ads_search google_ads_demand
+      cm360_models:
+        args: run --select +cm360_direct_buy
   files:
   - name: files-airflow
     variant: meltano
