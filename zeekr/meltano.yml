@@ -1,5 +1,5 @@
 version: 1
-default_environment: dev
+default_environment: prod
 project_id: 4f5340fe-b63b-41b8-8b8a-963749a65dc3
 environments:
 - name: dev
@@ -14,6 +14,7 @@ environments:
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           META_SUFFIX: dbt_test_facebook
 
           LINKEDIN_SUFFIX: dbt_test_linkedin
@@ -121,7 +122,7 @@ plugins:
       method: oauth
     commands:
       ttd_models:
-        args: run --select ttd
+        args: run --select ttd_transformed
       ga4_models:
         args: run --select ga4_goal_a ga4_goal_channel
       facebook_models:
@@ -130,6 +131,8 @@ plugins:
         args: run --select linkedin
       google_ads_models:
         args: run --select google_ads_search google_ads_demand
+      cm360_models:
+        args: run --select +cm360_direct_buy
   files:
   - name: files-airflow
     variant: meltano

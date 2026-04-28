@@ -4,3 +4,5 @@ report.csv
 secret.json
 .meltano
 .venv
+transform/dbt_packages
+transform/package-lock.yml

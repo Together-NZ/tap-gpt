@@ -74,7 +74,12 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
         env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
         return env
-    
+    def set_env_vars_cm360():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
+        env["DBT_BIGQUERY_DATASET"] = 'cm360_transformed'
+        return env
     def set_env_vars_linkedin():
         env = get_meltano_env()
         env["BQ_DATASET"] = "linkedin_raw"
@@ -116,6 +121,17 @@ with models.DAG(
             ),
             env_vars=set_env_vars_ttd(),
             execution_timeout=timedelta(minutes=60)
+    )
+    kube_cm360 = KubernetesPodOperator(
+            name="zeekr-cm360-to-bigquery",
+            task_id="zeekr-cm360_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-cm360","target-bigquery","dbt-bigquery:cm360_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_cm360(),
     )
     kube_facebook = KubernetesPodOperator(
             name="zeekr-facebook-to-bigquery",
@@ -220,6 +236,7 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    kube_cm360 >> kube_ttd
     kube_facebook >> task_facebook_comparison
     kube_linkedin >> task_linkedin_comparison
     [kube_facebook,kube_linkedin] >> kube_ttd,kube_dash >> kube_dash_search >> kube_dash_union

@@ -46,6 +46,11 @@ sources:
     tables:
       - name: dv360_standard
       - name: dv360_youtube
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
 
   - name: facebook_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
@@ -106,11 +111,6 @@ sources:
     tables:
       - name: snapchat
   
-  - name: cm360_transformed
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
-    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
-    tables:
-      - name: cm360_direct_buy
 
   - name: google_ads
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
