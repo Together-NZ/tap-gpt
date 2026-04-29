@@ -309,7 +309,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
         )
-    goal_list = ['sessions','goal']
+    goal_list = ['session','goal']
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
                 task_id=f"zeekr-ga4_{goal}_to_bigquery",
