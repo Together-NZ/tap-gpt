@@ -65,11 +65,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
 
   - name: tap-facebook
     variant: airbyte
@@ -123,8 +123,10 @@ plugins:
     commands:
       ttd_models:
         args: run --select ttd_transformed
-      ga4_models:
-        args: run --select ga4_goal_a ga4_goal_channel
+      ga4_goal_models:
+        args: run --select ga4_goal_a_goal ga4_goal_channel_goal
+      ga4_session_models:
+        args: run --select ga4_goal_a_session ga4_goal_channel_session
       facebook_models:
         args: run --select facebook
       linkedin_models:

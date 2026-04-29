@@ -127,7 +127,7 @@ with models.DAG(
             task_id="zeekr-cm360_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run","tap-cm360","target-bigquery","dbt-bigquery:cm360_models"],
+            arguments=["--environment=prod", "invoke","dbt-bigquery:cm360_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -255,13 +255,21 @@ with models.DAG(
         return env
 
   
-    def set_env_vars_ga4():
+    def set_env_vars_ga4(goal):
         env = get_meltano_env()
+        #if goal == 'ecommerce':
+        if goal == 'sessions':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'   
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'     
+        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -270,9 +278,8 @@ with models.DAG(
             client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
         )
         developer_creds.refresh(Request())
-        
+        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         return env
 
 
@@ -291,19 +298,31 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table_search'
         return env
-
-
-    kube_ga4 = KubernetesPodOperator(
-            #name="zeekr-ga4-to-bigquery",
-            task_id="zeekr-ga4_to_bigquery",
+    kube_dash_union = KubernetesPodOperator(
+            name="zeekr-dash-union-to-bigquery",
+            task_id="zeekr-dash_union_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],
+            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
-            env_vars=set_env_vars_ga4(),
-        )        
+            env_vars=set_env_vars_dash(),
+        )
+    goal_list = ['sessions','goal']
+    for goal in goal_list:
+        kube_ga4 = KubernetesPodOperator(
+                #name="zeekr-ga4-to-bigquery",
+                task_id="zeekr-ga4_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{goal}_models"],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_ga4(goal),
+            )       
+        kube_dash_union >> kube_ga4
 
 
    
@@ -354,18 +373,8 @@ with models.DAG(
         
             )
 
-    kube_dash_union = KubernetesPodOperator(
-            name="zeekr-dash-union-to-bigquery",
-            task_id="zeekr-dash_union_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_dash(),
-        )
+
         
 
  
-    kube_google_ads>>kube_dash>>kube_dash_search >> kube_dash_union >> kube_ga4
+    kube_google_ads>>kube_dash>>kube_dash_search >> kube_dash_union 
