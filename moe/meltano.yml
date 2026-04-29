@@ -6,6 +6,7 @@ environments:
 - name: staging
   config:
     plugins:
+    #
       transformers:
       - name: dbt-bigquery
         env:
