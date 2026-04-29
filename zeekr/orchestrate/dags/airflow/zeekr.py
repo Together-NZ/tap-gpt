@@ -298,7 +298,17 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table_search'
         return env
-
+    kube_dash_union = KubernetesPodOperator(
+            name="zeekr-dash-union-to-bigquery",
+            task_id="zeekr-dash_union_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(),
+        )
     goal_list = ['sessions','goal']
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
@@ -363,17 +373,7 @@ with models.DAG(
         
             )
 
-    kube_dash_union = KubernetesPodOperator(
-            name="zeekr-dash-union-to-bigquery",
-            task_id="zeekr-dash_union_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_dash(),
-        )
+
         
 
  
