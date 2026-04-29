@@ -191,7 +191,7 @@ with models.DAG(
     ga4_list = ['ecommerce','goal','session']
     for goal in ga4_list:
         kube_ga4 = KubernetesPodOperator(
-            name=f"tepuia-{goal}--ga4-to-bigquery",
+            name=f"tepuia-{goal}-ga4-to-bigquery",
             task_id=f"tepuia-{goal}-ga4_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
