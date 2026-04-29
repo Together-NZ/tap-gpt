@@ -27,7 +27,7 @@ plugins:
       ad_account_ids: ${AD_ACCOUNT_IDS}
   - name: tap-cm360
     namespace: tap-cm360
-    pip_url: git+https://github.com/Together-NZ/tap-cm360.git  setuptools<82.0
+    pip_url: git+https://github.com/Together-NZ/tap-cm360.git  setuptools<82.0 #
     executable: tap-cm360
     config:
       profile_id: '9840205'
