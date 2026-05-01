@@ -243,6 +243,12 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'doconservation-main'
         env["DBT_BIGQUERY_DATASET"] = f'facebook_transformed'
         return env
+    def set_env_vars_cm360():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'doconservation-main'
+        env["DBT_BIGQUERY_DATASET"] = f'cm360_transformed'
+        return env
     def set_env_vars_linkedin():
         env=get_meltano_env()
         env["BQ_DATASET"] = "linkedin_raw"
@@ -292,7 +298,18 @@ with models.DAG(
         task_id="set_env_task_dash_search",
         python_callable=set_env_vars_dash_search,
     )
-
+    kube_cm360 = KubernetesPodOperator(
+        name="doc-cm360-to-bigquery",
+        task_id="doc-cm360_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","cm360_direct_buy"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_cm360(),
+        get_logs=True
+    )
     kube_facebook = KubernetesPodOperator(
         name="doc-facebook-to-bigquery",
         task_id="doc-facebook_to_bigquery",
@@ -397,7 +414,7 @@ with models.DAG(
     kube_facebook >> task_facebook_comparison
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
- 
+    kube_cm360 >> kube_dv360
 
     [kube_facebook,kube_dv360,kube_linkedin] >> kube_dash
     kube_dash >> kube_dash_search

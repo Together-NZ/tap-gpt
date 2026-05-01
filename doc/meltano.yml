@@ -134,6 +134,7 @@ plugins:
     pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     commands:
       facebook_models: run --select +facebook
+      cm360_models: run --select +cm360_direct_buy
       dv360_models: run --select +dv360_standard +dv360_youtube
       tiktok_models: run --select +tiktok
       ga4_models: run --select +ga4_goal_a +ga4_goal_channel
