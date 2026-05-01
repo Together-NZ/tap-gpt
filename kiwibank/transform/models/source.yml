@@ -47,6 +47,18 @@ sources:
       - name: kiwibank_report
       - name: amp_report
 
+  - name: cm360_raw__kiwibank
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_RAW_BIGQUERY_DATASET', 'cm360_raw__kiwibank') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      
   - name: dash_union__everyday_banking_retail_deposit
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__everyday_banking_retail_deposit') }}"
@@ -119,18 +131,18 @@ sources:
       - name: dash_table__ao_social_boosting
       - name: dash_union__ao_social_boosting
 
-  - name: dash_union__home_loan
+  - name: dash_union__home_loans
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__home_loan') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__home_loans') }}"
     tables:
-      - name: dash_table__home_loan
-      - name: dash_union__home_loan
+      - name: dash_table__home_loans
+      - name: dash_union__home_loans
 
-  - name: dash_union_search__home_loan
+  - name: dash_union_search__home_loans
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__home_loan') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__home_loans') }}"
     tables:
-      - name: dash_table_search__home_loan
+      - name: dash_table_search__home_loans
 
   - name: cm360_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
@@ -206,12 +218,12 @@ sources:
       - name: google_ads_demand__fraud_and_scams
       - name: google_ads_search__fraud_and_scams
 
-  - name: google_ads__home_loan
+  - name: google_ads__home_loans
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
-    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__home_loan') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__home_loans') }}"
     tables:
-      - name: google_ads_demand__home_loan
-      - name: google_ads_search__home_loan
+      - name: google_ads_demand__home_loans
+      - name: google_ads_search__home_loans
 models:
   - name: facebook
     config:

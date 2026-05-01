@@ -161,8 +161,8 @@ plugins:
         args: run --select ga4_goal_channel__everyday_banking_join_kiwibank
       ga4_everyday_banking_retail_deposit_models:
         args: run --select ga4_goal_channel__everyday_banking_retail_deposit
-      ga4_home_loan_models:
-        args: run --select ga4_goal_channel__home_loan
+      ga4_home_loans_models:
+        args: run --select ga4_goal_channel__home_loans
       ga4_unattributed_models:
         args: run --select ga4_goal_channel__unattributed
       google_ads_ao_social_boosting_models:
@@ -177,8 +177,8 @@ plugins:
         args: run --select +google_ads_search__everyday_banking_join_kiwibank +google_ads_demand__everyday_banking_join_kiwibank
       google_ads_business_banking_models:
         args: run --select +google_ads_search__business_banking +google_ads_demand__business_banking
-      google_ads_home_loan_models:
-        args: run --select +google_ads_search__home_loan +google_ads_demand__home_loan
+      google_ads_home_loans_models:
+        args: run --select +google_ads_search__home_loans +google_ads_demand__home_loans
       google_ads_unattributed_models:
         args: run --select +google_ads_search__unattributed +google_ads_demand__unattributed
   files:

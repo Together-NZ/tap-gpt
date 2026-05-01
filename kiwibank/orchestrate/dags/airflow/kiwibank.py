@@ -263,7 +263,7 @@ with models.DAG(
         'everyday_banking_join_kiwibank',
         'business_banking',
         'ao_social_boosting',
-        'home_loan',
+        'home_loans',
         "unattributed",
     ]
 
@@ -363,7 +363,7 @@ with models.DAG(
         'everyday_banking_join_kiwibank',
         'business_banking',
         'ao_social_boosting',
-        'home_loan',
+        'home_loans',
         'unattributed',
     ]
     google_ads_task = []
