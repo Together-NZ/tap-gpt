@@ -19,6 +19,13 @@ sources:
       - name: ads
       - name: campaigns
       - name: custom_conversions
+      
+  - name: cm360_raw
+    database: "together-internal"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
   - name: facebook_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
     schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"

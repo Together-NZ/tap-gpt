@@ -95,6 +95,15 @@ with models.DAG(
         env['TAP_CM360_PROFILE_ID']='10275036'
       
         return env
+    
+    def set_env_vars_cm360_kiwibank():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "cm360_raw__kiwibank"
+        env["BQ_METHOD"] = "batch_job"
+        env['TAP_CM360_PROFILE_ID']='10872019'
+      
+        return env
+    
     def set_env_vars_cm360():
         env = get_meltano_env()
         env["BQ_DATASET"] = "cm360_raw"
@@ -129,6 +138,10 @@ with models.DAG(
     set_env_task_cm360_contact = PythonOperator(
         task_id = "set_env_cm360_contact",
         python_callable=set_env_vars_cm360_contact
+    )
+    set_env_task_cm360_kiwibank = PythonOperator(
+        task_id = "set_env_cm360_kiwibank",
+        python_callable=set_env_vars_cm360_kiwibank
     )
     set_env_task_linkedin = PythonOperator(
         task_id = "set_env_linkedin",
@@ -194,6 +207,17 @@ with models.DAG(
         ),
         env_vars=set_env_vars_cm360_contact(),
     )
+    kube_cm360_kiwibank = KubernetesPodOperator(
+        name="cm360_kiwibank-to-bigquery",
+        task_id="cm360_kiwibank_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-cm360", "target-bigquery","--full-refresh"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_cm360_kiwibank(),
+    )
 
     kube_linkedin = KubernetesPodOperator(
         name="linkedin-to-bigquery",
@@ -212,3 +236,4 @@ with models.DAG(
     set_env_task_spotifyads >> kube_spotifyads
     set_env_task_cm360_contact >> kube_cm360_contact
     set_env_task_linkedin >> kube_linkedin 
+    set_env_task_cm360_kiwibank >> kube_cm360_kiwibank

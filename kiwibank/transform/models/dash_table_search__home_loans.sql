@@ -2,7 +2,7 @@
     materialized='table',
 ) }}
 with dash_table AS (
-SELECT * FROM `kiwibank-main.google_ads_search_transformed__home_loan.google_ads_search__home_loan`
+SELECT * FROM `kiwibank-main.google_ads_search_transformed__home_loans.google_ads_search__home_loans`
 U)
 SELECT *,
 CASE WHEN 
@@ -15,7 +15,7 @@ CASE WHEN
 END as media_format,
 CASE WHEN lower(publisher) = 'demand gen' THEN 'Demand Gen'
 ELSE 'Paid Search' END as channel,
-CASE WHEN 'INTENT' IN (select distinct funnel from `kiwibank-main.dash_table__home_loan.dash_table__home_loan`) then 'INTENT'
+CASE WHEN 'INTENT' IN (select distinct funnel from `kiwibank-main.dash_table__home_loans.dash_table__home_loans`) then 'INTENT'
 ELSE 'OTHER' END as funnel,
 NULL AS creative_name,
 NULL AS ad_format, 

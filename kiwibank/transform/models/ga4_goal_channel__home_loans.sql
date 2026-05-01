@@ -126,7 +126,7 @@ END AS campaign_name_selection
  FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
 ),
 funnel_campaign AS (
-     select distinct funnel, campaign_name from `kiwibank-main.dash_table__home_loan.dash_union__home_loan`
+     select distinct funnel, campaign_name from `kiwibank-main.dash_table__home_loans.dash_union__home_loans`
 ),
 dash AS (
      SELECT DISTINCT 
@@ -134,7 +134,7 @@ dash AS (
           --campaign_name AS platform_campaigns,
           REGEXP_REPLACE(TRIM(creative_descr), r'[_\-\s]+', '') AS creative_name,
           ROW_NUMBER() OVER(PARTITION BY LOWER(creative_descr)) AS row_num
-     FROM `kiwibank-main.dash_table__home_loan.dash_union__home_loan`
+     FROM `kiwibank-main.dash_table__home_loans.dash_union__home_loans`
 ),
 deduplicate_dash AS (
     SELECT old_creative,creative_name FROM dash WHERE row_num=1

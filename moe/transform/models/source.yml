@@ -42,6 +42,11 @@ sources:
     tables:
       - name: dv360_standard
       - name: dv360_youtube
+  - name: cm360_raw
+    database: "together-internal"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
 
   - name: facebook_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
