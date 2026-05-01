@@ -138,7 +138,7 @@ funnel_campaign AS (
      UNION ALL
      select distinct funnel, campaign_name from `kiwibank-main.dash_table__fraud_and_scams.dash_union__fraud_and_scams`
      UNION ALL
-     select distinct funnel, campaign_name from `kiwibank-main.dash_table__home_loan.dash_union__home_loan`
+     select distinct funnel, campaign_name from `kiwibank-main.dash_table__home_loans.dash_union__home_loans`
 ),
 dash AS (
      SELECT DISTINCT 
