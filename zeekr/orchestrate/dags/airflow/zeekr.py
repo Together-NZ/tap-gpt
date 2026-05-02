@@ -155,6 +155,30 @@ with models.DAG(
             ),
             env_vars=set_env_vars_linkedin(),
     )
+    env=get_meltano_env()
+    comparison_trigger_linkedin = ComparisonTrigger(
+        project_name="zeekr-main",
+        destination_table="linkedin_transformed",
+        table_name="linkedin",
+        source_name="linkedin",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_zeekr_main",
+        project_id=env["PROJECT_ID"]
+    )
+
+    def linkedin_comparison_check(**context):
+        result = comparison_trigger_linkedin.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
     kube_dash_search = KubernetesPodOperator(
             name="zeekr-dash-search-to-bigquery",
             task_id="zeekr-dash_search_to_bigquery",
