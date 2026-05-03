@@ -24,6 +24,7 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
     tables:
       - name: goal
+      - name: session_goal
 
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
@@ -31,6 +32,12 @@ sources:
     tables:
       - name: dv360_standard
       - name: dv360_youtube
+
+  - name: dash_table
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_table
 
   - name: tiktok_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"

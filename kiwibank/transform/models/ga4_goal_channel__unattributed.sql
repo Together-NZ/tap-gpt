@@ -15,5 +15,5 @@ WHERE campaign_name NOT IN (
     UNION ALL
     select distinct campaign_name FROM `kiwibank-main.dash_table__fraud_and_scams.dash_union__fraud_and_scams`  
     UNION ALL
-    select distinct campaign_name FROM `kiwibank-main.dash_table__home_loan.dash_union__home_loan`  
+    select distinct campaign_name FROM `kiwibank-main.dash_table__home_loans.dash_union__home_loans`  
 )
