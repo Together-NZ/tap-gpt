@@ -8,6 +8,8 @@ from copy import deepcopy
 import logging
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
+from comparison_package import ComparisonTrigger
+from airflow.operators.python import PythonOperator
 from datetime import timedelta
 from google.cloud import storage
 
@@ -18,6 +20,8 @@ log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
+
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
 default_args = {
     "retries": 3,
@@ -108,8 +112,14 @@ def set_env_vars_google_ads_search(brand):
     return env
 
 
-def set_env_vars_ga4_overall():
+def set_env_vars_ga4_overall(goal):
     env = get_meltano_env()
+    if goal == 'session':
+        env["GA4_REPORTS"] = "./report_sessions.json"
+        env["GA4_GOAL"] = 'session_goal'
+    else:
+        env["GA4_REPORTS"] = "./report.json"
+        env["GA4_GOAL"] = 'goal'
     env["BQ_DATASET"] = "ga4_raw"
     env["BQ_METHOD"] = "gcs_stage"
     env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -186,7 +196,31 @@ with models.DAG(
         env_vars=set_env_vars_facebook(),
         get_logs=True
     )
-
+    env=get_meltano_env()
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="kiwibank-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="facebook",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_kiwibank_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+    
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    
+    kube_facebook >> task_facebook_comparison
     kube_linkedin = KubernetesPodOperator(
         name="kb-linkedin-to-bq",
         task_id="kb-linkedin_to_bigquery",
@@ -201,6 +235,29 @@ with models.DAG(
         get_logs=True
     )
 
+    comparison_trigger_linkedin = ComparisonTrigger(
+        project_name="kiwibank-main",
+        destination_table="linkedin_transformed",
+        table_name="linkedin",
+        source_name="linkedin",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_kiwibank_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def linkedin_comparison_check(**context):
+        result = comparison_trigger_linkedin.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_linkedin >> task_linkedin_comparison
     kube_dv360 = KubernetesPodOperator(
         name="kb-dv360-to-bq",
         task_id="kb-dv360_to_bigquery",
@@ -317,19 +374,23 @@ with models.DAG(
     schedule_interval="0 14 * * *",
     default_args=default_args
 ) as dag_ga4:
+    ga4_task_list = []
+    goal_list = ['goal','session']
+    for goal in goal_list:
 
-    kube_ga4_overall = KubernetesPodOperator(
-        name="kb-ga4-to-bq",
-        task_id="kb-ga4_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",
-                    "dbt-bigquery:ga4_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_ga4_overall(),
-    )
+        kube_ga4_overall = KubernetesPodOperator(
+            name=f"kb-ga4-to-bq_{goal}",
+            task_id=f"kb-ga4_to_bigquery_{goal}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",
+                        f"dbt-bigquery:ga4_{goal}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4_overall(goal),
+        )
+        ga4_task_list.append(kube_ga4_overall)
     kube_tiktok = KubernetesPodOperator(
         name="kb-tiktok-to-bq",
         task_id="kb-tiktok_to_bigquery",
@@ -366,7 +427,6 @@ with models.DAG(
         'home_loans',
         'unattributed',
     ]
-    google_ads_task = []
     for brand in brands:
         kube_ga4_brand = KubernetesPodOperator(
             name=f"kb-{brand}-ga4-channel-to-bq",
@@ -381,9 +441,9 @@ with models.DAG(
             env_vars=set_env_vars_ga4_brand(brand),
         )
         
+        for task in ga4_task_list:
+            kube_dash_overall>>task >> kube_ga4_brand
 
-        kube_dash_overall>>kube_ga4_overall >> kube_ga4_brand
-        
 
         kube_google_ads = KubernetesPodOperator(
                 name=f"kb-{brand}-google-ads-to-bq",
@@ -433,4 +493,5 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
-        kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_overall
+        for task in ga4_task_list:
+            kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> task
