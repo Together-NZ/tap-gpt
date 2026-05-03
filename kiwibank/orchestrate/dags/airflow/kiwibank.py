@@ -506,4 +506,4 @@ with models.DAG(
             env_vars=set_env_vars_dash(brand),
         )
         for task in ga4_task_list:
-            kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> task
+            [kube_google_ads,kube_tiktok] >> kube_dash >> kube_dash_search >> kube_dash_union >> task
