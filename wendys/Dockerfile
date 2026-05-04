@@ -53,6 +53,12 @@ RUN --mount=type=ssh \
     ssh -T git@github.com || true && \
     meltano invoke dbt-bigquery deps
  
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    git clone git@github.com:Together-NZ/tap-hivestack.git /tmp/tap-hivestack && \
+    git clone git@github.com:Together-NZ/tap-reddit-ads.git /tmp/tap-reddit-ads
+
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
 

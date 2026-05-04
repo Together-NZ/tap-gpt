@@ -70,11 +70,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-dv360
     namespace: tap-dv360
     pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
@@ -144,6 +144,8 @@ plugins:
     variant: dbt-labs
     pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
+      cm360_models:
+        args: run --select +cm360_direct_buy
       google_ads_models:
         args: run --select +google_ads_search +google_ads_demand
       tiktok_models:
@@ -164,12 +166,13 @@ plugins:
       snapchat_models:
         args: run --select +snapchat
         description: Run the Snapchat ads model
-      cm360_models:
-        args: run --select +cm360_seralized +cm360_direct_buy
-        description: Run the CM360 ads model
-      ga4_models:
+
+      ga4_goal_models:
         args: run --select +ga4_goal_a +ga4_goal_channel
         description: Run the GA4 model
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+        description: Run the GA4 session model
     config:
       project: wendys-main
       method: oauth
