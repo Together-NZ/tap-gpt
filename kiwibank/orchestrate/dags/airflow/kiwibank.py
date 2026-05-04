@@ -434,7 +434,7 @@ with models.DAG(
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "invoke",
-                        f"dbt-bigquery:ga4_{brand}_models"],
+                        f"dbt-bigquery:ga4_{brand}_goal_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
