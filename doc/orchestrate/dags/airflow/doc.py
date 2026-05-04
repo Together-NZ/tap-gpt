@@ -68,14 +68,19 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'doconservation-main'
         env["DBT_BIGQUERY_DATASET"] = f'google_ads_search_transformed'
         return env
-    def set_env_vars_ga4():
+    def set_env_vars_ga4(goal):
         env = get_meltano_env()
-        env["BQ_DATASET"] = f"ga4_raw"
+        if goal == 'session':
+            env["GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        else:
+            env["GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'
+        env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'doconservation-main'
-        env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed'   
-   
+        env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed'
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -84,11 +89,11 @@ with models.DAG(
             client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
         )
         developer_creds.refresh(Request())
-        
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         env["TAP_GA4_START_DATE"] = get_ga4_start_date()
-        
+        env["TAP_GA4_PROPERTY_ID"] = env.get('TAP_GA4_PROPERTY_ID', '')
         return env
+
     def set_env_vars_dash():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -110,10 +115,7 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'doconservation-main'
         env["DBT_BIGQUERY_DATASET"] = f'tiktok_transformed'
         return env
-    set_env_task_ga4 = PythonOperator(
-        task_id="set_env_task_ga4",
-        python_callable=set_env_vars_ga4,
-    )
+
     set_env_task_google_ads = PythonOperator(
         task_id="set_env_task_google_ads",
         python_callable=set_env_vars_google_ads_search,
@@ -202,18 +204,7 @@ with models.DAG(
         env_vars=set_env_vars_dash_search(),
         base_container_name=f"meltano-doc-dash-search",
     )
-    kube_ga4 = KubernetesPodOperator(
-        name="doc-ga4-to-bigquery",
-        task_id="doc-ga4_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run","tap-ga4","target-bigquery","dbt-bigquery:ga4_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_ga4(),
-        get_logs=True
-    )
+
 
     kube_dash_union = KubernetesPodOperator(
         name="doc-dash-union-to-bigquery",
@@ -227,6 +218,21 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
+    goal_list = ['goal','session']
+    for goal in goal_list:
+        kube_ga4 = KubernetesPodOperator(
+            name=f"doc-ga4-to-bigquery-{goal}",
+            task_id=f"doc-ga4_to_bigquery_{goal}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-ga4","target-bigquery",f"dbt-bigquery:ga4_{goal}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(goal),
+            get_logs=True
+        )
+        kube_dash_union >> kube_ga4
     kube_tiktok >> task_tiktok_comparison
     kube_tiktok >> kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
 with models.DAG(
