@@ -3,7 +3,6 @@ packages:
 
   - git: https://github.com/Together-NZ/Impact-CI-Linkedin_models.git
 
-  - git: git@github.com:Together-NZ/Impact-CI-reddit_models.git
 
   - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
 

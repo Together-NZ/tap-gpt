@@ -13,12 +13,7 @@ WORKDIR /project
 COPY requirements.txt .
 RUN pip install -r requirements.txt
 RUN pip install -U "setuptools<81"
-# Mount SSH and trust GitHub SSH host key
-# Mount SSH and trust GitHub host key
-RUN --mount=type=ssh \
-    mkdir -p /root/.ssh && \
-    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
-    git clone git@github.com:Together-NZ/tap-hivestack.git /tmp/tap-hivestack
+
 
 # Copy project files
 COPY . .
