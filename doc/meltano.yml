@@ -1,5 +1,5 @@
 version: 1
-default_environment: dev
+default_environment: prod
 project_id: 4f5340fe-b63b-41b8-8b8a-963749a65dc3
 environments:
 - name: dev
@@ -13,18 +13,14 @@ environments:
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
- 
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360_raw
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
-   
-  
           REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok       
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
-
+          CM360_SUFFIX: dbt_test_cm360
           LINKEDIN_SUFFIX: dbt_test_linkedin
-   
           TIKTOK_SUFFIX: dbt_test_tiktok
-
 - name: prod
 #state_backend:
 #  uri: gs://doconservation-meltano-state-staging
@@ -59,11 +55,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
 
   - name: tap-dv360
     namespace: tap-dv360
@@ -137,7 +133,8 @@ plugins:
       cm360_models: run --select +cm360_direct_buy
       dv360_models: run --select +dv360_standard +dv360_youtube
       tiktok_models: run --select +tiktok
-      ga4_models: run --select +ga4_goal_a +ga4_goal_channel
+      ga4_goal_models: run --select +ga4_goal_a ga4_goal_channel
+      ga4_session_models: run --select +ga4_goal_a_session ga4_goal_channel_session
       google_ads_models: run --select +google_ads_search +google_ads_demand
       linkedin_models:
         args: run --select +linkedin
