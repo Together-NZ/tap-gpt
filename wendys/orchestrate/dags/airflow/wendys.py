@@ -92,14 +92,21 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
         env["DBT_BIGQUERY_DATASET"] = 'google_ads_search_transformed'
         return env
-    def set_env_vars_ga4():
+    def set_env_vars_ga4(goal):
         env = get_meltano_env()
+        #if goal == 'ecommerce':
+        if goal == 'sessions':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'   
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'   
- 
+        env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
+        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -108,7 +115,7 @@ with models.DAG(
             client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
         )
         developer_creds.refresh(Request())
-        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
+        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         return env
     kube_tiktok = KubernetesPodOperator(
@@ -135,16 +142,17 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dash_search(),
     )
-    kube_ga4 = KubernetesPodOperator(
-            name = "wendys-ga4-to-bigquery",
-            task_id = "wendys-ga4_to_bigquery",
-            namespace = "composer-user-workloads",
-            image = IMAGE,
-            arguments = ["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_ga4()),
+    kube_dash_union = KubernetesPodOperator(
+        name="wendys-dash-union-to-bigquery",
+        task_id="wendys-dash_union_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+    )
     kube_dash = KubernetesPodOperator(
         name="wendys-dash-to-bigquery",
         task_id="wendys-dash_to_bigquery",
@@ -159,6 +167,21 @@ with models.DAG(
         
         
         )
+    goal_list = ['goal','session']
+    for goal in goal_list:
+        kube_ga4 = KubernetesPodOperator(
+            name = f"wendys-ga4-to-bigquery-{goal}",
+            task_id = f"wendys-ga4_to_bigquery_{goal}",
+            namespace = "composer-user-workloads",
+            image = IMAGE,
+            arguments = ["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{goal}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(goal),
+        )
+        kube_dash_union >> kube_ga4
+
     kube_google_ads_search=KubernetesPodOperator(
         name="wendys-google-ads-search-to-bigquery",
         task_id="wendys-google-ads_search_to_bigquery",
@@ -172,17 +195,7 @@ with models.DAG(
         env_vars=set_env_vars_google_ads(),
     )
 
-    kube_dash_union = KubernetesPodOperator(
-        name="wendys-dash-union-to-bigquery",
-        task_id="wendys-dash_union_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash(),
-    )
+
     env = get_meltano_env()
     comparison_trigger_tiktok = ComparisonTrigger(
         project_name="wendys-main",
@@ -207,7 +220,7 @@ with models.DAG(
         trigger_rule="all_done",
     )
     kube_tiktok >> task_tiktok_comparison
-    kube_tiktok >> kube_google_ads_search >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
+    kube_tiktok >> kube_google_ads_search >> kube_dash >> kube_dash_search >> kube_dash_union 
     
     
     

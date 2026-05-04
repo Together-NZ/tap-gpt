@@ -5,6 +5,7 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
     tables:
       - name: goal
+      - name: session_goal
 
 
   - name: dash_union
@@ -26,6 +27,12 @@ sources:
     tables:
       - name: wendys_report
       - name: amp_report
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
 
   - name: hivestack_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
