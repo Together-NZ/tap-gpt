@@ -116,14 +116,21 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
-    def set_env_vars_ga4():
+    def set_env_vars_ga4(goal):
         env = get_meltano_env()
+        #if goal == 'ecommerce':
+        if goal == 'sessions':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'   
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'  
-        env["TAP_GA4_START_DATE"] = get_ga4_start_date() 
+        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -132,12 +139,10 @@ with models.DAG(
             client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
         )
         developer_creds.refresh(Request())
+        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         return env
-    set_env_task_ga4 = PythonOperator(
-        task_id="set_env_ga4",
-        python_callable=set_env_vars_ga4,
-    )
+
     set_env_task_tiktok = PythonOperator(
         task_id="set_env_tiktok",
         python_callable=set_env_vars_tiktok,
@@ -146,19 +151,35 @@ with models.DAG(
         task_id="set_env_google_ads",
         python_callable=set_env_vars_google_ads,
     )
-    kube_ga4 = KubernetesPodOperator(
+    kube_dash_union = KubernetesPodOperator(
         email_on_failure=True,
-        name="uow-ga4-to-bigquery",
-        task_id="uow-ga4_to_bigquery",
+        name="uow-dash-union-to-bigquery",
+        task_id="uow-dash_union_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_ga4(),
-        get_logs=True
-    )
+        env_vars=set_env_vars_dash(),
+        
+        )
+    goal_list = ['goal','session']
+    for goal in goal_list:
+        kube_ga4 = KubernetesPodOperator(
+            email_on_failure=True,
+            name=f"uow-ga4-to-bigquery-{goal}",
+            task_id=f"uow-ga4_to_bigquery_{goal}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_{goal}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(goal),
+            get_logs=True
+        )
+        kube_dash_union >> kube_ga4
     kube_tiktok = KubernetesPodOperator(
         email_on_failure=True,
         name="uow-tiktok-to-bigquery",
@@ -200,19 +221,7 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
-    kube_dash_union = KubernetesPodOperator(
-        email_on_failure=True,
-        name="uow-dash-union-to-bigquery",
-        task_id="uow-dash_union_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash(),
-        
-        )
+
     env = get_meltano_env()
     comparison_trigger_tiktok = ComparisonTrigger(
         project_name="uowaikato-main",

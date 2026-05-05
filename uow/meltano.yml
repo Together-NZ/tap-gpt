@@ -88,11 +88,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -163,8 +163,10 @@ plugins:
       snapchat_models:
         args: run --select +snapchat
         description: Run the Snapchat ads model
-      ga4_models:
+      ga4_goal_models:
         args: run --select +ga4_goal_a +ga4_goal_channel
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
         description: Run the Google Analytics models
       google_ads_models:
         args: run --select +google_ads
