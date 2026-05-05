@@ -5,6 +5,7 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__volvo') }}"
     tables:
       - name: goal
+      - name: session_goal
 
   - name: dv360_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
@@ -104,6 +105,12 @@ sources:
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__volvo') }}"
     tables:
       - name: dash_table_search__volvo
+
+  - name: cm360_raw__volvo
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
 
 models:
 

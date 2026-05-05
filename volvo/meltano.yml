@@ -46,11 +46,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-dv360
     namespace: tap-dv360
     pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
@@ -146,7 +146,7 @@ plugins:
       method: oauth
     commands:
       cm360_volvo_models:
-        args: run --select +cm360_seralized__volvo +cm360_direct_buy__volvo
+        args: run --select +cm360_direct_buy__volvo
         description: Run the CM360 ads model
       dv360_volvo_models:
         args: run --select +dv360_standard__volvo +dv360_youtube__volvo
@@ -164,8 +164,10 @@ plugins:
         args: run --select +facebook__geely
       facebook_polestar_models:
         args: run --select +facebook__polestar
-      ga4_volvo_models:
+      ga4_volvo_goal_models:
         args: run --select ga4_goal_a__volvo ga4_goal_channel__volvo
+      ga4_volvo_session_models:
+        args: run --select ga4_goal_a__volvo_session ga4_goal_channel__volvo_session
       linkedin_volvo_models:
         args: run --select +linkedin__volvo
       google_ads_volvo_models:
