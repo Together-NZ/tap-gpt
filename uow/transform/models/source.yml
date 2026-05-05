@@ -120,6 +120,12 @@ sources:
       - name: cm360_direct_buy
       - name: cm360_seralized
 
+  - name: cm360_raw
+    database: "together-internal"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
 
 models:
 

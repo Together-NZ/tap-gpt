@@ -205,7 +205,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_google_ads(),
-        base_container_name=f"meltano-uow-google-ads",
+        get_logs=True,
     )
     kube_dash = KubernetesPodOperator(
         email_on_failure=True,
@@ -243,10 +243,10 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    set_env_task_ga4 >> kube_ga4 
+
     set_env_task_google_ads >> kube_google_ads
     kube_tiktok >> task_tiktok_comparison
-    [kube_tiktok,kube_google_ads] >> kube_dash >> kube_dash_union >> kube_ga4
+    [kube_tiktok,kube_google_ads] >> kube_dash >> kube_dash_union 
 with models.DAG(
     dag_id="uowaikato-meltano-extraction-transformation-dbt",
     schedule_interval="0 4 * * *",
@@ -392,7 +392,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_dv360(),
-        base_container_name=f"meltano-uow-dv360",
+        get_logs=True,
     )
     kube_cm360 = KubernetesPodOperator(
         email_on_failure=True,
