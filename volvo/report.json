@@ -15,8 +15,7 @@
         "metrics":[
           "eventCount",
           "eventValue"
-        ],
-        "dateRanges":[{"startDate":"2025-09-07","endDate":"yesterday"}]
+        ]
       }
 ]
 

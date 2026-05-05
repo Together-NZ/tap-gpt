@@ -79,27 +79,32 @@ def set_env_vars_facebook(label):
     return env
 
 
-def set_env_vars_ga4(value):
-    env = get_meltano_env()
-    env["BQ_DATASET"] = f"ga4_raw__{value}"
-    env["BQ_METHOD"] = "gcs_stage"
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
-    env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{value}'
-    env["TAP_GA4_PROPERTY_ID"] = id
-    developer_creds = Credentials(
-        None,
-        refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
-        client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
-    )
-    developer_creds.refresh(Request())
-
-    env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-    env["TAP_GA4_START_DATE"] = get_ga4_start_date()
-    env["TAP_GA4_PROPERTY_ID"] = env[f'{value}_TAP_GA4_PROPERTY_ID']
-    return env
+def set_env_vars_ga4(goal,brand):
+        env = get_meltano_env()
+        #if goal == 'ecommerce':
+        if goal == 'sessions':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'   
+        env["BQ_DATASET"] = f"ga4_raw__{brand}"
+        env["BQ_METHOD"] = "gcs_stage"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
+        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
+        env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{brand}'       
+        developer_creds = Credentials(
+            None,
+            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
+            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
+        )
+        developer_creds.refresh(Request())
+        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
+        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        return env
 
 
 def set_env_vars_linkedin(label):
@@ -170,6 +175,7 @@ with models.DAG(
 
     brands = ['volvo']
     for brand in brands:
+        
         kube_google_ads = KubernetesPodOperator(
             name=f"{brand}-google-ads-to-bigquery",
             task_id=f"{brand}-google-ads_to_bigquery",
@@ -219,23 +225,22 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
+        goal_list = ['goal','session']
+        for goal in goal_list:
+            kube_ga4 = KubernetesPodOperator(
+                name=f"{brand}-ga4-to-bigquery",
+                task_id=f"{brand}-{goal}-ga4_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery", f"dbt-bigquery:ga4_{brand}_{goal}_models"],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_ga4(goal,brand),
+            )
 
-        kube_ga4 = KubernetesPodOperator(
-            name=f"{brand}-ga4-to-bigquery",
-            task_id=f"{brand}-ga4_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery", f"dbt-bigquery:ga4_{brand}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_ga4(brand),
-        )
-
-
-        kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
-
-
+            kube_dash_union >> kube_ga4
+        kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union
 # ---------------------------------------------------------------------------
 # DAG 2: Social / Display / Programmatic (schedule: 05:00 NZST daily)
 # Flow: [facebook, dv360, cm360, linkedin, ttd, hivestack] >> dash >> dash_search >> dash_union
