@@ -104,7 +104,7 @@ with models.DAG(
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
+        env["DBT_BIGQUERY_PROJECT"] = 'wendys-main'
         env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
         env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
         developer_creds = Credentials(
