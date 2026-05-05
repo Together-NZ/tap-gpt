@@ -205,7 +205,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_google_ads(),
-        base_container_name=f"meltano-uow-google-ads",
+        get_logs=True,
     )
     kube_dash = KubernetesPodOperator(
         email_on_failure=True,
@@ -392,7 +392,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_dv360(),
-        base_container_name=f"meltano-uow-dv360",
+        get_logs=True,
     )
     kube_cm360 = KubernetesPodOperator(
         email_on_failure=True,
