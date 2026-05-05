@@ -237,6 +237,7 @@ with models.DAG(
                     limits={"memory": "1000M", "cpu": "500m"},
                 ),
                 env_vars=set_env_vars_ga4(goal,brand),
+                get_logs=True,
             )
 
             kube_dash_union >> kube_ga4
