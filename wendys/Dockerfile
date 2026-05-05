@@ -53,7 +53,8 @@ RUN --mount=type=ssh \
     ssh-keyscan github.com >> /root/.ssh/known_hosts && \
     git clone git@github.com:Together-NZ/tap-hivestack.git /tmp/tap-hivestack && \
     git clone git@github.com:Together-NZ/tap-reddit-ads.git /tmp/tap-reddit-ads
-
+RUN curl -sSL -o dv360_standard.json https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_standard.json
+RUN curl -sSL -o dv360_youtube.json https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_youtube.json
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
 
