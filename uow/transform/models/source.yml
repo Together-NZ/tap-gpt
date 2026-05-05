@@ -12,6 +12,7 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
     tables:
       - name: goal
+      - name: session_goal
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'uowaikato-main') }}"
