@@ -243,10 +243,10 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    set_env_task_ga4 >> kube_ga4 
+
     set_env_task_google_ads >> kube_google_ads
     kube_tiktok >> task_tiktok_comparison
-    [kube_tiktok,kube_google_ads] >> kube_dash >> kube_dash_union >> kube_ga4
+    [kube_tiktok,kube_google_ads] >> kube_dash >> kube_dash_union 
 with models.DAG(
     dag_id="uowaikato-meltano-extraction-transformation-dbt",
     schedule_interval="0 4 * * *",
