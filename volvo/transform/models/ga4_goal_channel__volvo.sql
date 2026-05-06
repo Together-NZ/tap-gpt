@@ -1,4 +1,6 @@
-{{ config(
-    materialized='table',
-) }}
-{{ ga4.ga4_goal_channel(source_name='dash_union__volvo', table_name='dash_union__volvo', plan_code=env_var('PLAN_CODE_GA4', 'volvo'), ga4_goal_a_model='ga4_goal_a__volvo') }}
+{{
+    config(
+        materialized='table',
+    )
+}}
+{{ ga4.ga4_goal_channel_final(ga4_session_source_name='ga4_session_transformed__volvo', ga4_session_table_name='ga4_goal_channel__volvo_session', ga4_goal_source_name='ga4_goal_transformed__volvo', ga4_goal_table_name='ga4_goal_channel__volvo_goal') }}

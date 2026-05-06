@@ -7,6 +7,17 @@ sources:
       - name: goal
       - name: session_goal
 
+  - name: ga4_session_transformed__volvo
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__volvo') }}"
+    tables:
+      - name: ga4_goal_channel__volvo_session
+  - name: ga4_goal_transformed__volvo
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__volvo') }}"
+    tables:
+      - name: ga4_goal_channel__volvo_goal
+
   - name: dv360_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
     schema: "{{ env_var('REFERENCE_DV360_RAW_BIGQUERY_DATASET', 'dv360_raw__volvo') }}"

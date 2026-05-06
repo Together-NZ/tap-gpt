@@ -77,7 +77,12 @@ def set_env_vars_facebook(label):
     env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
     env["DBT_BIGQUERY_DATASET"] = f'facebook_transformed__{label}'
     return env
-
+def set_env_vars_ga4_final():
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = 'oauth'
+    env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
+    env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+    return env
 
 def set_env_vars_ga4(goal,brand):
         env = get_meltano_env()
@@ -225,7 +230,19 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
+        kube_ga4_final = KubernetesPodOperator(
+            name=f"{brand}-ga4-final-to-bigquery",
+            task_id=f"{brand}-ga4_final_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke","dbt-bigquery:ga4_volvo_final_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4_final(),
+        )
         goal_list = ['goal','session']
+        kube_ga4_list = []
         for goal in goal_list:
             kube_ga4 = KubernetesPodOperator(
                 name=f"{brand}-ga4-to-bigquery",
@@ -239,8 +256,9 @@ with models.DAG(
                 env_vars=set_env_vars_ga4(goal,brand),
                 get_logs=True,
             )
-
-            kube_dash_union >> kube_ga4
+            kube_ga4_list.append(kube_ga4)
+        for task in kube_ga4_list:
+            kube_dash_union >> task >> kube_ga4_final
         kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union
 # ---------------------------------------------------------------------------
 # DAG 2: Social / Display / Programmatic (schedule: 05:00 NZST daily)
