@@ -17,6 +17,7 @@ environments:
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           LINKEDIN_SUFFIX: dbt_test_linkedin
@@ -33,11 +34,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -118,27 +119,30 @@ plugins:
     variant: dbt-labs
     pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     commands:
-      hivestack_models:
-        args: run --select +hivestack
-        description: Run Hivestack model
+      cm360_models:
+        args: run --select  +cm360_direct_buy
+        description: Run CM360 models
+      dv360_models:
+        args: run --select +dv360_standard +dv360_youtube
+        description: Run DV360 models
       ttd_models:
         args: run --select +ttd_transformed
         description: Run TTD model
+      hivestack_models:
+        args: run --select +hivestack
+        description: Run Hivestack model
       tiktok_models:
         args: run --select +tiktok
         description: Run TikTok model
       facebook_models:
         args: run --select +facebook
         description: Run Facebook model
-      dv360_models:
-        args: run --select +dv360_standard +dv360_youtube
-        description: Run DV360 models
-      cm360_models:
-        args: run --select +cm360_seralized +cm360_direct_buy
-        description: Run CM360 models
-      ga4_models:
+      ga4_goal_models:
         args: run --select +ga4_goal_a +ga4_goal_channel
-        description: Run GA4 goal models
+        description: Run GA4 goal-level models
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+        description: Run GA4 session-level models
       dash_models:
         args: run --select +dash_table +dash_union
         description: Run dash_table and dash_union

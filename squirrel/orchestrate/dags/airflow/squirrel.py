@@ -66,13 +66,19 @@ with models.DAG(
     schedule_interval="30 13 * * *",
     default_args=default_args,
 ) as google_ads_dag:
-    def set_env_vars_ga4():
+    def set_env_vars_ga4(goal):
         env = get_meltano_env()
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        if goal == "session":
+            env["GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = "session_goal"
+        else:
+            env["GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = "goal"
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -83,7 +89,7 @@ with models.DAG(
         developer_creds.refresh(Request())
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         env["TAP_GA4_START_DATE"] = get_ga4_start_date()
-        return env   
+        return env
     def set_env_vars_dash():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -98,17 +104,38 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
         env["DBT_BIGQUERY_DATASET"] = 'tiktok_transformed'
         return env
-    kube_ga4 = KubernetesPodOperator(
-            name="squirrel-ga4-to-bigquery",
-            task_id="squirrel-ga4_to_bigquery",
+    kube_dash_union=KubernetesPodOperator(
+            name="squirrel-dash-union-to-bigquery",
+            task_id="squirrel-dash_union_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],
+            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
-            env_vars=set_env_vars_ga4(),
-    ) 
+            env_vars=set_env_vars_dash(),
+    )
+    ga4_goals = ["goal", "session"]
+    kube_ga4_tasks = []
+    for goal in ga4_goals:
+        kube_ga4_t = KubernetesPodOperator(
+            name=f"squirrel-{goal}-ga4-to-bigquery",
+            task_id=f"squirrel-{goal}-ga4_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-ga4",
+                "target-bigquery",
+                f"dbt-bigquery:ga4_{goal}_models",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(goal),
+        )
+        kube_ga4_tasks.append(kube_ga4_t)
     kube_tiktok=KubernetesPodOperator(
             name="squirrel-tiktok-to-bigquery",
             task_id="squirrel-tiktok_to_bigquery",
@@ -155,19 +182,11 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    kube_dash_union=KubernetesPodOperator(
-            name="squirrel-dash-union-to-bigquery",
-            task_id="squirrel-dash_union_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_dash(),
-    )
-    kube_tiktok>>task_tiktok_comparison
-    kube_tiktok>>kube_dash>>kube_dash_union>>kube_ga4
+
+    kube_tiktok >> task_tiktok_comparison
+    kube_tiktok >> kube_dash >> kube_dash_union
+    for kube_ga4_t in kube_ga4_tasks:
+        kube_dash_union >> kube_ga4_t
     
     
 with models.DAG(
@@ -328,6 +347,6 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    kube_facebook>>task_facebook_comparison
-
-    [kube_facebook,kube_ttd,kube_hivestack,kube_cm360,kube_dv360]>>kube_dash>>kube_dash_union
+    kube_facebook >> task_facebook_comparison
+    kube_cm360 >> kube_dv360 >> kube_ttd
+    [kube_facebook, kube_hivestack, kube_ttd] >> kube_dash >> kube_dash_union
