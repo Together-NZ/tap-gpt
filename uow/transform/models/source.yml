@@ -126,6 +126,17 @@ sources:
     tables:
       - name: cm360_report_stream
 
+  - name: ga4_session_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'uowaikato-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_session
+  - name: ga4_goal_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'uowaikato-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+
 
 models:
 
