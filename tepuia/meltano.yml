@@ -116,6 +116,8 @@ plugins:
       ga4_goal_models:
         args: run --select +ga4_goal_a_goal +ga4_goal_channel_goal
         description: Run GA4 goal models
+      ga4_final_models:
+        args: run --select ga4_goal_channel
       ga4_ecommerce_models:
         args: run --select +ga4_goal_ecommerce
         description: Run GA4 ecommerce goal model
