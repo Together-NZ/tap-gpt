@@ -165,9 +165,11 @@ plugins:
       facebook_polestar_models:
         args: run --select +facebook__polestar
       ga4_volvo_goal_models:
-        args: run --select ga4_goal_a__volvo ga4_goal_channel__volvo
+        args: run --select ga4_goal_a__volvo ga4_goal_channel__volvo_goal
       ga4_volvo_session_models:
         args: run --select ga4_goal_a__volvo_session ga4_goal_channel__volvo_session
+      ga4_volvo_final_models:
+        args: run --select ga4_goal_channel__volvo
       linkedin_volvo_models:
         args: run --select +linkedin__volvo
       google_ads_volvo_models:

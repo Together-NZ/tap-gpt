@@ -164,10 +164,12 @@ plugins:
         args: run --select +snapchat
         description: Run the Snapchat ads model
       ga4_goal_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
       ga4_session_models:
         args: run --select +ga4_goal_a_session +ga4_goal_channel_session
         description: Run the Google Analytics models
+      ga4_final_models:
+        args: run --select ga4_goal_channel
       google_ads_models:
         args: run --select +google_ads
         description: Run the Google Ads model

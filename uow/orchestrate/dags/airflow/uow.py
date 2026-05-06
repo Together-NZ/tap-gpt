@@ -151,6 +151,12 @@ with models.DAG(
         task_id="set_env_google_ads",
         python_callable=set_env_vars_google_ads,
     )
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'uowaikato-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        return env
     kube_dash_union = KubernetesPodOperator(
         email_on_failure=True,
         name="uow-dash-union-to-bigquery",
@@ -164,7 +170,19 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
+    kube_ga4_final = KubernetesPodOperator(
+        name="uow-ga4-final-to-bigquery",
+        task_id="uow-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+    )
     goal_list = ['goal','session']
+    kube_ga4_list = []
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
             email_on_failure=True,
@@ -172,14 +190,16 @@ with models.DAG(
             task_id=f"uow-ga4_to_bigquery_{goal}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_{goal}_models"],
+            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{goal}_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_ga4(goal),
             get_logs=True
         )
-        kube_dash_union >> kube_ga4
+        kube_ga4_list.append(kube_ga4)
+    for task in kube_ga4_list:
+        kube_dash_union >> task >> kube_ga4_final
     kube_tiktok = KubernetesPodOperator(
         email_on_failure=True,
         name="uow-tiktok-to-bigquery",
