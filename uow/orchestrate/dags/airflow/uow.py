@@ -198,6 +198,7 @@ with models.DAG(
             get_logs=True
         )
         kube_ga4_list.append(kube_ga4)
+        #
     for task in kube_ga4_list:
         kube_dash_union >> task >> kube_ga4_final
     kube_tiktok = KubernetesPodOperator(
