@@ -109,6 +109,23 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'tepuia-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'tepuia-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        return env
+    kube_ga4_final = KubernetesPodOperator(
+        name="tepuia-ga4-final-to-bigquery",
+        task_id="tepuia-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+    )
     def set_env_vars_ga4(goal):
         env = get_meltano_env()
         env["BQ_DATASET"] = "ga4_raw"
@@ -189,6 +206,7 @@ with models.DAG(
     )
     ga4_task = {}
     ga4_list = ['ecommerce','goal','session']
+    kube_ga4_list = []
     for goal in ga4_list:
         kube_ga4 = KubernetesPodOperator(
             name=f"tepuia-{goal}-ga4-to-bigquery",
@@ -203,7 +221,9 @@ with models.DAG(
             #base_container_name=f"meltano-tepuia-ga4",
             get_logs=True
         )
-        kube_dash_union >> kube_ga4
+        kube_ga4_list.append(kube_ga4)
+    for task in kube_ga4_list:
+        kube_dash_union >> task >> kube_ga4_final
 
     kube_dash = KubernetesPodOperator(
         name="tepuia-dash-to-bigquery",
