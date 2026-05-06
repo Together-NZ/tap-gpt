@@ -172,7 +172,7 @@ with models.DAG(
             task_id=f"uow-ga4_to_bigquery_{goal}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_{goal}_models"],
+            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{goal}_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
