@@ -284,6 +284,13 @@ with models.DAG(
         env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         return env
+    
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        return env
 
 
  
@@ -313,6 +320,7 @@ with models.DAG(
             env_vars=set_env_vars_dash(),
         )
     goal_list = ['session','goal']
+    kube_ga4_list = []
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
                 task_id=f"zeekr-ga4_{goal}_to_bigquery",
@@ -323,8 +331,21 @@ with models.DAG(
                     limits={"memory": "1000M", "cpu": "500m"},
                 ),
                 env_vars=set_env_vars_ga4(goal),
-            )       
-        kube_dash_union >> kube_ga4
+            ) 
+        kube_ga4_list.append(kube_ga4)     
+    kube_ga4_final = KubernetesPodOperator(
+        name="zeekr-ga4-final-to-bigquery",
+        task_id="zeekr-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+    )
+    for task in kube_ga4_list:
+        kube_dash_union >> task >> kube_ga4_final
 
 
    
