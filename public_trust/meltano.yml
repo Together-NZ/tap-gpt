@@ -4,6 +4,27 @@ project_id: 0cb8ff00-386d-41c1-8c5e-7ec1c34af65b
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          TIKTOK_SUFFIX: dbt_test_tiktok
+          REPORT_NAME: amp_report
 - name: prod
 #state_backend:
 #  uri: gs://public-trust-main-meltano-state-staging
@@ -13,11 +34,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -30,6 +51,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
@@ -40,6 +62,22 @@ plugins:
       end_date:
       manual: false
       advertiser_id: ejafown
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '7986485995'
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -68,7 +106,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
       outbrain_models:
         args: run --select +outbrain
@@ -76,9 +114,6 @@ plugins:
       tiktok_models:
         args: run --select +tiktok
         description: Run the TikTok ads model
-      google_ads_models:
-        args: run --select +google_ads_dv
-        description: Run the Google Ads model
       facebook_models:
         args: run --select +facebook
         description: Run the Facebook ads model
@@ -91,16 +126,21 @@ plugins:
         args: run --select +ttd
         description: Run the TTD ads model
       cm360_models:
-        args: run --select +cm360_seralized +cm360_direct_buy
+        args: run --select +cm360_direct_buy
         description: Run the CM360 ads model
       linkedin_models:
         args: run --select +linkedin
         description: Run the Linkedin ads model
-      ga4_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
         description: Run the GA4 model
-      google_ads_search_models:
-        args: run --select +google_ads_search +google_ads_demand
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+        description: Run the GA4 goal model
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+      google_ads_models:
+        args: run --select +google_ads_search +google_ads_demand +google_ads_demand_2
         description: Run the Google Ads model 
   files:
   - name: files-airflow

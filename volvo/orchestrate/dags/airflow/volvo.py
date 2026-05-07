@@ -81,7 +81,7 @@ def set_env_vars_ga4_final():
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = 'oauth'
     env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
-    env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+    env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed__volvo'
     return env
 
 def set_env_vars_ga4(goal,brand):

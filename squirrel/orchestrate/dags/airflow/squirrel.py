@@ -66,6 +66,12 @@ with models.DAG(
     schedule_interval="30 13 * * *",
     default_args=default_args,
 ) as google_ads_dag:
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        return env
     def set_env_vars_ga4(goal):
         env = get_meltano_env()
         env["BQ_DATASET"] = "ga4_raw"
@@ -115,6 +121,18 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
     )
+    kube_ga4_final = KubernetesPodOperator(
+        name="squirrel-ga4-final-to-bigquery",
+        task_id="squirrel-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+    )
+    kube_ga4_list = []
     ga4_goals = ["goal", "session"]
     kube_ga4_tasks = []
     for goal in ga4_goals:
@@ -135,7 +153,9 @@ with models.DAG(
             ),
             env_vars=set_env_vars_ga4(goal),
         )
-        kube_ga4_tasks.append(kube_ga4_t)
+        kube_ga4_list.append(kube_ga4_t)
+    for task in kube_ga4_list:
+        kube_dash_union >> task >> kube_ga4_final
     kube_tiktok=KubernetesPodOperator(
             name="squirrel-tiktok-to-bigquery",
             task_id="squirrel-tiktok_to_bigquery",
@@ -185,8 +205,7 @@ with models.DAG(
 
     kube_tiktok >> task_tiktok_comparison
     kube_tiktok >> kube_dash >> kube_dash_union
-    for kube_ga4_t in kube_ga4_tasks:
-        kube_dash_union >> kube_ga4_t
+
     
     
 with models.DAG(
