@@ -85,7 +85,7 @@ sources:
 
   - name: cm360_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'polestar-main') }}"
-    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_transformed') }}"
     tables:
       - name: cm360_direct_buy
 
