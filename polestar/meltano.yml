@@ -37,11 +37,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: report.json
+      reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
     pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
@@ -113,10 +113,14 @@ plugins:
     commands:
       linkedin_models:
         args: run --select +linkedin
-      ga4_models:
-        args: run --select ga4_goal_a ga4_goal_channel
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
       cm360_models:
-        args: run --select +cm360_seralized +cm360_direct_buy
+        args: run --select  +cm360_direct_buy
         description: Run the CM360 ads model
       google_ads_models:
         args: run --select +google_ads_search +google_ads_demand
