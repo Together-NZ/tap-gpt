@@ -9,6 +9,7 @@ from copy import deepcopy
 from airflow.config_templates.airflow_local_settings import DEFAULT_LOGGING_CONFIG
 import logging
 from google.oauth2.credentials import Credentials
+from comparison_package import ComparisonTrigger
 from google.auth.transport.requests import Request
 from datetime import timedelta,datetime, timezone
 import datetime
@@ -46,29 +47,15 @@ def get_meltano_env():
     meltano_env["BQ_METHOD"] = "batch_job"
 
     return deepcopy(meltano_env)
-def get_ga4_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-def get_ttd_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-with models.DAG(
-    dag_id="public-trust-meltano-extraction-transformation-dbt",
-    schedule_interval="0 3 * * *",
-    default_args=default_args,
-) as dag:
 
-    def set_env_vars_google_ads_search():
+def set_env_vars_google_ads_search():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
         env["DBT_BIGQUERY_DATASET"] = 'google_ads_search_transformed'
         return env
-    def set_env_vars_google_ads_dv():
-        env = get_meltano_env()
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
-        env["DBT_BIGQUERY_DATASET"] = 'google_ads_dv_transformed'
-        return env
-    def set_env_vars_facebook():
+
+def set_env_vars_facebook():
         env = get_meltano_env()
         env["BQ_DATASET"] = "facebook_raw"
         env["BQ_METHOD"] = "batch_job"
@@ -76,14 +63,14 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
         env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
         return env
-    def set_env_vars_cm360():
+def set_env_vars_cm360():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
         env["DBT_BIGQUERY_DATASET"] = 'cm360_transformed'
         return env
 
-    def set_env_vars_ttd():
+def set_env_vars_ttd():
         env = get_meltano_env()
         env["BQ_DATASET"] = "ttd_raw"
         env["BQ_METHOD"] = "batch_job"
@@ -93,25 +80,37 @@ with models.DAG(
         env["TAP_TTD_START_DATE"] = get_ttd_start_date()
         return env
 
-    def set_env_vars_dash():
+def set_env_vars_dash():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
-    def ser_env_vars_dash_search():
+def ser_env_vars_dash_search():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
         env["DBT_BIGQUERY_DATASET"] = 'dash_table_search'
         return env
-    def set_env_vars_ga4():
+def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        return env  
+def set_env_vars_ga4(goal):
         env = get_meltano_env()
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        if goal == "session":
+            env["GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = "session_goal"
+        else:
+            env["GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = "goal"
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -123,74 +122,130 @@ with models.DAG(
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         return env
-    set_env_task_cm360 = PythonOperator(
-        task_id="set_env_cm360",
-        python_callable=set_env_vars_cm360,
-    )
-    set_env_task_ga4 = PythonOperator(
-        task_id="set_env_ga4",
-        python_callable=set_env_vars_ga4,
-    )
-    set_env_task_facebook = PythonOperator(
-        task_id="set_env_facebook",
-        python_callable=set_env_vars_facebook,
-    )
-    set_env_task_google_ads_dv = PythonOperator(
-        task_id="set_env_google_ads_dv",
-        python_callable=set_env_vars_google_ads_dv,
-    )
-    set_env_task_google_ads_search = PythonOperator(
-        task_id="set_env_google_ads_search",
-        python_callable=set_env_vars_google_ads_search,
-    )
-    set_env_task_ttd = PythonOperator(
-        task_id="set_env_ttd",
-        python_callable=set_env_vars_ttd,
-    )
-    kube_google_ads_dv = KubernetesPodOperator(
-        name="public-trust-google-ads-dv-to-bigquery",
-        task_id="public-trust-google-ads-dv_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery","run","--select","google_ads_dv"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_google_ads_dv(),
-    )
+def set_env_vars_dv360():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
+        env["DBT_BIGQUERY_DATASET"] = 'dv360_transformed'
+        return env
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+with models.DAG(
+    dag_id="public-trust-meltano-google-ads",
+    schedule_interval="30 13 * * *",
+    default_args=default_args,
+) as dag:
     kube_google_ads_search = KubernetesPodOperator(
         name="public-trust-google-ads-search-to-bigquery",
         task_id="public-trust-google-ads-search_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery","run","--select","google_ads_search"],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:google_ads_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_google_ads_search(),
     )
+    goal_list = ['goal','session']
+    kube_ga4_list = []
+    for goal in goal_list:
+        kube_ga4 = KubernetesPodOperator(
+            name=f"public-trust-ga4-{goal}-to-bigquery",
+            task_id=f"public-trust-ga4_{goal}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{goal}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4(goal),
+    )
+    kube_ga4_list.append(kube_ga4)
+    kube_ga4_final = KubernetesPodOperator(
+        name="public-trust-ga4-final-to-bigquery",
+        task_id="public-trust-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+    )
+    for task in kube_ga4_list:
+        kube_google_ads_search >> task >> kube_ga4_final
+    kube_dash_union = KubernetesPodOperator(
+        name="public-trust-dash-union-to-bigquery",
+        task_id="public-trust-dash_union_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_union"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+    )
+    kube_dash = KubernetesPodOperator(
+        name="public-trust-dash-to-bigquery",
+        task_id="public-trust-dash_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        trigger_rule="all_done",
+        #base_container_name=f"meltano-barfoot-dash",
+        )
     kube_dash_search = KubernetesPodOperator(
         name="public-trust-dash-search-to-bigquery",
         task_id="public-trust-dash-search_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery","run","--select","dash_table_search"],
+        arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","dash_table_search"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=ser_env_vars_dash_search(),
     )
-    kube_ga4 = KubernetesPodOperator(
-        name="public-trust-ga4-to-bigquery",
-        task_id="public-trust-ga4_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_ga4(),
+    kube_google_ads_search >> kube_dash >> kube_dash_search >> kube_dash_union
+    for task in kube_ga4_list:
+        kube_dash_union >> task >> kube_ga4_final
+
+with models.DAG(
+    dag_id="public-trust-meltano-extraction-transformation-dbt",
+    schedule_interval="0 3 * * *",
+    default_args=default_args,
+) as dag:
+    env = get_meltano_env()
+
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="public-trust-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_public_trust_main",
+        project_id=env["PROJECT_ID"]
     )
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
+
     kube_cm360 = KubernetesPodOperator(
         name="public-trust-cm360-transformation",
         task_id = "public-trust-cm360_transformation",
@@ -251,14 +306,18 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         #base_container_name=f"meltano-barfoot-dash",
         )
-
-    set_env_task_facebook >> kube_facebook
-    set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
-    set_env_task_google_ads_search >> kube_google_ads_search
-    set_env_task_ga4 >> kube_ga4
-    set_env_task_cm360 >> kube_cm360
-    set_env_task_google_ads_dv >> kube_google_ads_dv
-    [kube_google_ads_search] >> kube_dash_search
-    
-    [kube_facebook,kube_ttd,kube_cm360,kube_google_ads_dv] >> kube_dash
-    kube_dash >> kube_dash_search >> kube_dash_union
+    kube_dv360 = KubernetesPodOperator(
+        name="public-trust-dv360-to-bigquery",
+        task_id="public-trust-dv360_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery","dbt-bigquery:dv360_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dv360(),
+    )
+    kube_cm360 >> kube_dv360
+    kube_cm360 >> kube_ttd
+    kube_facebook >> task_facebook_comparison
+    [kube_dv360,kube_ttd,kube_facebook] >> kube_dash >> kube_dash_union

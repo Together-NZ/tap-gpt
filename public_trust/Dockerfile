@@ -31,6 +31,16 @@ RUN pip install \
     google-cloud-storage \
     pandas \
     pyarrow
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh \
+    && ssh-keyscan github.com >> /root/.ssh/known_hosts \
+    && ssh -T git@github.com || true \
+    && meltano invoke dbt-bigquery deps
+
+RUN curl -fsSL -o dv360_standard.json \
+      https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_standard.json \
+    && curl -fsSL -o dv360_youtube.json \
+      https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_youtube.json
 
 # Entrypoint for container
 ENTRYPOINT ["meltano"]

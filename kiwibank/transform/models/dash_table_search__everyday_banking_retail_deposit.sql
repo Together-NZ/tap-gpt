@@ -17,8 +17,7 @@ CASE WHEN
 END as media_format,
 CASE WHEN lower(publisher) = 'demand gen' THEN 'Demand Gen'
 ELSE 'Paid Search' END as channel,
-CASE WHEN 'CHOOSE' IN (select distinct funnel from `kiwibank-main.dash_table__everyday_banking_retail_deposit.dash_table__everyday_banking_retail_deposit`) then 'CHOOSE'
-ELSE 'OTHER' END as funnel,
+'Choose' as funnel,
 NULL AS creative_name,
 NULL AS ad_format, 
 NULL AS ad_format_detail,
