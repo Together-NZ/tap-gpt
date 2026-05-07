@@ -138,8 +138,10 @@ plugins:
         args: run --select +facebook
         description: Run Facebook model
       ga4_goal_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
         description: Run GA4 goal-level models
+      ga4_final_models:
+        args: run --select ga4_goal_channel
       ga4_session_models:
         args: run --select +ga4_goal_a_session +ga4_goal_channel_session
         description: Run GA4 session-level models
