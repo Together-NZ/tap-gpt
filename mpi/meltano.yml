@@ -11,6 +11,7 @@ environments:
         env:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
+          DBT_BIGQUERY_AUTH_METHOD: oauth
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin

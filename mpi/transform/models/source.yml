@@ -90,7 +90,7 @@ sources:
 
   - name: ttd_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'mpi-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_RAW_BIGQUERY_DATASET', 'ttd_raw') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
     tables:
       - name: standard_streams
 
