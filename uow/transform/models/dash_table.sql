@@ -62,7 +62,92 @@ duplicate_raw AS (
 ),
 deduplicate_raw AS (
        select * from duplicate_raw where row_number = 1
-)
+),
+old_data_process AS (
+       SELECT * FROM campaign_base
+       WHERE date < '2026-04-01'
+),
+new_data_process AS (
+       SELECT * FROM campaign_base
+       WHERE date >= '2026-04-01'
+),
+new_creative AS (
+SELECT camb.* EXCEPT(campaign_name_raw),
+0 as metrics_value_per_conversion,
+NULL AS segments_conversion_action,
+NULL AS segments_conversion_action_category,
+NULL AS segments_conversion_action_name,
+NULL AS segments_conversion_attribution_event_type,
+NULL AS segments_day_of_week,
+NULL AS segments_month,
+NULL AS segments_week,
+NULL AS segments_quarter,
+NULL AS segments_year,
+NULL AS bidding_strategy_name,
+NULL AS campaign_advertising_channel_sub_type,
+NULL AS campaign_advertising_channel_type,
+NULL AS campaign_bidding_strategy,
+NULL AS campaign_bidding_strategy_type,
+NULL AS campaign_budget_amount_micros,
+NULL AS campaign_budget_explicitly_shared,
+NULL AS campaign_budget_has_recommended_budget,
+NULL AS campaign_budget_period,
+NULL AS campaign_budget_recommended_budget_amount_micros,
+NULL AS campaign_budget_total_amount_micros,
+NULL AS campaign_campaign_budget,
+NULL AS campaign_end_date,
+NULL AS campaign_experiment_type,
+NULL AS campaign_manual_cpc_enhanced_cpc_enabled,
+NULL AS campaign_maximize_conversion_value_target_roas,
+NULL AS campaign_percent_cpc_enhanced_cpc_enabled,
+NULL AS campaign_serving_status,
+NULL AS campaign_start_date,
+NULL AS campaign_status,
+NULL AS campaign_tracking_url_template,
+NULL AS campaign_url_custom_parameters,
+NULL AS campaign_id,
+NULL AS customer_id,
+NULL AS campaign_base_campaign,
+NULL AS metrics_conversions,
+NULL AS metrics_conversions_value,
+NULL AS metrics_interaction_event_types,
+NULL AS metrics_interactions,
+NULL AS metrics_view_through_conversions,
+NULL AS segments_ad_network_type,
+NULL AS segments_device,
+NULL AS segments_slot,
+NULL AS _LATEST_DATE,
+NULL AS _DATA_DATE,
+trim(CASE WHEN 
+       lower(camb.campaign_name_raw) = lower(deduplicate_raw.campaign_name_raw) 
+       
+       THEN deduplicate_raw.campaign_name_raw
+       ELSE camb.campaign_name_raw
+END )AS campaign_name_selection,
+CASE WHEN 
+       EXISTS(SELECT 1 FROM UNNEST(SPLIT(creative_name,'_'))  as a
+       WHERE lower(a) in UNNEST(ARRAY['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
+       THEN  (SELECT X FROM UNNEST(SPLIT(creative_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
+       LIMIT 1)
+       WHEN  EXISTS(SELECT 1 FROM UNNEST(SPLIT(campaign_name,'_'))  as a
+       WHERE lower(a) in UNNEST(ARRAY['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
+       THEN  (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
+       LIMIT 1)
+       else 'Other'
+END as media_format,
+CASE WHEN 
+       EXISTS(SELECT 1 FROM UNNEST(SPLIT(campaign_name,'_')) as a
+       WHERE LOWER(a) IN UNNEST(ARRAY['consideration','awareness','intent']))
+       THEN (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE LOWER(X) IN UNNEST(['consideration','awareness','intent'])
+       LIMIT 1)
+       else 'Other'
+END AS funnel,
+CASE WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) > 1
+THEN SPLIT(creative_name, '_')[SAFE_OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_')) - 1)]
+ELSE creative_name END AS creative_descr
+FROM new_data_process camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
+),
+old_creative AS (
 SELECT camb.* EXCEPT(campaign_name_raw),
 0 as metrics_value_per_conversion,
 NULL AS segments_conversion_action,
@@ -393,4 +478,11 @@ CASE WHEN
          ELSE creative_name
        END
 END AS creative_descr
- FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
+ FROM old_data_process camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
+),
+result as (
+(SELECT * FROM new_creative)
+UNION ALL 
+(SELECT * FROM old_creative)
+)
+SELECT * FROM result

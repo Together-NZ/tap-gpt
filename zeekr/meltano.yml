@@ -141,4 +141,4 @@ plugins:
   - name: files-airflow
     variant: meltano
     pip_url: git+https://github.com/meltano/files-airflow.git
-#
+#update linkedin
