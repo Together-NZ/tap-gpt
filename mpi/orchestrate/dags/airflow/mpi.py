@@ -15,6 +15,7 @@ from google.auth.transport.requests import Request
 import json
 import time
 from datetime import timedelta,datetime, timezone
+from comparison_package import ComparisonTrigger
 import datetime
 from google.cloud import secretmanager
 from google.cloud import storage 
@@ -55,6 +56,10 @@ def get_meltano_env():
 
     return deepcopy(meltano_env)
 def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
+
+def get_ttd_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="mpi-meltano-extraction-transformation-dbt",
@@ -108,19 +113,33 @@ with models.DAG(
             
         
             )
+    env = get_meltano_env()
+    comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
-    kube_facebook=KubernetesPodOperator(
-            name="mpi-facebook-to-bigquery",
-            task_id="mpi-facebook_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run","tap-facebook","target-bigquery","dbt-bigquery:facebook_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_facebook(),
-            get_logs=True
-            )
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+    
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="mpi-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_mpi_main",
+        project_id=env["PROJECT_ID"]
+    )
+    
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    
     kube_cm360=KubernetesPodOperator(
             name="mpi-cm360-to-bigquery",
             task_id="mpi-cm360_to_bigquery",
@@ -156,7 +175,48 @@ with models.DAG(
             env_vars=set_env_vars_dv360(),
             get_logs=True
     )
-    [kube_facebook,kube_cm360,kube_dv360] >> kube_dash >> kube_dash_union
+
+    kube_facebook=KubernetesPodOperator(
+            name="mpi-facebook-to-bigquery",
+            task_id="mpi-facebook_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run","tap-facebook","target-bigquery","dbt-bigquery:facebook_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_facebook(),
+            get_logs=True
+    )
+    kube_facebook >> task_facebook_comparison
+    def set_env_vars_ttd():
+        env = get_meltano_env()
+        env["BQ_DATASET"] = "ttd_raw"
+        env["BQ_METHOD"] = "batch_job"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_AUTH_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'mpi-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+        env["TAP_TTD_START_DATE"] = get_ttd_start_date()
+        return env
+
+    kube_ttd = KubernetesPodOperator(
+            name="mpi-ttd-to-bigquery",
+            task_id="mpi-ttd_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-ttd", "target-bigquery", "dbt-bigquery:ttd_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ttd(),
+            get_logs=True,
+            
+    )
+
+    kube_cm360 >> kube_dv360 
+    kube_cm360 >> kube_ttd
+    [kube_facebook, kube_ttd,kube_dv360] >> kube_dash >> kube_dash_union
     
 with models.DAG(
     dag_id="mpi-meltano-google_ads",
@@ -193,15 +253,22 @@ with models.DAG(
         env["DBT_BIGQUERY_DATASET"] = 'dash_table_search'
         return env
   
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_AUTH_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'mpi-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        return env
+
     def set_env_vars_ga4(goal):
         env = get_meltano_env()
-        #if goal == 'ecommerce':
-        if goal == 'sessions':
-            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
-            env["GA4_GOAL"] = 'session_goal'
+        if goal == "session":
+            env["GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = "session_goal"
         else:
-            env["TAP_GA4_REPORTS"] = "./report.json"
-            env["GA4_GOAL"] = 'goal'   
+            env["GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = "goal"
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -283,34 +350,44 @@ with models.DAG(
         
 
   
-    goal_list = ['sessions','goal']
-    for label in goal_list:
-        
-        kube_ga4 = KubernetesPodOperator(
-                name=f"mpi-ga4-to-bigquery-{label}",
-                task_id=f"mpi-ga4_to_bigquery_{label}",
-                namespace="composer-user-workloads",
-                image=IMAGE,
-                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery",f"dbt-bigquery:ga4_{label}_models"],
-                container_resources=k8s_models.V1ResourceRequirements(
-                    limits={"memory": "1000M", "cpu": "500m"},
-                ),
-                env_vars=set_env_vars_ga4(goal=label),
-            ) 
-        kube_dash_union >> kube_ga4
-    kube_ga4_final=KubernetesPodOperator(
-            name="mpi-ga4-to-bigquery-final",
-            task_id="mpi-ga4_to_bigquery_final",
+    kube_ga4_final = KubernetesPodOperator(
+            name="mpi-ga4-final-to-bigquery",
+            task_id="mpi-ga4_final_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery","run","--select","ga4_goal_channel"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_final_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
-            env_vars=set_env_vars_ga4(goal=label),
-            get_logs=True
+            env_vars=set_env_vars_ga4_final(),
+            get_logs=True,
         )
-    kube_ga4 >> kube_ga4_final
+
+    kube_ga4_list = []
+    ga4_goals = ["goal", "session"]
+    for goal in ga4_goals:
+        kube_ga4_t = KubernetesPodOperator(
+                name=f"mpi-{goal}-ga4-to-bigquery",
+                task_id=f"mpi-{goal}-ga4_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-ga4",
+                    "target-bigquery",
+                    f"dbt-bigquery:ga4_{goal}_models",
+                ],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_ga4(goal=goal),
+                get_logs=True,
+            )
+        kube_ga4_list.append(kube_ga4_t)
+
+    for task in kube_ga4_list:
+        kube_dash_union >> task >> kube_ga4_final
 
     [kube_google_ads_search] >> kube_dash
     kube_dash>>kube_dash_search >> kube_dash_union 

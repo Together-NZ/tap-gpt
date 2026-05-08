@@ -18,12 +18,12 @@ plugins:
       start_date: ${START_DATE}
       end_date:
       manual: false
-      advertiser_id: rg2hcax
+      advertiser_id: 1msupzo
   - name: tap-ga4
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ${TAP_GA4_REPORTS}
+      reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
@@ -40,6 +40,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
 
   - name: tap-dv360
     namespace: tap-dv360
@@ -87,25 +88,37 @@ plugins:
   - name: files-airflow
     variant: meltano
     pip_url: git+https://github.com/meltano/files-airflow.git 
-  utilities:
+  transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core dbt-bigquery meltano-dbt-ext~=0.3.0 setuptools<82.0   
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     config:
       project: mpi-main
       location: australia-southeast1
       method: oauth
     commands:
+      cm360_models:
+        args: run --select +cm360_direct_buy
+        description: Run CM360 models
       dv360_models:
         args: run --select +dv360_standard +dv360_youtube
-      ga4_sessions_models:
-        args: run --select ga4_goal_a_session ga4_goal_channel_session
-      ga4_goal_models:
-        args: run --select ga4_goal_a ga4_goal_channel_goal
-      cm360_models:
-        args: run --select cm360_direct_buy
+        description: Run DV360 models
+      ttd_models:
+        args: run --select +ttd_transformed
+        description: Run TTD model
       facebook_models:
-        args: run --select facebook
+        args: run --select +facebook
+        description: Run Facebook model
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+        description: Run GA4 goal-level models (tap streams goal → ga4_raw.goal)
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+        description: Union GA4 goal + session channel models via ga4 package macro
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+        description: Run GA4 session-level models (tap streams session_goal → ga4_raw.session_goal)
       google_ads_models:
         args: run --select google_ads_search google_ads_demand
+        description: Run Google Ads models
     

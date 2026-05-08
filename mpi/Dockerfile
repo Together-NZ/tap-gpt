@@ -47,6 +47,13 @@ RUN for v in /project/.meltano/*/*/venv/bin/python; do \
 "$v" -m ensurepip --upgrade || true; \
 "$v" -m pip install -U "setuptools<81" || true; \
 done
+
+
+RUN curl -fsSL -o dv360_standard.json \
+      https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_standard.json \
+    && curl -fsSL -o dv360_youtube.json \
+      https://raw.githubusercontent.com/Together-NZ/Impact-CI-DV360_models/main/dv360_youtube.json
+
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
 

@@ -3,6 +3,10 @@
 ) }}
 WITH dash_table AS (
 
+    {{ dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd_transformed') }}
+
+    UNION ALL
+
     SELECT media_cost, impressions, clicks, creative_name, audience_name, ad_format, ad_format_detail, video_completion,video_25_completion,video_50_completion,video_75_completion, video_25_completion as video_views,
            campaign_name, publisher, campaign_descr, creative_descr, date(date) as date
     FROM `mpi-main.dv360_transformed.dv360_standard`
