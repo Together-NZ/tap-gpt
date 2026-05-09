@@ -124,7 +124,9 @@ def set_env_vars_ga4(goal):
         return env
 def set_env_vars_dv360():
         env = get_meltano_env()
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_AUTH_METHOD"] = 'oauth'
+        env["BQ_DATASET"] = "dv360_raw"
+        env["BQ_METHOD"] = "batch_job"
         env["DBT_BIGQUERY_PROJECT"] = 'public-trust-main'
         env["DBT_BIGQUERY_DATASET"] = 'dv360_transformed'
         return env
