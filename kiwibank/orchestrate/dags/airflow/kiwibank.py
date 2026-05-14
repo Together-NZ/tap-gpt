@@ -257,6 +257,52 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    comparison_trigger_dv360 = ComparisonTrigger(
+        project_name="kiwibank-main",
+        destination_table="dv360_transformed",
+        table_name="dv360_standard",
+        source_name="dv360_standard",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_kiwibank_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def dv360_comparison_standard_check(**context):
+        result = comparison_trigger_dv360.compare_data()
+        if not result:
+            raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+        return result
+    
+    task_dv360_comparison_standard = PythonOperator(
+        task_id="task_dv360_comparison_standard",
+        python_callable=dv360_comparison_standard_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    comparison_trigger_dv360_youtube = ComparisonTrigger(
+        project_name="kiwibank-main",
+        destination_table="dv360_transformed",
+        table_name="dv360_youtube",
+        source_name="dv360_youtube",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_kiwibank_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def dv360_comparison_youtube_check(**context):
+        result = comparison_trigger_dv360_youtube.compare_data()
+        if not result:
+            raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+        return result
+    
+    task_dv360_comparison_youtube = PythonOperator(
+        task_id="task_dv360_comparison_youtube",
+        python_callable=dv360_comparison_youtube_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
+    
     kube_linkedin >> task_linkedin_comparison
     kube_dv360 = KubernetesPodOperator(
         name="kb-dv360-to-bq",
@@ -270,6 +316,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_dv360(),
     )
+    kube_dv360 >>[task_dv360_comparison_standard,task_dv360_comparison_youtube]
 
     kube_hivestack = KubernetesPodOperator(
         name="kb-hivestack-to-bq",
