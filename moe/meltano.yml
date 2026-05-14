@@ -114,11 +114,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -207,10 +207,18 @@ plugins:
         args: run --select +tiktok
       ttd_models:
         args: run --select +ttd_transformed
-      ga4_career_models:
-        args: run --select ga4_goal_a__career ga4_goal_channel__career
-      ga4_education_models:
-        args: run --select ga4_goal_a__education ga4_goal_channel__education
+      ga4_career_goal_models:
+        args: run --select ga4_goal_a__career ga4_goal_channel__career_goal
+      ga4_career_session_models:
+        args: run --select ga4_goal_a__career_session ga4_goal_channel__career_session
+      ga4_career_final_models:
+        args: run --select ga4_goal_channel__career
+      ga4_education_goal_models:
+        args: run --select ga4_goal_a__education ga4_goal_channel__education_goal
+      ga4_education_session_models:
+        args: run --select ga4_goal_a__education_session ga4_goal_channel__education_session
+      ga4_education_final_models:
+        args: run --select ga4_goal_channel__education
       hivestack_models:
         args: run --select +hivestack
       reddit_models:

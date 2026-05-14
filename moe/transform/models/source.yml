@@ -5,12 +5,14 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__career') }}"
     tables:
       - name: goal
+      - name: session_goal
 
   - name: ga4_raw__education
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__education') }}"
     tables:
       - name: goal
+      - name: session_goal
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
@@ -145,7 +147,26 @@ sources:
     tables:
       - name: cm360_direct_buy
 
-
+  - name: ga4_session_transformed__career
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__career') }}"
+    tables:
+      - name: ga4_goal_channel__career_session
+  - name: ga4_goal_transformed__career
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__career') }}"
+    tables:
+      - name: ga4_goal_channel__career_goal
+  - name: ga4_session_transformed__education
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__education') }}"
+    tables:
+      - name: ga4_goal_channel__education_session
+  - name: ga4_goal_transformed__education
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'moe-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__education') }}"
+    tables:
+      - name: ga4_goal_channel__education_goal
 
 models:
   - name: reddit
