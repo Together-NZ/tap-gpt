@@ -548,10 +548,38 @@ with models.DAG(
         trigger_rule="all_done",
     )
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
-        if not result:
-            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
-        return result
+        ti = context["ti"]
+        dag_id = context["dag"].dag_id
+        run_id = context["run_id"]
+        t0 = time.monotonic()
+        wall_start = datetime.datetime.now(timezone.utc).isoformat()
+        log.info(
+            "UOW_TAP_TIMING event=start phase=facebook_comparison dag_id=%s task_id=%s "
+            "run_id=%s try_number=%s iso_utc=%s",
+            dag_id,
+            ti.task_id,
+            run_id,
+            ti.try_number,
+            wall_start,
+        )
+        try:
+            result = comparison_trigger_facebook.compare_data()
+            if not result:
+                raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+            return result
+        finally:
+            elapsed = time.monotonic() - t0
+            wall_end = datetime.datetime.now(timezone.utc).isoformat()
+            log.info(
+                "UOW_TAP_TIMING event=end phase=facebook_comparison dag_id=%s task_id=%s "
+                "run_id=%s try_number=%s elapsed_sec=%.3f iso_utc=%s",
+                dag_id,
+                ti.task_id,
+                run_id,
+                ti.try_number,
+                elapsed,
+                wall_end,
+            )
 
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
