@@ -23,7 +23,7 @@ sources:
 
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'uowaikato-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw_test') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
@@ -115,7 +115,7 @@ sources:
 
   - name: cm360_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'uowaikato-main') }}"
-    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_transformed') }}"
     tables:
       - name: cm360_direct_buy
       - name: cm360_seralized
