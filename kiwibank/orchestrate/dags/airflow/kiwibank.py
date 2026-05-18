@@ -137,6 +137,12 @@ def set_env_vars_ga4_overall(goal):
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
     env["TAP_GA4_PROPERTY_ID"] = env.get('TAP_GA4_PROPERTY_ID', '')
     return env
+def set_env_vars_ga4_final():
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = 'oauth'
+    env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
+    env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+    return env
 def set_env_vars_ga4_brand(brand):
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -438,6 +444,19 @@ with models.DAG(
             env_vars=set_env_vars_ga4_overall(goal),
         )
         ga4_task_list.append(kube_ga4_overall)
+    kube_ga4_final = KubernetesPodOperator(
+        name="kb-ga4-final-to-bq",
+        task_id="kb-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+    )
+    for task in ga4_task_list:
+        task >> kube_ga4_final
     kube_tiktok = KubernetesPodOperator(
         name="kb-tiktok-to-bq",
         task_id="kb-tiktok_to_bigquery",
@@ -481,28 +500,14 @@ with models.DAG(
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "invoke",
-                        f"dbt-bigquery:ga4_{brand}_goal_models"],
+                        f"dbt-bigquery:ga4_{brand}_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_ga4_brand(brand),
         )
-        kube_ga4_brand_session = KubernetesPodOperator(
-            name=f"kb-{brand}-ga4-channel-session-to-bq",
-            task_id=f"kb-{brand}-ga4_channel_session_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke",
-                        f"dbt-bigquery:ga4_{brand}_session_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_ga4_brand(brand),
-        )
-        for task in ga4_task_list:
-            kube_dash_overall>>task >> kube_ga4_brand
-            kube_dash_overall>>task >> kube_ga4_brand_session
-
+ 
+        kube_dash_overall>> kube_ga4_final >> kube_ga4_brand
 
         kube_google_ads = KubernetesPodOperator(
                 name=f"kb-{brand}-google-ads-to-bq",
@@ -552,5 +557,5 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
-        for task in ga4_task_list:
-            [kube_google_ads,kube_tiktok] >> kube_dash >> kube_dash_search >> kube_dash_union >> task
+        
+        [kube_google_ads,kube_tiktok] >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final >> kube_ga4_brand

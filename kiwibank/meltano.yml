@@ -148,41 +148,27 @@ plugins:
       tiktok_models:
         args: run --select +tiktok
       ga4_goal_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
       ga4_session_models:
         args: run --select +ga4_goal_a_session +ga4_goal_channel_session
-      ga4_ao_social_boosting_goal_models:
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+      ga4_ao_social_boosting_models:
         args: run --select ga4_goal_channel__ao_social_boosting
-      ga4_ao_social_boosting_session_models:
-        args: run --select ga4_goal_channel__ao_social_boosting_session
-      ga4_business_banking_goal_models:
+      ga4_business_banking_models:
         args: run --select ga4_goal_channel__business_banking
-      ga4_business_banking_session_models:
-        args: run --select ga4_goal_channel__business_banking_session
-      ga4_credit_card_goal_models:
+      ga4_credit_card_models:
         args: run --select ga4_goal_channel__credit_card
-      ga4_credit_card_session_models:
-        args: run --select ga4_goal_channel__credit_card_session
-      ga4_fraud_and_scams_goal_models:
+      ga4_fraud_and_scams_models:
         args: run --select ga4_goal_channel__fraud_and_scams
-      ga4_fraud_and_scams_session_models:
-        args: run --select ga4_goal_channel__fraud_and_scams_session
-      ga4_everyday_banking_join_kiwibank_goal_models:
+      ga4_everyday_banking_join_kiwibank_models:
         args: run --select ga4_goal_channel__everyday_banking_join_kiwibank
-      ga4_everyday_banking_join_kiwibank_session_models:
-        args: run --select ga4_goal_channel__everyday_banking_join_kiwibank_session
-      ga4_everyday_banking_retail_deposit_goal_models:
+      ga4_everyday_banking_retail_deposit_models:
         args: run --select ga4_goal_channel__everyday_banking_retail_deposit
-      ga4_everyday_banking_retail_deposit_session_models:
-        args: run --select ga4_goal_channel__everyday_banking_retail_deposit_session
-      ga4_home_loans_goal_models:
+      ga4_home_loans_models:
         args: run --select ga4_goal_channel__home_loans
-      ga4_home_loans_session_models:
-        args: run --select ga4_goal_channel__home_loans_session
-      ga4_unattributed_goal_models:
+      ga4_unattributed_models:
         args: run --select ga4_goal_channel__unattributed
-      ga4_unattributed_session_models:
-        args: run --select ga4_goal_channel__unattributed_session
       google_ads_ao_social_boosting_models:
         args: run --select google_ads_search__ao_social_boosting google_ads_demand__ao_social_boosting
       google_ads_everyday_banking_retail_deposit_models:

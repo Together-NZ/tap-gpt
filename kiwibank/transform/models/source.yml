@@ -26,6 +26,18 @@ sources:
       - name: goal
       - name: session_goal
 
+  - name: ga4_goal_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+
+  - name: ga4_session_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_session
+
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_DV360_RAW_BIGQUERY_DATASET', 'dv360_raw') }}"

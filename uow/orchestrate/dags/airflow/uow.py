@@ -28,6 +28,46 @@ IMAGE = "australia-southeast1-docker.pkg.dev/uowaikato-main/meltano/meltano-uowa
 
 
 log: logging.log = logging.getLogger("airflow.task")
+
+
+class TimedTapKubernetesPodOperator(KubernetesPodOperator):
+    """Logs wall-clock duration around the pod run for observability (filter: UOW_TAP_TIMING)."""
+
+    def __init__(self, *args, tap_tracking_id: str = "unknown", **kwargs):
+        super().__init__(*args, **kwargs)
+        self.tap_tracking_id = tap_tracking_id
+
+    def execute(self, context):
+        ti = context["ti"]
+        dag_id = context["dag"].dag_id
+        run_id = context["run_id"]
+        t0 = time.monotonic()
+        wall_start = datetime.datetime.now(timezone.utc).isoformat()
+        log.info(
+            "UOW_TAP_TIMING event=start tap=%s dag_id=%s task_id=%s run_id=%s try_number=%s iso_utc=%s",
+            self.tap_tracking_id,
+            dag_id,
+            ti.task_id,
+            run_id,
+            ti.try_number,
+            wall_start,
+        )
+        try:
+            return super().execute(context)
+        finally:
+            elapsed = time.monotonic() - t0
+            wall_end = datetime.datetime.now(timezone.utc).isoformat()
+            log.info(
+                "UOW_TAP_TIMING event=end tap=%s dag_id=%s task_id=%s run_id=%s try_number=%s "
+                "elapsed_sec=%.3f iso_utc=%s",
+                self.tap_tracking_id,
+                dag_id,
+                ti.task_id,
+                run_id,
+                ti.try_number,
+                elapsed,
+                wall_end,
+            )
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
@@ -86,7 +126,7 @@ def get_ttd_start_date():
 def get_meta_start_date():
     return (
         datetime.datetime.now(datetime.timezone.utc)
-        - datetime.timedelta(days=30)
+        - datetime.timedelta(days=14)
     ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 def get_linkedin_start_date():
@@ -264,6 +304,7 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    
 
     set_env_task_google_ads >> kube_google_ads
     kube_tiktok >> task_tiktok_comparison
@@ -374,7 +415,7 @@ with models.DAG(
     )
  
     
-    kube_facebook = KubernetesPodOperator(
+    kube_facebook = TimedTapKubernetesPodOperator(
         email_on_failure=True,
         name="uow-facebook-to-bigquery",
         task_id="uow-facebook_to_bigquery",
@@ -387,7 +428,9 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_facebook(),
-        get_logs=True
+        get_logs=True,
+        tap_tracking_id="tap-facebook",
+        labels={"uow_tap": "facebook", "uow_timing": "enabled"},
     )
     kube_snapchat = KubernetesPodOperator(
         email_on_failure=True,
@@ -505,10 +548,38 @@ with models.DAG(
         trigger_rule="all_done",
     )
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
-        if not result:
-            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
-        return result
+        ti = context["ti"]
+        dag_id = context["dag"].dag_id
+        run_id = context["run_id"]
+        t0 = time.monotonic()
+        wall_start = datetime.datetime.now(timezone.utc).isoformat()
+        log.info(
+            "UOW_TAP_TIMING event=start phase=facebook_comparison dag_id=%s task_id=%s "
+            "run_id=%s try_number=%s iso_utc=%s",
+            dag_id,
+            ti.task_id,
+            run_id,
+            ti.try_number,
+            wall_start,
+        )
+        try:
+            result = comparison_trigger_facebook.compare_data()
+            if not result:
+                raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+            return result
+        finally:
+            elapsed = time.monotonic() - t0
+            wall_end = datetime.datetime.now(timezone.utc).isoformat()
+            log.info(
+                "UOW_TAP_TIMING event=end phase=facebook_comparison dag_id=%s task_id=%s "
+                "run_id=%s try_number=%s elapsed_sec=%.3f iso_utc=%s",
+                dag_id,
+                ti.task_id,
+                run_id,
+                ti.try_number,
+                elapsed,
+                wall_end,
+            )
 
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
