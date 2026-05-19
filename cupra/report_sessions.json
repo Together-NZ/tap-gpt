@@ -5,8 +5,7 @@
           "date",
           "sessionSourceMedium",
           "sessionCampaignName",
-          "sessionManualAdContent",
-          "sessionMedium"
+          "sessionManualAdContent"
         ],
         "metrics":[
  
