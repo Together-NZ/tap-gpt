@@ -359,28 +359,49 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    comparison_trigger_dv360 = ComparisonTrigger(
+    comparison_trigger_dv360_standard = ComparisonTrigger(
         project_name="wendys-main",
         destination_table="dv360_transformed",
-        table_name="dv360",
-        source_name="dv360",
+        table_name="dv360_standard",
+        source_name="dv360_standard",
         start_date=comparison_start_date,
         end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_wendys_main",
         project_id=env["PROJECT_ID"]
     )
-    def dv360_comparison_check(**context):
-        result = comparison_trigger_dv360.compare_data()
+    def dv360_standard_comparison_check(**context):
+        result = comparison_trigger_dv360_standard.compare_data()
         if not result:
             raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
         return result
-    task_dv360_comparison = PythonOperator(
-        task_id="task_dv360_comparison",
-        python_callable=dv360_comparison_check,
+    task_dv360_standard_comparison = PythonOperator(
+        task_id="task_dv360_standard_comparison",
+        python_callable=dv360_standard_comparison_check,
         retries=0,
         trigger_rule="all_done",
     )
- 
+    comparison_trigger_dv360_youtube = ComparisonTrigger(
+        project_name="wendys-main",
+        destination_table="dv360_transformed",
+        table_name="dv360_youtube",
+        source_name="dv360_youtube",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_wendys_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def dv360_youtube_comparison_check(**context):
+        result = comparison_trigger_dv360_youtube.compare_data()
+        if not result:
+            raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_dv360_youtube_comparison = PythonOperator(
+        task_id="task_dv360_youtube_comparison",
+        python_callable=dv360_youtube_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+   
     comparison_trigger_facebook = ComparisonTrigger(
         project_name="wendys-main",
         destination_table="facebook_transformed",
@@ -515,7 +536,7 @@ with models.DAG(
         )
 
     set_env_task_facebook >> kube_facebook >> task_facebook_comparison
-    set_env_task_dv360 >> kube_dv360 >> task_dv360_comparison
+    set_env_task_dv360 >> kube_dv360 >> [task_dv360_standard_comparison , task_dv360_youtube_comparison]
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     kube_cm360 >> kube_dv360
     set_env_task_hivestack >> kube_hivestack
