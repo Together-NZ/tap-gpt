@@ -9,13 +9,16 @@ from airflow.models import Variable
 from airflow.sensors.external_task import ExternalTaskSensor
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
+from comparison_package import ComparisonTrigger
 from kubernetes.client import models as k8s_models
+from airflow.operators.python import PythonOperator
+
 
 IMAGE = "australia-southeast1-docker.pkg.dev/cupra-main/meltano/meltano-cupra-main:prod"
 PROJECT_NAME = "cupra-main"
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -152,6 +155,72 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         get_logs=True,
     )
+    env = get_meltano_env()
+    comparison_trigger_facebook = ComparisonTrigger(
+        project_name="cupra-main",
+        destination_table="facebook_transformed",
+        table_name="facebook",
+        source_name="meta",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_cupra_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def facebook_comparison_check(**context):
+        result = comparison_trigger_facebook.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_facebook >> task_facebook_comparison
+    comparison_trigger_dv360_standard = ComparisonTrigger(
+        project_name="cupra-main",
+        destination_table="dv360_transformed",
+        table_name="dv360_standard",
+        source_name="dv360_standard",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_cupra_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def dv360_standard_comparison_check(**context):
+        result = comparison_trigger_dv360_standard.compare_data()
+        if not result:
+            raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_dv360_standard_comparison = PythonOperator(
+        task_id="task_dv360_standard_comparison",
+        python_callable=dv360_standard_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    comparison_trigger_dv360_youtube = ComparisonTrigger(
+        project_name="cupra-main",
+        destination_table="dv360_transformed",
+        table_name="dv360_youtube",
+        source_name="dv360_youtube",
+        start_date=comparison_start_date,
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        secret_name="airflow-variables-meltano_cupra_main",
+        project_id=env["PROJECT_ID"]
+    )
+    def dv360_youtube_comparison_check(**context):
+        result = comparison_trigger_dv360_youtube.compare_data()
+        if not result:
+            raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_dv360_youtube_comparison = PythonOperator(
+        task_id="task_dv360_youtube_comparison",
+        python_callable=dv360_youtube_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_dv360 >> [task_dv360_standard_comparison , task_dv360_youtube_comparison]
     kube_dash_union = KubernetesPodOperator(
         name="cupra-dash-union-to-bigquery",
         task_id="cupra-dash_union_to_bigquery",
