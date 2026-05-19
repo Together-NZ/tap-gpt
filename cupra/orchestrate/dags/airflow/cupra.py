@@ -25,7 +25,7 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "retry_delay": timedelta(minutes=30),
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
+    "start_date": datetime.datetime(2026, 5, 19, tzinfo=local_tz),
 }
 
 
