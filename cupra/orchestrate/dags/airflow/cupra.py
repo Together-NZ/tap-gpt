@@ -206,7 +206,7 @@ with models.DAG(
         table_name="dv360_youtube",
         source_name="dv360_youtube",
         start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d")-timedelta(days=1),
         secret_name="airflow-variables-meltano_cupra_main",
         project_id=env["PROJECT_ID"]
     )
