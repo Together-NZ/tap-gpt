@@ -12,23 +12,23 @@ environments:
           DBT_BIGQUERY_LOCATION: australia-southeast1
           DBT_BIGQUERY_AUTH_METHOD: oauth
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
-          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook_transformed
+          
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
-          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360_transformed
+        
           REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
-          REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_tiktok_transformed
+          
           REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
           REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
           REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
           REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
           REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
           REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
-          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360_raw
-          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360_transformed
-          CM360_SUFFIX: dbt_test_cm360_transformed
-          META_SUFFIX: dbt_test_facebook_transformed
-          DV360_SUFFIX: dbt_test_dv360_transformed
-          TIKTOK_SUFFIX: dbt_test_tiktok_transformed
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+ 
+          CM360_SUFFIX: dbt_test_cm360
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TIKTOK_SUFFIX: dbt_test_tiktok
           GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
 - name: prod
 plugins:

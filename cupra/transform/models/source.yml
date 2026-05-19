@@ -26,7 +26,7 @@ sources:
 
   - name: cm360_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"
-    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_transformed') }}"
     tables:
       - name: cm360_direct_buy
 
@@ -42,7 +42,7 @@ sources:
 
   - name: facebook_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"
-    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_transformed') }}"
     tables:
       - name: facebook
 
@@ -55,7 +55,7 @@ sources:
 
   - name: dv360_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_transformed') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
@@ -70,13 +70,13 @@ sources:
 
   - name: tiktok_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"
-    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_transformed') }}"
     tables:
       - name: tiktok
 
   - name: google_ads
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"
-    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
     tables:
       - name: google_ads_demand
       - name: google_ads_search
