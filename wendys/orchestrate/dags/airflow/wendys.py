@@ -344,7 +344,7 @@ with models.DAG(
         source_name="snapchat",
         start_date=comparison_start_date,
         # Timezone difference on snapchat 
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d")+timedelta(days=1),
+        end_date = (datetime.datetime.now(local_tz) + timedelta(days=1)).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_wendys_main",
         project_id=env["PROJECT_ID"]
     )
