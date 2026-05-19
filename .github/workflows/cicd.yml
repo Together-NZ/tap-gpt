@@ -251,6 +251,7 @@ jobs:
     if: needs.setup_dag.outputs.matrix != '[]' && needs.setup_dag.outputs.matrix != ''
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         folder: ${{ fromJson(needs.setup_dag.outputs.matrix) }}
     steps:
@@ -286,6 +287,7 @@ jobs:
     if: needs.setup_project.outputs.matrix != '[]' && needs.setup_project.outputs.matrix != ''
     runs-on: ubuntu-latest
     strategy:
+      fail-fast: false
       matrix:
         folder: ${{ fromJson(needs.setup_project.outputs.matrix) }}
     steps:
