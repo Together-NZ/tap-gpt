@@ -1,0 +1,145 @@
+default_environment: dev
+project_id: cupra-meltano-project
+environments:
+- name: dev
+- name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          DBT_BIGQUERY_AUTH_METHOD: oauth
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook_transformed
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360_transformed
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_tiktok_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360_raw
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360_transformed
+          CM360_SUFFIX: dbt_test_cm360_transformed
+          META_SUFFIX: dbt_test_facebook_transformed
+          DV360_SUFFIX: dbt_test_dv360_transformed
+          TIKTOK_SUFFIX: dbt_test_tiktok_transformed
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+- name: prod
+plugins:
+  extractors:
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
+    config:
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
+    select:
+    - ads_insights.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+    - custom_conversions.*
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '8207352454'
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  - name: tap-tiktok
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: ${TAP_TIKTOK_ADVERTISER_ID}
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
+    config:
+      reports: ${GA4_REPORTS}
+      start_date: ${START_DATE}
+      keep_empty_rows: true
+    select:
+    - ${GA4_GOAL}
+  loaders:
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
+    config:
+      dataset: ${BQ_DATASET}
+      project: cupra-main
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  transformers:
+  - name: dbt-bigquery
+    variant: dbt-labs
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
+    config:
+      project: cupra-main
+      location: australia-southeast1
+      method: oauth
+    commands:
+      facebook_models:
+        args: run --select +facebook
+        description: Run Facebook models
+      cm360_models:
+        args: run --select +cm360_direct_buy
+        description: Run CM360 direct buy model
+      dv360_models:
+        args: run --select +dv360_standard +dv360_youtube
+        description: Run DV360 models
+      tiktok_models:
+        args: run --select +tiktok
+        description: Run TikTok models
+      ga4_goal_models:
+        args: run --select ga4_goal_a ga4_goal_channel_goal
+        description: Run GA4 goal-level models
+      ga4_session_models:
+        args: run --select ga4_goal_a_session ga4_goal_channel_session
+        description: Run GA4 session-level models
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+        description: Union GA4 goal and session channel models
+      google_ads_models:
+        args: run --select +google_ads_search +google_ads_demand
+        description: Run Google Ads models
+      dash_models:
+        args: run --select +dash_table
+        description: Run dash_table union model
+      dash_search_models:
+        args: run --select +dash_table_search
+        description: Run dash_table_search model
+      dash_union_models:
+        args: run --select +dash_union
+        description: Run dash_union model
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git setuptools<82.0
+elt:
+  buffer_size: 52428800
+send_anonymous_usage_stats: false
