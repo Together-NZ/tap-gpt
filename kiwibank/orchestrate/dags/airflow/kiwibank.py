@@ -63,6 +63,14 @@ def set_env_vars_facebook():
     env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
     return env
 
+def set_env_vars_ttd():
+    env = get_meltano_env()
+    env["BQ_DATASET"] = "ttd_raw"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = 'oauth'
+    env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
+    env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+    return env
 
 def set_env_vars_linkedin():
     env = get_meltano_env()
@@ -338,6 +346,19 @@ with models.DAG(
         get_logs=True
     )
 
+    kube_ttd = KubernetesPodOperator(
+        name="kb-ttd-to-bq",
+        task_id="kb-ttd_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-ttd", "target-bigquery", "dbt-bigquery:ttd_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ttd(),
+        get_logs=True
+    )
+   
 
     kube_dash_overall = KubernetesPodOperator(
         name="kb-dash-to-bq",
@@ -364,7 +385,7 @@ with models.DAG(
         get_logs=True
     )
     kube_cm360 >> kube_dv360 
-    [kube_facebook,kube_linkedin,kube_dv360,kube_hivestack] >> kube_dash_overall
+    [kube_facebook,kube_linkedin,kube_dv360,kube_hivestack,kube_ttd] >> kube_dash_overall
     task_list = []
     brands = [
         'everyday_banking_retail_deposit',
