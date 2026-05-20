@@ -25,14 +25,15 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "retry_delay": timedelta(minutes=30),
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
+    "start_date": datetime.datetime(2026, 5, 19, tzinfo=local_tz),
 }
 
 
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_cupra_main", deserialize_json=True)
-    meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
-    meltano_env = {**meltano_env_common, **meltano_env_unique}
+    meltano_env_common = Variable.get("meltano_common_developer_main",deserialize_json=True)
+    meltano_env_ga4 = Variable.get("meltano_developer_ga4_main",deserialize_json=True)
+    meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
     start_date_str = (
         datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     ).strftime("%Y-%m-%d")
@@ -184,7 +185,7 @@ with models.DAG(
         table_name="dv360_standard",
         source_name="dv360_standard",
         start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_cupra_main",
         project_id=env["PROJECT_ID"]
     )
@@ -205,7 +206,7 @@ with models.DAG(
         table_name="dv360_youtube",
         source_name="dv360_youtube",
         start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
         secret_name="airflow-variables-meltano_cupra_main",
         project_id=env["PROJECT_ID"]
     )
