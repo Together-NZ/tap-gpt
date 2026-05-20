@@ -19,6 +19,6 @@ packages:
 
   - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
   
-  - git: https://github.com/Together-NZ/Impact-CI-ttd_models.git
+
 
   - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
