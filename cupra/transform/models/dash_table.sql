@@ -113,8 +113,8 @@ CASE WHEN
 END as media_format,
 CASE WHEN 
        EXISTS(SELECT 1 FROM UNNEST(SPLIT(campaign_name,'_')) as a
-       WHERE LOWER(a) IN UNNEST(ARRAY['consideration','awareness','intent']))
-       THEN (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE LOWER(X) IN UNNEST(['consideration','awareness','intent'])
+       WHERE LOWER(a) IN UNNEST(ARRAY['cultural signal', 'high attention', 'public impact', 'consideration', 'traffic' ]))
+       THEN (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE LOWER(X) IN UNNEST(['cultural signal', 'high attention', 'public impact', 'consideration', 'traffic' ])
        LIMIT 1)
        else 'OTHER'
 END AS funnel,
@@ -129,3 +129,4 @@ END AS sub_brands,
  FROM campaign_base camb LEFT JOIN deduplicate_raw ON LOWER(deduplicate_raw.campaign_name_raw) = LOWER(camb.campaign_name_raw)
 )
 SELECT * EXCEPT(ad_format) , ad_format_detail AS ad_format,ad_format AS ad_format1 FROM final_result
+    
