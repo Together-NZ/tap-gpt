@@ -21,7 +21,7 @@ SELECT *,
         WHEN LOWER(publisher) = 'demand gen' THEN 'Demand Gen'
         ELSE 'Paid Search'
     END AS channel,
-    'OTHER' AS funnel,
+    'Consideration' AS funnel,
     NULL AS creative_name,
     NULL AS ad_format,
     NULL AS ad_format_detail,
