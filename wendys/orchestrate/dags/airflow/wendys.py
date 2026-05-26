@@ -215,19 +215,19 @@ with models.DAG(
     )
 
 
-    env = get_meltano_env()
-    comparison_trigger_tiktok = ComparisonTrigger(
-        project_name="wendys-main",
-        destination_table="tiktok_transformed",
-        table_name="tiktok",
-        source_name="tiktok",
-        start_date=comparison_start_date,
-        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_wendys_main",
-        project_id=env["PROJECT_ID"]
-        )
     def tiktok_comparison_check(**context):
-        result = comparison_trigger_tiktok.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wendys-main",
+            destination_table="tiktok_transformed",
+            table_name="tiktok",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wendys_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
         return result
@@ -323,8 +323,6 @@ with models.DAG(
         python_callable=set_env_vars_facebook,
     )
 
-    env = get_meltano_env()
-
     set_env_task_dv360 = PythonOperator(
         task_id="set_env_dv360",
         python_callable=set_env_vars_dv360,
@@ -337,19 +335,20 @@ with models.DAG(
         task_id="set_env_ttd",
         python_callable=set_env_vars_ttd,
     )
-    comparison_trigger_snapchat = ComparisonTrigger(
-        project_name="wendys-main",
-        destination_table="snapchat_transformed",
-        table_name="snapchat",
-        source_name="snapchat",
-        start_date=comparison_start_date,
-        # Timezone difference on snapchat 
-        end_date = (datetime.datetime.now(local_tz) + timedelta(days=1)).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_wendys_main",
-        project_id=env["PROJECT_ID"]
-    )
     def snapchat_comparison_check(**context):
-        result = comparison_trigger_snapchat.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wendys-main",
+            destination_table="snapchat_transformed",
+            table_name="snapchat",
+            source_name="snapchat",
+            start_date=comparison_start_date,
+            # Timezone difference on snapchat 
+            end_date = (datetime.datetime.now(local_tz) + timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wendys_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Snapchat data accuracy check failed — BQ data does not match source API.")
         return result
@@ -359,18 +358,19 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    comparison_trigger_dv360_standard = ComparisonTrigger(
-        project_name="wendys-main",
-        destination_table="dv360_transformed",
-        table_name="dv360_standard",
-        source_name="dv360_standard",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_wendys_main",
-        project_id=env["PROJECT_ID"]
-    )
     def dv360_standard_comparison_check(**context):
-        result = comparison_trigger_dv360_standard.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wendys-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wendys_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
         return result
@@ -380,18 +380,19 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    comparison_trigger_dv360_youtube = ComparisonTrigger(
-        project_name="wendys-main",
-        destination_table="dv360_transformed",
-        table_name="dv360_youtube",
-        source_name="dv360_youtube",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_wendys_main",
-        project_id=env["PROJECT_ID"]
-    )
     def dv360_youtube_comparison_check(**context):
-        result = comparison_trigger_dv360_youtube.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wendys-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wendys_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
         return result
@@ -402,18 +403,19 @@ with models.DAG(
         trigger_rule="all_done",
     )
    
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="wendys-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_wendys_main",
-        project_id=env["PROJECT_ID"]
-        )
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wendys-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wendys_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
         return result

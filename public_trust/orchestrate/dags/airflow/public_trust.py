@@ -223,23 +223,22 @@ with models.DAG(
     schedule_interval="0 3 * * *",
     default_args=default_args,
 ) as dag:
-    env = get_meltano_env()
-
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="public-trust-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_public_trust_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
         return result
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="public-trust-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_public_trust_main",
-        project_id=env["PROJECT_ID"]
-    )
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
         python_callable=facebook_comparison_check,
