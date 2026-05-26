@@ -283,18 +283,18 @@ with models.DAG(
         
         )
 
-    env = get_meltano_env()
-    comparison_trigger_tiktok = ComparisonTrigger(
-        project_name="uowaikato-main",
-        destination_table="tiktok_transformed",
-        table_name="tiktok",
-        source_name="tiktok",
-        start_date=comparison_start_date,
-        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_uowaikato_main",
-        project_id=env["PROJECT_ID"])
     def tiktok_comparison_check(**context):
-        result = comparison_trigger_tiktok.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="uowaikato-main",
+            destination_table="tiktok_transformed",
+            table_name="tiktok",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_uowaikato_main",
+            project_id=env["PROJECT_ID"])
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
         return result
@@ -513,31 +513,19 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
-    env = get_meltano_env()
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="uowaikato-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_uowaikato_main",
-        project_id=env["PROJECT_ID"]
-        )
-
-    comparison_trigger_linkedin = ComparisonTrigger(
-        project_name="uowaikato-main",
-        destination_table="linkedin_transformed",
-        table_name="linkedin",
-        source_name="linkedin",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_uowaikato_main",
-        project_id=env["PROJECT_ID"]
-    )
-
     def linkedin_comparison_check(**context):
-        result = comparison_trigger_linkedin.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="uowaikato-main",
+            destination_table="linkedin_transformed",
+            table_name="linkedin",
+            source_name="linkedin",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_uowaikato_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
         return result
@@ -548,6 +536,17 @@ with models.DAG(
         trigger_rule="all_done",
     )
     def facebook_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="uowaikato-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_uowaikato_main",
+            project_id=env["PROJECT_ID"]
+        )
         ti = context["ti"]
         dag_id = context["dag"].dag_id
         run_id = context["run_id"]
@@ -563,7 +562,7 @@ with models.DAG(
             wall_start,
         )
         try:
-            result = comparison_trigger_facebook.compare_data()
+            result = trigger.compare_data()
             if not result:
                 raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
             return result
