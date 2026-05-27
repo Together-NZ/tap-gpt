@@ -24,6 +24,7 @@ WITH channels as (
         WHEN LOWER(site_name) LIKE '%meta%' and (lower(sessionCampaignName) like '%wat%' or lower(split(sessionCampaignName,'_')[safe_offset(0)]) like '%00%') THEN 'Paid Social'
         WHEN LOWER(site_name) LIKE '%gdn%' THEN 'Owned Display'
         WHEN LOWER(site_name) LIKE '%gmb%' THEN 'Google My Business'
+        WHEN TRIM(LOWER(site_name)) = 'google' AND lower(sessionSourceMediumraw) LIKE '%cpc%' THEN 'Paid Search'
         WHEN LOWER(site_name) LIKE '%google_ads_display%' THEN 'Paid Display'
         WHEN LOWER(site_name) LIKE '%google_ads_search%' THEN 'Paid Search'
         WHEN LOWER(site_name) LIKE '%google_my_business%' THEN 'Google My Business'

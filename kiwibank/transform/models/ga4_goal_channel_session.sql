@@ -13,6 +13,7 @@ WITH channels as (
         WHEN LOWER(site_name) LIKE '%apple_ads_search%' THEN 'Paid Search'
         WHEN LOWER(site_name) LIKE '%bing_ads_search%' THEN 'Paid Search'
         WHEN LOWER(site_name) LIKE '%blis%' THEN 'Paid Display'
+        WHEN TRIM(LOWER(site_name)) = 'google' AND lower(sessionSourceMediumraw) LIKE '%cpc%' THEN 'Paid Search'
         WHEN LOWER(site_name) LIKE '%business_desk%' THEN 'Paid Display'
         WHEN LOWER(site_name) LIKE '%clearscore%' THEN 'Affiliate'
         WHEN LOWER(site_name) LIKE '%dart_search%' THEN 'Paid Search'
