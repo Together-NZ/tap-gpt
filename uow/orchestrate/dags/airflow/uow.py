@@ -221,7 +221,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_ga4_final(),
     )
-    goal_list = ['goal','session']
+    goal_list = ['goal','sessions']
     kube_ga4_list = []
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
