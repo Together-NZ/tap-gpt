@@ -159,7 +159,7 @@ with models.DAG(
     def set_env_vars_ga4(goal):
         env = get_meltano_env()
         #if goal == 'ecommerce':
-        if goal == 'sessions':
+        if goal == 'session':
             env["TAP_GA4_REPORTS"] = "./report_sessions.json"
             env["GA4_GOAL"] = 'session_goal'
         else:
@@ -221,7 +221,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_ga4_final(),
     )
-    goal_list = ['goal','sessions']
+    goal_list = ['goal','session']
     kube_ga4_list = []
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(

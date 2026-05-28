@@ -35,8 +35,8 @@ table2 AS (
     SELECT
         date,
         eventName,
-        eventCount,
-        eventValue,
+        SUM(eventCount) as eventCount,
+        SUM(SAFE_CAST(eventValue AS FLOAT64)) as eventValue,
         campaign_name,
         publisher,
         sessionSourceMedium,
@@ -49,7 +49,21 @@ table2 AS (
         sessionManualAdContent,
         funnel,
         media_format
-    FROM `uowaikato-main.ga4_transformed.ga4_goal_channel_goal`
+    FROM `uowaikato-main.ga4_transformed.ga4_goal_channel_goal` group by 
+    date,
+    eventName,
+    campaign_name,
+    publisher,
+    sessionSourceMedium,
+    sessionCampaignName,
+    sessionSourceMediumraw,
+    site_name,
+    sessionManualAdContentraw,
+    channel,
+    campaign_name_selection,
+    sessionManualAdContent,
+    funnel,
+    media_format
 
 ),
 union_table AS (
