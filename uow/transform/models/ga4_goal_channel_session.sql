@@ -94,6 +94,7 @@ select *,
   ),
   campaign_base AS (
        SELECT * except(sessionManualAdContent),
+       sessionManualAdContent as sessionManualAdContentraw,
        CASE WHEN 
        REGEXP_REPLACE(LOWER(replace(sessionManualAdContent,'"','')),r'\s+', '') like '%accommodation%' 
        OR REGEXP_REPLACE(LOWER(replace(sessionManualAdContent,'"','')),r'\s+', '') like '%acommodation%' 
