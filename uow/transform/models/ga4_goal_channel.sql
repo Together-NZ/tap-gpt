@@ -18,7 +18,8 @@ table1 AS (SELECT
       metric_value
     ELSE NULL 
   END AS eventValue,
-  campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format 
+  campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format ,
+  sessionManualAdContentraw
      
 
 FROM `uowaikato-main.ga4_transformed.ga4_goal_channel_session`
@@ -34,39 +35,27 @@ table2 AS (
     SELECT
         date,
         eventName,
-        SUM(eventCount) AS eventCount,
-        SUM(SAFE_CAST(eventValue AS FLOAT64)) AS eventValue,
+        eventCount,
+        eventValue,
         campaign_name,
         publisher,
         sessionSourceMedium,
         sessionCampaignName,
         sessionSourceMediumraw,
         site_name,
+        sessionManualAdContentraw,
         channel,
         campaign_name_selection,
         sessionManualAdContent,
         funnel,
         media_format
     FROM `uowaikato-main.ga4_transformed.ga4_goal_channel_goal`
-    GROUP BY
-        date,
-        eventName,
-        campaign_name,
-        publisher,
-        sessionSourceMedium,
-        sessionCampaignName,
-        sessionSourceMediumraw,
-        site_name,
-        channel,
-        campaign_name_selection,
-        sessionManualAdContent,
-        funnel,
-        media_format
+
 ),
 union_table AS (
-SELECT date,eventName,safe_cast(eventCount AS INT64) as eventCount,safe_cast(eventValue AS FLOAT64) as eventValue, campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format FROM table1
+SELECT date,eventName,safe_cast(eventCount AS INT64) as eventCount,safe_cast(eventValue AS FLOAT64) as eventValue, campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, sessionManualAdContentraw,funnel, media_format FROM table1
 UNION ALL
-SELECT  date,eventName,eventCount ,SAFE_CAST(eventValue AS FLOAT64) as eventValue , campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format FROM table2
+SELECT  date,eventName,eventCount ,SAFE_CAST(eventValue AS FLOAT64) as eventValue , campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, sessionManualAdContentraw,funnel, media_format FROM table2
 ),
 session_sessionDuration_reference AS (
   SELECT *
@@ -81,7 +70,8 @@ sessions_ref AS (
     campaign_name,
     sessionManualAdContent,
     sessionSourceMedium,
-    eventCount AS sessions_count
+    eventCount AS sessions_count,
+    sessionManualAdContentraw
   FROM session_sessionDuration_reference
   WHERE eventName = 'sessions'
 ),
@@ -106,6 +96,7 @@ joint AS (
   r.sessionSourceMediumraw,
   r.site_name, 
   r.channel, 
+  r.sessionManualAdContentraw,
   r.campaign_name_selection, 
   r.sessionManualAdContent, r.funnel, r.media_format
 FROM session_sessionDuration_reference r
@@ -113,19 +104,19 @@ LEFT JOIN sessions_ref s
   ON  r.date = s.date
   AND r.publisher = s.publisher
   AND r.campaign_name = s.campaign_name
-  AND r.sessionManualAdContent = s.sessionManualAdContent
+  AND r.sessionManualAdContentraw = s.sessionManualAdContentraw
   AND r.sessionSourceMedium = s.sessionSourceMedium
 ),
 deduplicated_joint AS (
   select * from joint 
 ),
 final AS (
-SELECT date,eventName,safe_cast(eventCount AS INT64) as eventCount,safe_cast(eventValue AS FLOAT64) as eventValue, campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format FROM table2
+SELECT date,eventName,sessionManualAdContentraw,safe_cast(eventCount AS INT64) as eventCount,safe_cast(eventValue AS FLOAT64) as eventValue, campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format FROM table2
 UNION ALL
-SELECT  date,eventName,eventCount ,SAFE_CAST(eventValue AS FLOAT64) as eventValue , campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format FROM deduplicated_joint)
+SELECT  date,eventName,sessionManualAdContentraw,eventCount ,SAFE_CAST(eventValue AS FLOAT64) as eventValue , campaign_name, publisher, sessionSourceMedium, sessionCampaignName, sessionSourceMediumraw, site_name, channel, campaign_name_selection, sessionManualAdContent, funnel, media_format FROM deduplicated_joint)
 ,deduplicated_final as (
   select *,
-  ROW_NUMBER() OVER (PARTITION BY date,publisher,eventCount,SAFE_CAST(eventValue as STRING),sessionManualAdContent,
-sessionCampaignName,sessionSourceMedium,eventName) as row_num from final
+  ROW_NUMBER() OVER (PARTITION BY date,publisher,eventCount,SAFE_CAST(eventValue as STRING),sessionManualAdContentraw,
+sessionCampaignName,sessionSourceMedium,eventName,sessionSourceMediumraw) as row_num from final
 )
-select * from deduplicated_final where row_num=1
+select * from deduplicated_final WHERE row_num = 1
