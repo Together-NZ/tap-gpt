@@ -224,7 +224,7 @@ with models.DAG(
         
 with models.DAG(
     dag_id="curative-meltano-extraction-transformation-dbt",
-    schedule_interval="0 2 * * *",
+    schedule_interval="0 1 * * *",
     default_args=default_args,
 ) as dag:
     env = get_meltano_env()
