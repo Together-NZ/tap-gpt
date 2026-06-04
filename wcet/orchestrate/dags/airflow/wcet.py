@@ -289,13 +289,33 @@ with models.DAG(
                 "dbt-bigquery",
                 "run",
                 "--select",
-                f"dash_table__{brand} dash_table_search__{brand}",
+                f"dash_table__{brand}",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             trigger_rule="all_done",
             env_vars=set_env_vars_dash(brand),
+            get_logs=True,
+        )
+        kube_dash_search = KubernetesPodOperator(
+            name="wcet-dash-search-to-bigquery",
+            task_id=f"wcet-dash_search__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_table_search__{brand}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            trigger_rule="all_done",
+            env_vars=set_env_vars_dash_search(brand),
             get_logs=True,
         )
         kube_dash_union = KubernetesPodOperator(
@@ -340,4 +360,4 @@ with models.DAG(
 
 
 
-        [kube_facebook, kube_tiktok, kube_dv360] >> kube_dash >> kube_dash_union
+        [kube_facebook, kube_tiktok, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
