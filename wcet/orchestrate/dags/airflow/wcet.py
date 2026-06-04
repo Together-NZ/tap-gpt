@@ -75,7 +75,7 @@ def set_env_vars_dv360(brand):
 def set_env_vars_ga4(brand,goal):
     env = get_meltano_env()
     #if goal == 'ecommerce':
-    if goal == 'sessions':
+    if goal == 'session':
             env["TAP_GA4_REPORTS"] = "./report_sessions.json"
             env["GA4_GOAL"] = 'session_goal'
     else:
@@ -130,7 +130,7 @@ with models.DAG(
     for brand in brands:
         kube_google_ads = KubernetesPodOperator(
             name="wcet-google-ads-to-bigquery",
-            task_id="wcet-google-ads_to_bigquery",
+            task_id=f"wcet-google-ads__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -148,7 +148,7 @@ with models.DAG(
         )
         kube_dash = KubernetesPodOperator(
             name="wcet-dash-to-bigquery",
-            task_id="wcet-dash_to_bigquery",
+            task_id=f"wcet-dash__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -169,7 +169,7 @@ with models.DAG(
         )
         kube_dash_search = KubernetesPodOperator(
             name="wcet-dash-search-to-bigquery",
-            task_id="wcet-dash_search_to_bigquery",
+            task_id=f"wcet-dash_search__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -189,7 +189,7 @@ with models.DAG(
         )
         kube_dash_union = KubernetesPodOperator(
             name="wcet-dash-union-to-bigquery",
-            task_id="wcet-dash_union_to_bigquery",
+            task_id=f"wcet-dash_union__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -211,7 +211,7 @@ with models.DAG(
         for type in ga4_type:
             kube_ga4 = KubernetesPodOperator(
                 name="wcet-ga4-to-bigquery",
-                task_id="wcet-ga4_to_bigquery",
+                task_id=f"wcet-ga4__{brand}_{type}_to_bigquery",
                 namespace="composer-user-workloads",
                 image=IMAGE,
                 arguments=[
@@ -219,7 +219,7 @@ with models.DAG(
                     "run",
                     "tap-ga4",
                     "target-bigquery",
-                    "dbt-bigquery:ga4_models",
+                    f"dbt-bigquery:ga4_{brand}_{type}_models",
                 ],
                 container_resources=k8s_models.V1ResourceRequirements(
                     limits={"memory": "1000M", "cpu": "500m"},
@@ -243,7 +243,7 @@ with models.DAG(
     for brand in brands:
         kube_facebook = KubernetesPodOperator(
             name="wcet-facebook-to-bigquery",
-            task_id="wcet-facebook_to_bigquery",
+            task_id=f"wcet-facebook__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -251,7 +251,7 @@ with models.DAG(
                 "run",
                 "tap-facebook",
                 "target-bigquery",
-                "dbt-bigquery:facebook_models",
+                f"dbt-bigquery:facebook_{brand}_models",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
@@ -262,7 +262,7 @@ with models.DAG(
 
         kube_tiktok = KubernetesPodOperator(
             name="wcet-tiktok-to-bigquery",
-            task_id="wcet-tiktok_to_bigquery",
+            task_id=f"wcet-tiktok__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -270,7 +270,7 @@ with models.DAG(
                 "run",
                 "tap-tiktok",
                 "target-bigquery",
-                "dbt-bigquery:tiktok_models",
+                f"dbt-bigquery:tiktok_{brand}_models",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
@@ -280,7 +280,7 @@ with models.DAG(
         )
         kube_dash = KubernetesPodOperator(
             name="wcet-dash-to-bigquery",
-            task_id="wcet-dash_to_bigquery",
+            task_id=f"wcet-dash__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -289,7 +289,7 @@ with models.DAG(
                 "dbt-bigquery",
                 "run",
                 "--select",
-                "dash_table__beervana dash_table_search__beervana",
+                f"dash_table__{brand} dash_table_search__{brand}",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
@@ -300,7 +300,7 @@ with models.DAG(
         )
         kube_dash_union = KubernetesPodOperator(
             name="wcet-dash-union-to-bigquery",
-            task_id="wcet-dash_union_to_bigquery",
+            task_id=f"wcet-dash_union__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -309,7 +309,7 @@ with models.DAG(
                 "dbt-bigquery",
                 "run",
                 "--select",
-                "dash_union__beervana",
+                f"dash_union__{brand}",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
@@ -321,7 +321,7 @@ with models.DAG(
 
         kube_dv360 = KubernetesPodOperator(
             name="wcet-dv360-to-bigquery",
-            task_id="wcet-dv360_to_bigquery",
+            task_id=f"wcet-dv360__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=[
@@ -329,7 +329,7 @@ with models.DAG(
                 "run",
                 "tap-dv360",
                 "target-bigquery",
-                "dbt-bigquery:dv360_models",
+                f"dbt-bigquery:dv360_{brand}_models",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
