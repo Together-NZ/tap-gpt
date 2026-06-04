@@ -92,7 +92,7 @@ sources:
 models:
 
 
-  - name: facebook
+  - name: facebook__beervana
     config:
       schema: "{{ env_var('META_SUFFIX', '') }}"
 
@@ -111,7 +111,7 @@ models:
               expected_value: 22450
       
 
-  - name: dv360_standard
+  - name: dv360_standard__beervana
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
     columns:
@@ -127,7 +127,7 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 7786
-  - name: dv360_youtube
+  - name: dv360_youtube__beervana
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
     columns:
@@ -146,7 +146,7 @@ models:
 
 
 
-  - name: tiktok
+  - name: tiktok__beervana
     config:
       schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
     columns:

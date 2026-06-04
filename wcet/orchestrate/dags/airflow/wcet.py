@@ -135,9 +135,7 @@ with models.DAG(
             image=IMAGE,
             arguments=[
                 "--environment=prod",
-                "run",
-                "tap-google-ads",
-                "target-bigquery",
+                "invoke",
                 f"dbt-bigquery:google_ads_{brand}_models",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
