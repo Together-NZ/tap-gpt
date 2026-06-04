@@ -14,6 +14,7 @@ from airflow.models import Variable
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from kubernetes.client import models as k8s_models
 from google.auth.transport.requests import Request
+from comparison_package import ComparisonTrigger
 
 IMAGE = "australia-southeast1-docker.pkg.dev/wcet-main/meltano/meltano-wcet-main:prod"
 PROJECT_NAME = "wcet-main"
@@ -41,8 +42,12 @@ def get_meltano_env():
     ).strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
     return deepcopy(meltano_env)
-
-
+def set_env_vars_ga4_final(brand):
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"ga4_final__{brand}"
+    return env
 def set_env_vars_facebook(brand):
     env = get_meltano_env()
     env["BQ_DATASET"] = f"facebook_raw__{brand}"
@@ -205,6 +210,7 @@ with models.DAG(
             env_vars=set_env_vars_dash(brand),
             get_logs=True,
         )
+        kube_ga4_list = []
         ga4_type=['session','goal']
         for type in ga4_type:
             kube_ga4 = KubernetesPodOperator(
@@ -226,6 +232,26 @@ with models.DAG(
                 get_logs=True,
             )
             kube_dash_union >> kube_ga4
+            kube_ga4_list.append(kube_ga4)
+        kube_ga4_final = KubernetesPodOperator(
+            name="wcet-ga4-final-to-bigquery",
+            task_id=f"wcet-ga4_final__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-ga4",
+                "target-bigquery",
+                f"dbt-bigquery:ga4_final_{brand}_models",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4_final(brand),
+            get_logs=True,)
+        for task in kube_ga4_list:
+            task >> kube_ga4_final
         kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union
         
         
