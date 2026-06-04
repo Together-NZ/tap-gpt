@@ -112,10 +112,129 @@ def set_env_vars_dash(brand):
     env["DBT_BIGQUERY_DATASET"] = f"dash_table__{brand}"
     return env
 
+def set_env_vars_dash_search(brand):
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"dash_table_search__{brand}"
+    return env
 
 with models.DAG(
-    dag_id="wcet-meltano-extraction-transformation-dbt",
+    dag_id="wcet-meltano-google-ads",
     schedule_interval="0 14 * * *",
+    default_args=default_args,
+    tags=["wcet", "meltano", "beervana"],
+) as dag_google_ads:
+    brands = ['beervana']
+    for brand in brands:
+        kube_google_ads = KubernetesPodOperator(
+            name="wcet-google-ads-to-bigquery",
+            task_id="wcet-google-ads_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-google-ads",
+                "target-bigquery",
+                f"dbt-bigquery:google_ads_{brand}_models",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_google_ads(brand),
+            get_logs=True,
+        )
+        kube_dash = KubernetesPodOperator(
+            name="wcet-dash-to-bigquery",
+            task_id="wcet-dash_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_table__{brand}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            trigger_rule="all_done",
+            env_vars=set_env_vars_dash(brand),
+            
+            get_logs=True,
+        )
+        kube_dash_search = KubernetesPodOperator(
+            name="wcet-dash-search-to-bigquery",
+            task_id="wcet-dash_search_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_table_search__{brand}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            trigger_rule="all_done",
+            env_vars=set_env_vars_dash_search(brand),
+            get_logs=True,
+        )
+        kube_dash_union = KubernetesPodOperator(
+            name="wcet-dash-union-to-bigquery",
+            task_id="wcet-dash_union_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_union__{brand}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            trigger_rule="all_done",
+            env_vars=set_env_vars_dash(brand),
+            get_logs=True,
+        )
+        ga4_type=['session','goal']
+        for type in ga4_type:
+            kube_ga4 = KubernetesPodOperator(
+                name="wcet-ga4-to-bigquery",
+                task_id="wcet-ga4_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-ga4",
+                    "target-bigquery",
+                    "dbt-bigquery:ga4_models",
+                ],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_ga4(brand,type),
+                get_logs=True,
+            )
+            kube_dash_union >> kube_ga4
+        kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union
+        
+        
+        
+        
+with models.DAG(
+    dag_id="wcet-meltano-extraction-transformation-dbt",
+    schedule_interval="0 4 * * *",
     default_args=default_args,
     tags=["wcet", "meltano", "beervana"],
 ) as dag:
@@ -198,27 +317,7 @@ with models.DAG(
             env_vars=set_env_vars_dash(brand),
             get_logs=True,
         )
-        ga4_type=['session','goal']
-        for type in ga4_type:
-            kube_ga4 = KubernetesPodOperator(
-                name="wcet-ga4-to-bigquery",
-                task_id="wcet-ga4_to_bigquery",
-                namespace="composer-user-workloads",
-                image=IMAGE,
-                arguments=[
-                    "--environment=prod",
-                    "run",
-                    "tap-ga4",
-                    "target-bigquery",
-                    "dbt-bigquery:ga4_models",
-                ],
-                container_resources=k8s_models.V1ResourceRequirements(
-                    limits={"memory": "1000M", "cpu": "500m"},
-                ),
-                env_vars=set_env_vars_ga4(brand,type),
-                get_logs=True,
-            )
-            kube_dash >> kube_ga4
+
         kube_dv360 = KubernetesPodOperator(
             name="wcet-dv360-to-bigquery",
             task_id="wcet-dv360_to_bigquery",
