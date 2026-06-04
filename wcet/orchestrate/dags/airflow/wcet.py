@@ -34,7 +34,8 @@ def get_ga4_start_date():
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_wcet_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
-    meltano_env = {**meltano_env_common, **meltano_env_unique}
+    meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
+    meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
     meltano_env["START_DATE"] = (
         datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     ).strftime("%Y-%m-%d")
