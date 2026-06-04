@@ -30,6 +30,7 @@ CLIENT_NAME={
     "uow":"uowaikato",
     "volvo":"volvo",
     "wendys":"wendys",
+    "wcet":"wcet",
     "zeekr":"zeekr"
 }
 #
