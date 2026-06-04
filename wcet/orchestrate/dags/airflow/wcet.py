@@ -243,7 +243,7 @@ with models.DAG(
                 "run",
                 "tap-ga4",
                 "target-bigquery",
-                f"dbt-bigquery:ga4_final_{brand}_models",
+                f"dbt-bigquery:ga4_{brand}_final_models",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
