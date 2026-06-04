@@ -1,0 +1,89 @@
+version: 2
+
+sources:
+  - name: facebook_raw__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__beervana') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__beervana') }}"
+    tables:
+      - name: facebook__beervana
+
+  - name: tiktok_raw__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw__beervana') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__beervana') }}"
+    tables:
+      - name: tiktok__beervana
+
+  - name: dv360_raw__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__beervana') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__beervana') }}"
+    tables:
+      - name: dv360_standard__beervana
+      - name: dv360_youtube__beervana
+
+  - name: cm360_raw
+    database: "together-internal"
+    schema: "{{ env_var('REFERENCE_CM360_RAW_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: cm360_transformed__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__beervana') }}"
+    tables:
+      - name: cm360_direct_buy__beervana
+
+  - name: ga4_raw__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__beervana') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+  - name: dash_union__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__beervana') }}"
+    tables:
+      - name: dash_union__beervana
+      - name: dash_table__beervana
+
+  - name: dash_union_search__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_SEARCH_BIGQUERY_DATASET', 'dash_table_search__beervana') }}"
+    tables:
+      - name: dash_table_search__beervana
+
+  - name: ga4_session_transformed__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__beervana') }}"
+    tables:
+      - name: ga4_goal_channel_session__beervana
+
+  - name: ga4_goal_transformed__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__beervana') }}"
+    tables:
+      - name: ga4_goal_channel_goal__beervana

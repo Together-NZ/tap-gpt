@@ -1,0 +1,124 @@
+version: 1
+default_environment: dev
+project_id: wcet-meltano-project
+send_anonymous_usage_stats: false
+environments:
+  - name: dev
+  - name: staging
+    config:
+      plugins:
+        transformers:
+          - name: dbt-bigquery
+            env:
+              DBT_BIGQUERY_PROJECT: together-internal
+              DBT_BIGQUERY_LOCATION: australia-southeast1
+              REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+              REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+              REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+              META_SUFFIX: dbt_test_facebook
+              DV360_SUFFIX: dbt_test_dv360
+              TIKTOK_SUFFIX: dbt_test_tiktok
+              PLAN_CODE: beervana
+              REPORT_NAME: beervana_report
+  - name: prod
+plugins:
+  extractors:
+    - name: tap-facebook
+      variant: airbyte
+      pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
+      config:
+        airbyte_config:
+          start_date: ${START_DATE}T00:00:00Z
+      select:
+        - ads_insights.*
+        - ad_account.*
+        - ad_sets.*
+        - ads.*
+        - campaigns.*
+        - custom_conversions.*
+    - name: tap-ga4
+      variant: meltanolabs
+      pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
+      config:
+        reports: ${TAP_GA4_REPORTS}
+        start_date: ${START_DATE}
+        keep_empty_rows: true
+        select:
+        - ${GA4_GOAL}
+    - name: tap-tiktok
+      variant: gthesheep
+      pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
+      config:
+        start_date: ${START_DATE}
+        advertiser_id: ${TAP_TIKTOK_ADVERTISER_ID}
+    - name: tap-dv360
+      namespace: tap-dv360
+      pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
+      executable: tap-dv360
+      capabilities:
+        - state
+        - catalog
+        - discover
+        - about
+        - stream-maps
+      config:
+        start_date: ${START_DATE}
+        advertiser_id: '8202470311'
+        query_standard: dv360_standard.json
+        query_youtube: dv360_youtube.json
+        service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  loaders:
+    - name: target-bigquery
+      variant: z3z1ma
+      pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
+      config:
+        dataset: ${BQ_DATASET}
+        project: wcet-main
+        location: australia-southeast1
+        denormalized: false
+        schema_resolver_version: 2
+        column_name_transforms:
+          add_underscore_when_invalid: true
+          lower: true
+          snake_case: true
+        fail_fast: false
+        method: ${BQ_METHOD}
+        bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  transformers:
+    - name: dbt-bigquery
+      variant: dbt-labs
+      pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
+      config:
+        project: wcet-main
+        location: australia-southeast1
+        method: oauth
+      commands:
+        cm360_beervana_models:
+          args: run --select cm360_direct_buy__beervana
+          description: Run CM360 models for Beervana
+        facebook_beervana_models:
+          args: run --select facebook__beervana
+          description: Run Facebook models for Beervana
+        tiktok_beervana_models:
+          args: run --select tiktok__beervana
+          description: Run TikTok models for Beervana
+        dv360_beervana_models:
+          args: run --select dv360_standard__beervana dv360_youtube__beervana
+          description: Run DV360 models for Beervana
+        google_ads_beervana_models:
+          args: run --select google_ads_search__beervana google_ads_demand__beervana
+        ga4_beervana_goal_models:
+          args: run --select ga4_goal_a__beervana ga4_goal_channel_goal__beervana
+          description: Run GA4 goal models for Beervana
+        ga4_beervana_session_models:
+          args: run --select ga4_goal_a_session__beervana ga4_goal_channel_session__beervana
+          description: Run GA4 session models for Beervana
+        ga4_beervana_final_models:
+          args: run --select ga4_goal_channel__beervana
+          description: Run GA4 final models for Beervana
+  files:
+    - name: files-airflow
+      variant: meltano
+      pip_url: git+https://github.com/meltano/files-airflow.git setuptools<82.0
+elt:
+  buffer_size: 52428800
