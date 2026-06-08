@@ -46,7 +46,7 @@ def set_env_vars_ga4_final(brand):
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    env["DBT_BIGQUERY_DATASET"] = f"ga4_final__{brand}"
+    env["DBT_BIGQUERY_DATASET"] = f"ga4_transformed__{brand}"
     return env
 def set_env_vars_facebook(brand):
     env = get_meltano_env()
