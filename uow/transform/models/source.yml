@@ -23,7 +23,7 @@ sources:
 
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'uowaikato-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw_test') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
