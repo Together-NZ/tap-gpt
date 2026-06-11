@@ -224,7 +224,7 @@ plugins:
       reddit_models:
         args: run --select +reddit
       google_ads_models:
-        args: run --select +google_ads_search
+        args: run --select +google_ads_search google_ads_keyword google_ads_location
 
   files:
   - name: files-airflow
