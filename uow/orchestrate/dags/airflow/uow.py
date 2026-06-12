@@ -456,7 +456,7 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_dv360(),
-        get_logs=True,
+       
     )
     kube_cm360 = KubernetesPodOperator(
         email_on_failure=True,

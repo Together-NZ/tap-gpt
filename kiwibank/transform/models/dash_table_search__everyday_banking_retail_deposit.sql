@@ -13,8 +13,10 @@ CASE WHEN
        WHERE lower(a) in UNNEST(ARRAY['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt']))
        THEN  (SELECT X FROM UNNEST(SPLIT(campaign_name,'_') ) as X WHERE lower(X) IN UNNEST(['aud','disp','native','pdooh','rmdisp','social','vid','vidod','yt'])
        LIMIT 1)
-       else 'OTHER'
-END as media_format,
+       WHEN LOWER(campaign_name) LIKE '%pmax%' OR LOWER(campaign_name) LIKE '%performance max%' OR LOWER(campaign_name) LIKE '%performance-max%' THEN 'PERFORMANCE MAX'
+       WHEN LOWER(campaign_name) LIKE '%search%' OR LOWER(campaign_name) LIKE '%search%' OR LOWER(campaign_name) LIKE '%search%' THEN 'SEARCH'
+       ELSE 'OTHER'
+       END as media_format,
 CASE WHEN lower(publisher) = 'demand gen' THEN 'Demand Gen'
 ELSE 'Paid Search' END as channel,
 'Choose' as funnel,

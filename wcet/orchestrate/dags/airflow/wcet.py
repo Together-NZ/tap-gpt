@@ -240,9 +240,7 @@ with models.DAG(
             image=IMAGE,
             arguments=[
                 "--environment=prod",
-                "run",
-                "tap-ga4",
-                "target-bigquery",
+                "invoke",
                 f"dbt-bigquery:ga4_{brand}_final_models",
             ],
             container_resources=k8s_models.V1ResourceRequirements(
