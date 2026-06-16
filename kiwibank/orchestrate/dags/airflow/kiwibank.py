@@ -125,6 +125,9 @@ def set_env_vars_ga4_overall(goal):
     if goal == 'session':
         env["GA4_REPORTS"] = "./report_sessions.json"
         env["GA4_GOAL"] = 'session_goal'
+    elif goal == 'keyword':
+        env["GA4_REPORTS"] = "./report_keyword.json"
+        env["GA4_GOAL"] = 'keyword_goal'
     else:
         env["GA4_REPORTS"] = "./report.json"
         env["GA4_GOAL"] = 'goal'
@@ -452,7 +455,7 @@ with models.DAG(
     default_args=default_args
 ) as dag_ga4:
     ga4_task_list = []
-    goal_list = ['goal','session']
+    goal_list = ['goal','session','keyword']
     for goal in goal_list:
 
         kube_ga4_overall = KubernetesPodOperator(

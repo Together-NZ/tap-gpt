@@ -1,0 +1,13 @@
+[
+    {
+    "name": "keyword_goal",
+    "dimensions": [
+     "date",
+     "eventName",
+     "googleAdsKeyword"
+    ],
+    "metrics": [
+        "keyEvents"
+    ]
+    }
+]
