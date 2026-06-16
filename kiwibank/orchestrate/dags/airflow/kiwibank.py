@@ -210,19 +210,19 @@ with models.DAG(
         env_vars=set_env_vars_facebook(),
         get_logs=True
     )
-    env=get_meltano_env()
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="kiwibank-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_kiwibank_main",
-        project_id=env["PROJECT_ID"]
-    )
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="kiwibank-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_kiwibank_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
         return result
@@ -249,18 +249,19 @@ with models.DAG(
         get_logs=True
     )
 
-    comparison_trigger_linkedin = ComparisonTrigger(
-        project_name="kiwibank-main",
-        destination_table="linkedin_transformed",
-        table_name="linkedin",
-        source_name="linkedin",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_kiwibank_main",
-        project_id=env["PROJECT_ID"]
-    )
     def linkedin_comparison_check(**context):
-        result = comparison_trigger_linkedin.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="kiwibank-main",
+            destination_table="linkedin_transformed",
+            table_name="linkedin",
+            source_name="linkedin",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_kiwibank_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
         return result
@@ -271,18 +272,19 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    comparison_trigger_dv360 = ComparisonTrigger(
-        project_name="kiwibank-main",
-        destination_table="dv360_transformed",
-        table_name="dv360_standard",
-        source_name="dv360_standard",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_kiwibank_main",
-        project_id=env["PROJECT_ID"]
-    )
     def dv360_comparison_standard_check(**context):
-        result = comparison_trigger_dv360.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="kiwibank-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_kiwibank_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
         return result
@@ -293,18 +295,19 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    comparison_trigger_dv360_youtube = ComparisonTrigger(
-        project_name="kiwibank-main",
-        destination_table="dv360_transformed",
-        table_name="dv360_youtube",
-        source_name="dv360_youtube",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_kiwibank_main",
-        project_id=env["PROJECT_ID"]
-    )
     def dv360_comparison_youtube_check(**context):
-        result = comparison_trigger_dv360_youtube.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="kiwibank-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_kiwibank_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
         return result
@@ -514,6 +517,7 @@ with models.DAG(
         'home_loans',
         'unattributed',
     ]
+    bing_task_list = []
     for brand in brands:
         kube_ga4_brand = KubernetesPodOperator(
             name=f"kb-{brand}-ga4-channel-to-bq",
@@ -578,5 +582,25 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
+        bing_brands = [
+            "home_loans",
+            "everyday_banking_retail_deposit"
+            
+        ]
+        if brands in bing_brands:
+            kube_bing_ads = KubernetesPodOperator(
+                name=f"kb-{brand}-bing-ads-to-bq",
+                task_id=f"kb-{brand}-bing_ads_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=["--environment=prod", "invoke", f"dbt-bigquery:bing_ads_{brand}_models"],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_google_ads_search(brand),
+            )
+            bing_task_list.append(kube_bing_ads)
         
-        [kube_google_ads,kube_tiktok] >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final >> kube_ga4_brand
+            [kube_google_ads,kube_tiktok,kube_bing_ads] >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final >> kube_ga4_brand
+        else:
+            [kube_google_ads,kube_tiktok] >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final >> kube_ga4_brand
