@@ -590,7 +590,7 @@ with models.DAG(
             "everyday_banking_retail_deposit"
             
         ]
-        if brands in bing_brands:
+        if brand in bing_brands:
             kube_bing_ads = KubernetesPodOperator(
                 name=f"kb-{brand}-bing-ads-to-bq",
                 task_id=f"kb-{brand}-bing_ads_to_bigquery",
