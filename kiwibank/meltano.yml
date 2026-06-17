@@ -163,6 +163,24 @@ plugins:
         args: run --select +ga4_goal_a_session +ga4_goal_channel_session
       ga4_final_models:
         args: run --select ga4_goal_channel
+      ga4_keyword_models:
+        args: run --select ga4_goal_a_keyword +ga4_goal_channel_keyword
+      ga4_keyword_ao_social_boosting_models:
+        args: run --select ga4_goal_channel_keyword__ao_social_boosting
+      ga4_keyword_business_banking_models:
+        args: run --select ga4_goal_channel_keyword__business_banking
+      ga4_keyword_credit_card_models:
+        args: run --select ga4_goal_channel_keyword__credit_card
+      ga4_keyword_fraud_and_scams_models:
+        args: run --select ga4_goal_channel_keyword__fraud_and_scams
+      ga4_keyword_everyday_banking_join_kiwibank_models:
+        args: run --select ga4_goal_channel_keyword__everyday_banking_join_kiwibank
+      ga4_keyword_everyday_banking_retail_deposit_models:
+        args: run --select ga4_goal_channel_keyword__everyday_banking_retail_deposit
+      ga4_keyword_home_loans_models:
+        args: run --select ga4_goal_channel_keyword__home_loans
+      ga4_keyword_unattributed_models:
+        args: run --select ga4_goal_channel_keyword__unattributed
       ga4_ao_social_boosting_models:
         args: run --select ga4_goal_channel__ao_social_boosting
       ga4_business_banking_models:

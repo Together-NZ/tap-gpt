@@ -534,8 +534,20 @@ with models.DAG(
             ),
             env_vars=set_env_vars_ga4_brand(brand),
         )
+        kube_ga4_keyword = KubernetesPodOperator(
+            name=f"kb-{brand}-ga4-keyword-to-bq",
+            task_id=f"kb-{brand}-ga4_keyword_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", f"dbt-bigquery:ga4_keyword_{brand}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4_brand(brand),
+        )
  
-        kube_dash_overall>> kube_ga4_final >> kube_ga4_brand
+        kube_dash_overall>> kube_ga4_final >> [kube_ga4_brand, kube_ga4_keyword]
+
 
         kube_google_ads = KubernetesPodOperator(
                 name=f"kb-{brand}-google-ads-to-bq",

@@ -4,7 +4,10 @@
     "dimensions": [
      "date",
      "eventName",
-     "googleAdsKeyword"
+     "googleAdsKeyword",
+     "sessionSourceMedium",
+     "sessionCampaignName",
+     "sessionManualAdContent"
     ],
     "metrics": [
         "keyEvents"
