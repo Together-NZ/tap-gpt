@@ -213,9 +213,9 @@ plugins:
         args: run --select +google_ads_search__home_loans +google_ads_demand__home_loans
       google_ads_unattributed_models:
         args: run --select +google_ads_search__unattributed +google_ads_demand__unattributed
-      bing_ads_search_home_loans_models:
+      bing_ads_home_loans_models:
         args: run --select +bing_ads_search__home_loans
-      bing_ads_search_everyday_banking_retail_deposit_models:
+      bing_ads_everyday_banking_retail_deposit_models:
         args: run --select +bing_ads_search__everyday_banking_retail_deposit
       ttd_models:
         args: run --select +ttd
