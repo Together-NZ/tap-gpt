@@ -15,6 +15,7 @@ from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperato
 from kubernetes.client import models as k8s_models
 from google.auth.transport.requests import Request
 from comparison_package import ComparisonTrigger
+from airflow.operators.python import PythonOperator
 
 IMAGE = "australia-southeast1-docker.pkg.dev/wcet-main/meltano/meltano-wcet-main:prod"
 PROJECT_NAME = "wcet-main"
@@ -29,6 +30,8 @@ default_args = {
     "retry_delay": timedelta(minutes=30),
     "start_date": datetime.datetime(2026, 5, 28, tzinfo=local_tz),
 }
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
 def get_ga4_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 
@@ -55,6 +58,7 @@ def set_env_vars_facebook(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"facebook_transformed__{brand}"
+    env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = env[f"TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{brand}_ID"]
     return env
 
 
@@ -65,6 +69,7 @@ def set_env_vars_tiktok(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"tiktok_transformed__{brand}"
+    env["TAP_TIKTOK_ADVERTISER_ID"] = env[f"TAP_TIKTOK_ADVERTISER_{brand}_ID"]
     return env
 
 
@@ -75,6 +80,7 @@ def set_env_vars_dv360(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"dv360_transformed__{brand}"
+    env["TAP_DV360_ADVERTISER_ID"] = env[f"TAP_DV360_ADVERTISER_{brand}_ID"]
     return env
 
 def set_env_vars_ga4(brand,goal):
@@ -105,6 +111,7 @@ def set_env_vars_ga4(brand,goal):
     developer_creds.refresh(Request())
     env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
     env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+    env["TAP_GA4_PROPERTY_ID"] = env[f"TAP_GA4_PROPERTY_{brand}_ID"]
     return env
 
 def set_env_vars_google_ads(brand):
@@ -272,6 +279,42 @@ with models.DAG(
             task_id=f"wcet-facebook__{brand}_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
+            arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery",
+                        f"dbt-bigquery:facebook_{brand}_models"],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_facebook(brand),
+            get_logs=True
+        )
+        def facebook_comparison_check(**context):
+            env = get_meltano_env()
+            trigger = ComparisonTrigger(
+                project_name="wcet-main",
+                destination_table=f"facebook_transformed__{brand}",
+                table_name=f"facebook__{brand}",
+                source_name="meta",
+                start_date=comparison_start_date,
+                end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                secret_name="airflow-variables-meltano_wcet_main",
+                project_id=env["PROJECT_ID"]
+            )
+            result = trigger.compare_data()
+            if not result:
+                raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+            return result
+        
+        task_facebook_comparison = PythonOperator(
+            task_id=f"wcet-facebook_comparison__{brand}",
+            python_callable=facebook_comparison_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+        kube_facebook = KubernetesPodOperator(
+            name="wcet-facebook-to-bigquery",
+            task_id=f"wcet-facebook__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
             arguments=[
                 "--environment=prod",
                 "run",
@@ -285,6 +328,7 @@ with models.DAG(
             env_vars=set_env_vars_facebook(brand),
             get_logs=True,
         )
+        kube_facebook >> task_facebook_comparison
         if brand == 'beervana':
             kube_tiktok = KubernetesPodOperator(
                 name="wcet-tiktok-to-bigquery",
@@ -304,7 +348,30 @@ with models.DAG(
                 env_vars=set_env_vars_tiktok(brand),
                 get_logs=True,
             )
-            tiktok_task_list.append(kube_tiktok)
+            def tiktok_comparison_check(**context):
+                env = get_meltano_env()
+                trigger = ComparisonTrigger(
+                    project_name="wcet-main",
+                    destination_table=f"tiktok_transformed__{brand} ",
+                    table_name=f"tiktok__{brand}",
+                    source_name="tiktok",
+                    start_date=comparison_start_date,
+                    end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+                    secret_name="airflow-variables-meltano_wcet_main",
+                    project_id=env["PROJECT_ID"]
+                )
+                result = trigger.compare_data()
+                if not result:
+                    raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
+                return result
+            task_tiktok_comparison = PythonOperator(
+                task_id=f"wcet-tiktok_comparison__{brand}",
+                python_callable=tiktok_comparison_check,
+                retries=0,
+                trigger_rule="all_done",
+            )
+            kube_tiktok >> task_tiktok_comparison
+ 
         kube_dash = KubernetesPodOperator(
             name="wcet-dash-to-bigquery",
             task_id=f"wcet-dash__{brand}_to_bigquery",
@@ -384,8 +451,60 @@ with models.DAG(
             env_vars=set_env_vars_dv360(brand),
             get_logs=True,
         )
+        dv360_comparison_check = PythonOperator(
+            task_id=f"wcet-dv360_comparison__{brand}",
+            python_callable=dv360_comparison_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+        def dv360_comparison_standard_check(**context):
+            env = get_meltano_env()
+            trigger = ComparisonTrigger(
+                project_name="kiwibank-main",
+                destination_table="dv360_transformed",
+                table_name="dv360_standard",
+                source_name="dv360_standard",
+                start_date=comparison_start_date,
+                end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                secret_name="airflow-variables-meltano_kiwibank_main",
+                project_id=env["PROJECT_ID"]
+            )
+            result = trigger.compare_data()
+            if not result:
+                raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+            return result
+        
+        task_dv360_comparison_standard = PythonOperator(
+            task_id="task_dv360_comparison_standard",
+            python_callable=dv360_comparison_standard_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+        def dv360_comparison_youtube_check(**context):
+            env = get_meltano_env()
+            trigger = ComparisonTrigger(
+                project_name="wcet-main",
+                destination_table=f"dv360_transformed__{brand}",
+                table_name=f"dv360_youtube__{brand}",
+                source_name="dv360_youtube",
+                start_date=comparison_start_date,
+                end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                secret_name="airflow-variables-meltano_wcet_main",
+                project_id=env["PROJECT_ID"]
+            )
+            result = trigger.compare_data()
+            if not result:
+                raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+            return result
+        
+        task_dv360_comparison_youtube = PythonOperator(
+            task_id=f"wcet-dv360_comparison_youtube__{brand}",
+            python_callable=dv360_comparison_youtube_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
 
-
+        kube_dv360 >> [task_dv360_comparison_standard,task_dv360_comparison_youtube]
         if brand == 'beervana':
             for task in tiktok_task_list:
                 [kube_facebook, task, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
