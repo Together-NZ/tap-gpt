@@ -274,19 +274,6 @@ with models.DAG(
     tiktok_task_list = []
     brands = ['beervana','wop']
     for brand in brands:
-        kube_facebook = KubernetesPodOperator(
-            name="wcet-facebook-to-bigquery",
-            task_id=f"wcet-facebook__{brand}_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery",
-                        f"dbt-bigquery:facebook_{brand}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_facebook(brand),
-            get_logs=True
-        )
         def facebook_comparison_check(**context):
             env = get_meltano_env()
             trigger = ComparisonTrigger(
