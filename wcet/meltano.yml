@@ -63,7 +63,7 @@ plugins:
         - stream-maps
       config:
         start_date: ${START_DATE}
-        advertiser_id: '8202470311'
+        advertiser_id: ${TAP_DV360_ADVERTISER_ID}
         query_standard: dv360_standard.json
         query_youtube: dv360_youtube.json
         service_account: together-meltano@together-internal.iam.gserviceaccount.com
@@ -96,23 +96,68 @@ plugins:
         cm360_beervana_models:
           args: run --select cm360_direct_buy__beervana
           description: Run CM360 models for Beervana
+        cm360_wop_models:
+          args: run --select cm360_direct_buy__wop
+          description: Run CM360 models for WOP
+        facebook_wop_models:
+          args: run --select facebook__wop
+          description: Run Facebook models for WOP
+        tiktok_wop_models:
+          args: run --select tiktok__wop
+          description: Run TikTok models for WOP
+
         facebook_beervana_models:
           args: run --select facebook__beervana
           description: Run Facebook models for Beervana
+        
         tiktok_beervana_models:
           args: run --select tiktok__beervana
           description: Run TikTok models for Beervana
+
         dv360_beervana_models:
           args: run --select dv360_standard__beervana dv360_youtube__beervana
-          description: Run DV360 models for Beervana
+          description: Run DV360 models for Beervanas
+
+        dv360_wop_models:
+          args: run --select dv360_standard__wop dv360_youtube__wop
+          description: Run DV360 models for WOP
+
         google_ads_beervana_models:
-          args: run --select google_ads_search__beervana google_ads_demand__beervana
+          args: run --select google_ads_search__beervana google_ads_demand__beervana google_ads_keyword__beervana
+          description: Run Google Ads models for Beervana
+          
+        google_ads_wop_models:
+          args: run --select google_ads_search__wop google_ads_demand__wop google_ads_keyword__wop
+          description: Run Google Ads models for WOP
+
         ga4_beervana_goal_models:
           args: run --select ga4_goal_a__beervana ga4_goal_channel_goal__beervana
           description: Run GA4 goal models for Beervana
+
+        ga4_wop_goal_models:
+          args: run --select ga4_goal_a__wop ga4_goal_channel_goal__wop
+          description: Run GA4 goal models for WOP
+
+        ga4_wop_session_models:
+          args: run --select ga4_goal_a_session__wop ga4_goal_channel_session__wop
+          description: Run GA4 session models for WOP
+
+        ga4_wop_keyword_models:
+          args: run --select ga4_goal_channel_keyword__wop
+          description: Run GA4 keyword models for WOP
+
+        ga4_wop_final_models:
+          args: run --select ga4_goal_channel__wop
+          description: Run GA4 final models for WOP
+
         ga4_beervana_session_models:
           args: run --select ga4_goal_a_session__beervana ga4_goal_channel_session__beervana
           description: Run GA4 session models for Beervana
+
+        ga4_beervana_keyword_models:
+          args: run --select ga4_goal_channel_keyword__beervana
+          description: Run GA4 keyword models for Beervana
+
         ga4_beervana_final_models:
           args: run --select ga4_goal_channel__beervana
           description: Run GA4 final models for Beervana
