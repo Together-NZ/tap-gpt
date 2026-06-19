@@ -83,6 +83,9 @@ def set_env_vars_ga4(brand,goal):
     if goal == 'session':
             env["TAP_GA4_REPORTS"] = "./report_sessions.json"
             env["GA4_GOAL"] = 'session_goal'
+    elif goal == 'keyword':
+            env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = 'keyword_goal'
     else:
             env["TAP_GA4_REPORTS"] = "./report.json"
             env["GA4_GOAL"] = 'goal'   
@@ -131,7 +134,7 @@ with models.DAG(
     default_args=default_args,
     tags=["wcet", "meltano", "beervana"],
 ) as dag_google_ads:
-    brands = ['beervana']
+    brands = ['beervana','wop']
     for brand in brands:
         kube_google_ads = KubernetesPodOperator(
             name="wcet-google-ads-to-bigquery",
@@ -211,7 +214,7 @@ with models.DAG(
             get_logs=True,
         )
         kube_ga4_list = []
-        ga4_type=['session','goal']
+        ga4_type=['session','goal','keyword']
         for type in ga4_type:
             kube_ga4 = KubernetesPodOperator(
                 name="wcet-ga4-to-bigquery",
@@ -261,7 +264,8 @@ with models.DAG(
     default_args=default_args,
     tags=["wcet", "meltano", "beervana"],
 ) as dag:
-    brands = ['beervana']
+    tiktok_task_list = []
+    brands = ['beervana','wop']
     for brand in brands:
         kube_facebook = KubernetesPodOperator(
             name="wcet-facebook-to-bigquery",
@@ -281,25 +285,26 @@ with models.DAG(
             env_vars=set_env_vars_facebook(brand),
             get_logs=True,
         )
-
-        kube_tiktok = KubernetesPodOperator(
-            name="wcet-tiktok-to-bigquery",
-            task_id=f"wcet-tiktok__{brand}_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=[
-                "--environment=prod",
-                "run",
-                "tap-tiktok",
-                "target-bigquery",
-                f"dbt-bigquery:tiktok_{brand}_models",
-            ],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_tiktok(brand),
-            get_logs=True,
-        )
+        if brand == 'beervana':
+            kube_tiktok = KubernetesPodOperator(
+                name="wcet-tiktok-to-bigquery",
+                task_id=f"wcet-tiktok__{brand}_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-tiktok",
+                    "target-bigquery",
+                    f"dbt-bigquery:tiktok_{brand}_models",
+                ],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_tiktok(brand),
+                get_logs=True,
+            )
+            tiktok_task_list.append(kube_tiktok)
         kube_dash = KubernetesPodOperator(
             name="wcet-dash-to-bigquery",
             task_id=f"wcet-dash__{brand}_to_bigquery",
@@ -381,5 +386,8 @@ with models.DAG(
         )
 
 
-
-        [kube_facebook, kube_tiktok, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
+        if brand == 'beervana':
+            for task in tiktok_task_list:
+                [kube_facebook, task, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
+        else:
+            [kube_facebook, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
