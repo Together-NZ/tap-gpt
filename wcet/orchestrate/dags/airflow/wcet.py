@@ -271,7 +271,6 @@ with models.DAG(
     default_args=default_args,
     tags=["wcet", "meltano", "beervana"],
 ) as dag:
-    tiktok_task_list = []
     brands = ['beervana','wop']
     for brand in brands:
         def facebook_comparison_check(**context):
@@ -442,13 +441,13 @@ with models.DAG(
         def dv360_comparison_standard_check(**context):
             env = get_meltano_env()
             trigger = ComparisonTrigger(
-                project_name="kiwibank-main",
-                destination_table="dv360_transformed",
-                table_name="dv360_standard",
+                project_name="wcet-main",
+                destination_table=f"dv360_transformed__{brand}",
+                table_name=f"dv360_standard__{brand}",
                 source_name="dv360_standard",
                 start_date=comparison_start_date,
                 end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-                secret_name="airflow-variables-meltano_kiwibank_main",
+                secret_name="airflow-variables-meltano_wcet_main",
                 project_id=env["PROJECT_ID"]
             )
             result = trigger.compare_data()
@@ -457,7 +456,7 @@ with models.DAG(
             return result
         
         task_dv360_comparison_standard = PythonOperator(
-            task_id="task_dv360_comparison_standard",
+            task_id=f"wcet-dv360_comparison_standard__{brand}",
             python_callable=dv360_comparison_standard_check,
             retries=0,
             trigger_rule="all_done",
@@ -486,9 +485,8 @@ with models.DAG(
             trigger_rule="all_done",
         )
 
-        kube_dv360 >> [task_dv360_comparison_standard,task_dv360_comparison_youtube]
+        kube_dv360 >> [task_dv360_comparison_standard, task_dv360_comparison_youtube]
         if brand == 'beervana':
-            for task in tiktok_task_list:
-                [kube_facebook, task, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
+            [kube_facebook, kube_tiktok, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
         else:
             [kube_facebook, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
