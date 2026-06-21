@@ -438,12 +438,7 @@ with models.DAG(
             env_vars=set_env_vars_dv360(brand),
             get_logs=True,
         )
-        dv360_comparison_check = PythonOperator(
-            task_id=f"wcet-dv360_comparison__{brand}",
-            python_callable=dv360_comparison_check,
-            retries=0,
-            trigger_rule="all_done",
-        )
+
         def dv360_comparison_standard_check(**context):
             env = get_meltano_env()
             trigger = ComparisonTrigger(
