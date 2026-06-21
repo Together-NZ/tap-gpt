@@ -271,6 +271,7 @@ with models.DAG(
     default_args=default_args,
     tags=["wcet", "meltano", "beervana"],
 ) as dag:
+    tiktok_task_list = []
     brands = ['beervana','wop']
     for brand in brands:
         def facebook_comparison_check(**context):
@@ -487,6 +488,7 @@ with models.DAG(
 
         kube_dv360 >> [task_dv360_comparison_standard, task_dv360_comparison_youtube]
         if brand == 'beervana':
-            [kube_facebook, kube_tiktok, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
+            for task in tiktok_task_list:
+                [kube_facebook, task, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
         else:
             [kube_facebook, kube_dv360] >> kube_dash >> kube_dash_search >> kube_dash_union
