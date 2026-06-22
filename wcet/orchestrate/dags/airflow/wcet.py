@@ -135,6 +135,86 @@ def set_env_vars_dash_search(brand):
     env["DBT_BIGQUERY_DATASET"] = f"dash_table_search__{brand}"
     return env
 
+
+def make_facebook_comparison_check(brand):
+    def facebook_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wcet-main",
+            destination_table=f"facebook_transformed__{brand}",
+            table_name=f"facebook__{brand}",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wcet_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
+    return facebook_comparison_check
+
+
+def make_tiktok_comparison_check(brand):
+    def tiktok_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wcet-main",
+            destination_table=f"tiktok_transformed__{brand}",
+            table_name=f"tiktok__{brand}",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wcet_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
+        return result
+    return tiktok_comparison_check
+
+
+def make_dv360_comparison_standard_check(brand):
+    def dv360_comparison_standard_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wcet-main",
+            destination_table=f"dv360_transformed__{brand}",
+            table_name=f"dv360_standard__{brand}",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wcet_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+        return result
+    return dv360_comparison_standard_check
+
+
+def make_dv360_comparison_youtube_check(brand):
+    def dv360_comparison_youtube_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="wcet-main",
+            destination_table=f"dv360_transformed__{brand}",
+            table_name=f"dv360_youtube__{brand}",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_wcet_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
+        return result
+    return dv360_comparison_youtube_check
+
 with models.DAG(
     dag_id="wcet-meltano-google-ads",
     schedule_interval="0 14 * * *",
@@ -271,8 +351,8 @@ with models.DAG(
     default_args=default_args,
     tags=["wcet", "meltano", "beervana"],
 ) as dag:
-    tiktok_task_list = []
     brands = ['beervana','wop']
+    tiktok_task_list = []
     for brand in brands:
         def facebook_comparison_check(**context):
             env = get_meltano_env()
@@ -284,7 +364,8 @@ with models.DAG(
                 start_date=comparison_start_date,
                 end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
                 secret_name="airflow-variables-meltano_wcet_main",
-                project_id=env["PROJECT_ID"]
+                project_id=env["PROJECT_ID"],
+                brand= brand
             )
             result = trigger.compare_data()
             if not result:
@@ -345,7 +426,8 @@ with models.DAG(
                     start_date=comparison_start_date,
                     end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
                     secret_name="airflow-variables-meltano_wcet_main",
-                    project_id=env["PROJECT_ID"]
+                    project_id=env["PROJECT_ID"],
+                    brand= brand
                 )
                 result = trigger.compare_data()
                 if not result:
@@ -357,6 +439,7 @@ with models.DAG(
                 retries=0,
                 trigger_rule="all_done",
             )
+            tiktok_task_list.append(task_tiktok_comparison)
             kube_tiktok >> task_tiktok_comparison
  
         kube_dash = KubernetesPodOperator(
@@ -449,7 +532,8 @@ with models.DAG(
                 start_date=comparison_start_date,
                 end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
                 secret_name="airflow-variables-meltano_wcet_main",
-                project_id=env["PROJECT_ID"]
+                project_id=env["PROJECT_ID"],
+                brand= brand
             )
             result = trigger.compare_data()
             if not result:
