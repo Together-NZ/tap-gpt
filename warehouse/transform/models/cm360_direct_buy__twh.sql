@@ -1,6 +1,5 @@
 {{ config(
     materialized='table',
-    schema='cm360_transformed__twh',
     alias='cm360_direct_buy__twh',
 ) }}
 

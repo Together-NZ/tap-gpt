@@ -176,6 +176,14 @@ sources:
       - name: dash_table_search__twhs
 
 models:
+  - name: cm360_direct_buy__twh
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', 'cm360_transformed__twh') }}"
+
+  - name: cm360_direct_buy__twhs
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', 'cm360_transformed__twhs') }}"
+  
   - name: facebook__twh
     config:
       schema: "{{ env_var('META_SUFFIX', 'facebook_transformed__twh') }}"

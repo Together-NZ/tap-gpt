@@ -15,6 +15,8 @@ environments:
               REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
               META_SUFFIX: dbt_test_facebook
               DV360_SUFFIX: dbt_test_dv360
+              REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+              CM360_SUFFIX: dbt_test_cm360
               PLAN_CODE: twh
   - name: prod
 plugins:
