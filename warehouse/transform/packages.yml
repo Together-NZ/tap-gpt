@@ -1,0 +1,14 @@
+packages:
+  - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
+    revision: ae4a005e19100d01c4d986e8b06fa9792e751cbb
+  - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
+    revision: 3399b3855bcfee80c3090164478121369b78c3b1
+  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
+    revision: dc826c17a7294fe41129ff6fc27e40bc5bf728c1
+  - local: ../../google_ads
+  - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
+    revision: 0817a62f0ff5ed6fb4dab879f438ede3bad5a6c2
+  - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
+    revision: bf67bb91150d9547f66e10dfc2d5648b08853dec
+  - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
+    revision: 085cc208375d7672aef4c342b818823a6d43e674

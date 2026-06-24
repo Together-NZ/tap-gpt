@@ -1,0 +1,126 @@
+default_environment: dev
+project_id: warehouse-meltano-project
+send_anonymous_usage_stats: false
+environments:
+  - name: dev
+  - name: staging
+    config:
+      plugins:
+        transformers:
+          - name: dbt-bigquery
+            env:
+              DBT_BIGQUERY_PROJECT: together-internal
+              DBT_BIGQUERY_LOCATION: australia-southeast1
+  - name: prod
+plugins:
+  extractors: 
+  - name: tap-ga4
+    variant: meltanolabs
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
+    config:
+      reports: ${TAP_GA4_REPORTS}
+      start_date: ${START_DATE}
+      keep_empty_rows: true
+      select:
+      - ${GA4_GOAL}
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '685375340'
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+  - name: tap-facebook
+    variant: airbyte
+    pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
+    config:
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
+    select:
+    - ads_insights.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+    - custom_conversions.*
+  loaders:
+    - name: target-bigquery
+      variant: z3z1ma
+      pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
+      config:
+        dataset: ${BQ_DATASET}
+        project: warehouse-main
+        location: australia-southeast1
+        denormalized: false
+        schema_resolver_version: 2
+        column_name_transforms:
+          add_underscore_when_invalid: true
+          lower: true
+          snake_case: true
+        fail_fast: false
+        method: ${BQ_METHOD}
+        bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  orchestrators:
+    - name: airflow
+      variant: apache
+      pip_url: apache-airflow==2.10.5 --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
+  transformers:
+    - name: dbt-bigquery
+      variant: dbt-labs
+      pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
+      commands:
+        cm360_twh_models:
+          args: run --select cm360_direct_buy__twh
+        cm360_twhs_models:
+          args: run --select cm360_direct_buy__twhs
+        facebook_twh_models:
+          args: run --select facebook__twh
+        facebook_twhs_models:
+          args: run --select facebook__twhs
+        dv360_twh_models:
+          args: run --select dv360_standard__twh dv360_youtube__twh
+        dv360_twhs_models:
+          args: run --select dv360_standard__twhs dv360_youtube__twhs
+        google_ads_twh_models:
+          args: run --select +google_ads_search__twh +google_ads_demand__twh +google_ads_keyword__twh +bing_ads_search__twh
+        google_ads_twhs_models:
+          args: run --select +google_ads_search__twhs +google_ads_demand__twhs +google_ads_keyword__twhs +bing_ads_search__twhs
+        bing_ads_twh_models:
+          args: run --select bing_ads_search__twh bing_ads_keyword__twh
+        bing_ads_twhs_models:
+          args: run --select bing_ads_search__twhs bing_ads_keyword__twhs
+        ga4_twh_goal_models:
+          args: run --select ga4_goal_a__twh ga4_goal_channel_goal__twh
+        ga4_twhs_goal_models:
+          args: run --select ga4_goal_a__twhs ga4_goal_channel_goal__twhs
+        ga4_twh_session_models:
+          args: run --select ga4_goal_a_session__twh ga4_goal_channel_session__twh
+        ga4_twhs_session_models:
+          args: run --select ga4_goal_a_session__twhs ga4_goal_channel_session__twhs
+        ga4_twh_keyword_models:
+          args: run --select ga4_goal_channel_keyword__twh
+        ga4_twhs_keyword_models:
+          args: run --select ga4_goal_channel_keyword__twhs
+        ga4_twh_final_models:
+          args: run --select ga4_goal_channel__twh
+        ga4_twhs_final_models:
+          args: run --select ga4_goal_channel__twhs
+        dash_twh_models:
+          args: run --select dash_table__twh dash_table_search__twh dash_union__twh
+        dash_twhs_models:
+          args: run --select dash_table__twhs dash_table_search__twhs dash_union__twhs
+  files:
+    - name: files-airflow
+      variant: meltano
+      pip_url: git+https://github.com/meltano/files-airflow.git setuptools<82.0
+elt:
+  buffer_size: 52428800
