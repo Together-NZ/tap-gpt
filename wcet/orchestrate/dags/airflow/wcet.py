@@ -481,7 +481,8 @@ with models.DAG(
                 start_date=comparison_start_date,
                 end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
                 secret_name="airflow-variables-meltano_wcet_main",
-                project_id=env["PROJECT_ID"]
+                project_id=env["PROJECT_ID"],
+                brand= brand
             )
             result = trigger.compare_data()
             if not result:
