@@ -42,7 +42,7 @@ plugins:
     - stream-maps
     config:
       start_date: ${START_DATE}
-      advertiser_id: '685375340'
+      advertiser_id: ${TAP_DV360_ADVERTISER_ID}
       query_standard: dv360_standard.json
       query_youtube: dv360_youtube.json
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
@@ -52,6 +52,7 @@ plugins:
     config:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
+        account_id: ${TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID}
     select:
     - ads_insights.*
     - ad_account.*
