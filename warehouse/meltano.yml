@@ -87,6 +87,18 @@ plugins:
       location: australia-southeast1
       method: oauth
     commands:
+      facebook_twh_models:
+        args: run --select facebook__twh
+      facebook_twhs_models:
+        args: run --select facebook__twhs
+      cm360_twh_models:
+        args: run --select cm360_direct_buy__twh
+      cm360_twhs_models:
+        args: run --select cm360_direct_buy__twhs
+      dv360_twh_models:
+        args: run --select dv360_standard__twh dv360_youtube__twh
+      dv360_twhs_models:
+        args: run --select dv360_standard__twhs dv360_youtube__twhs
       google_ads_twh_models:
         args: run --select +google_ads_search__twh +google_ads_demand__twh +google_ads_keyword__twh +bing_ads_search__twh
       google_ads_twhs_models:
