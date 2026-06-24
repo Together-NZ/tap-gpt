@@ -1,6 +1,6 @@
 FROM meltano/meltano:latest
 
-RUN apt-get update && apt-get install -y openssh-client git
+RUN apt-get update && apt-get install -y openssh-client git curl
 
 WORKDIR /project
 
@@ -15,7 +15,7 @@ RUN bash -c '\
   for i in {1..3}; do meltano install transformer dbt-bigquery   && break || sleep 5; done && \
   for i in {1..3}; do meltano install file files-airflow          && break || sleep 5; done'
 
-RUN pip install httplib2 google-api-python-client google-auth google-auth-oauthlib google-cloud-bigquery google-cloud-storage pandas pyarrow curl
+RUN pip install httplib2 google-api-python-client google-auth google-auth-oauthlib google-cloud-bigquery google-cloud-storage pandas pyarrow
 
 RUN for v in /project/.meltano/*/*/venv/bin/python; do \
   "$v" -m ensurepip --upgrade || true; \
