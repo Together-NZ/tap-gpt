@@ -29,6 +29,7 @@ CLIENT_NAME={
     "tepuia":"tepuia",
     "uow":"uowaikato",
     "volvo":"volvo",
+    "warehouse":"warehouse",
     "wendys":"wendys",
     "wcet":"wcet",
     "zeekr":"zeekr"
