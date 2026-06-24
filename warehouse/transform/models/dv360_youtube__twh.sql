@@ -1,6 +1,5 @@
 {{ config(
     materialized='table',
-    schema='dv360_transformed__twh',
     alias='dv360_youtube__twh',
 ) }}
 {{ dv360.dv360_youtube(

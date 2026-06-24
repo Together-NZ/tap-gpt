@@ -1,6 +1,5 @@
 {{ config(
     materialized='table',
-    schema='dv360_transformed__twhs',
     alias='dv360_standard__twhs',
 ) }}
 {{ dv360.dv360_standard(

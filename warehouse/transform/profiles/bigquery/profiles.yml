@@ -6,34 +6,22 @@ meltano:
   outputs:
     dev:
       type: bigquery
-      method: "{{ env_var('DBT_BIGQUERY_AUTH_METHOD') }}"
-      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-      dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      method: "{{ env_var('DBT_BIGQUERY_AUTH_METHOD', 'oauth') }}"
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'dev') }}"
+      location: australia-southeast1
       threads: 2
-      refresh_token: "{{ env_var('DBT_BIGQUERY_REFRESH_TOKEN', '') }}"
-      client_id: "{{ env_var('DBT_BIGQUERY_CLIENT_ID', '') }}"
-      client_secret: "{{ env_var('DBT_BIGQUERY_CLIENT_SECRET', '') }}"
-      token_uri: "{{ env_var('DBT_BIGQUERY_TOKEN_URI', '') }}"
-      keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE', '') }}"
     staging:
       type: bigquery
-      method: "{{ env_var('DBT_BIGQUERY_METHOD') }}"
-      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-      dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      method: "{{ env_var('DBT_BIGQUERY_METHOD', 'oauth') }}"
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT', 'together-internal') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'staging') }}"
+      location: australia-southeast1
       threads: 4
-      refresh_token: "{{ env_var('DBT_BIGQUERY_REFRESH_TOKEN', '') }}"
-      client_id: "{{ env_var('DBT_BIGQUERY_CLIENT_ID', '') }}"
-      client_secret: "{{ env_var('DBT_BIGQUERY_CLIENT_SECRET', '') }}"
-      token_uri: "{{ env_var('DBT_BIGQUERY_TOKEN_URI', '') }}"
-      keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE', '') }}"
     prod:
       type: bigquery
-      method: "{{ env_var('DBT_BIGQUERY_METHOD') }}"
-      project: "{{ env_var('DBT_BIGQUERY_PROJECT') }}"
-      dataset: "{{ env_var('DBT_BIGQUERY_DATASET') }}"
+      method: "{{ env_var('DBT_BIGQUERY_METHOD', 'oauth') }}"
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'prod') }}"
+      location: australia-southeast1
       threads: 6
-      refresh_token: "{{ env_var('DBT_BIGQUERY_REFRESH_TOKEN', '') }}"
-      client_id: "{{ env_var('DBT_BIGQUERY_CLIENT_ID', '') }}"
-      client_secret: "{{ env_var('DBT_BIGQUERY_CLIENT_SECRET', '') }}"
-      token_uri: "{{ env_var('DBT_BIGQUERY_TOKEN_URI', '') }}"
-      keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE', '') }}"

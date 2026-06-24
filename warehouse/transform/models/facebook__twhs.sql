@@ -1,6 +1,5 @@
 {{ config(
     materialized='table',
-    schema='facebook_transformed__twhs',
     alias='facebook__twhs',
 ) }}
 WITH {{ facebook.daily_breakdown(source_name='facebook_raw__twhs', table_name='ads_insights') }},
