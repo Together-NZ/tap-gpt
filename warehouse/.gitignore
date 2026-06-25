@@ -1,0 +1,6 @@
+/venv
+/.meltano
+.env
+transform/logs/
+transform/dbt_packages/
+transform/target/

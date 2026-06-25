@@ -1,0 +1,27 @@
+config:
+  send_anonymous_usage_stats: False
+  use_colors: True
+meltano:
+  target: "{{ env_var('MELTANO_ENVIRONMENT', 'dev') }}"
+  outputs:
+    dev:
+      type: bigquery
+      method: "{{ env_var('DBT_BIGQUERY_AUTH_METHOD', 'oauth') }}"
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'dev') }}"
+      location: australia-southeast1
+      threads: 2
+    staging:
+      type: bigquery
+      method: "{{ env_var('DBT_BIGQUERY_METHOD', 'oauth') }}"
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT', 'together-internal') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'staging') }}"
+      location: australia-southeast1
+      threads: 4
+    prod:
+      type: bigquery
+      method: "{{ env_var('DBT_BIGQUERY_METHOD', 'oauth') }}"
+      project: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+      dataset: "{{ env_var('DBT_BIGQUERY_DATASET', 'prod') }}"
+      location: australia-southeast1
+      threads: 6

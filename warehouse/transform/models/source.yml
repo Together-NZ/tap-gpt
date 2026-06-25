@@ -1,0 +1,283 @@
+version: 2
+
+sources:
+  - name: facebook_raw__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__twh') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_account
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+  - name: facebook_raw__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__twhs') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_account
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__twh') }}"
+    tables:
+      - name: facebook__twh
+  - name: facebook_transformed__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__twhs') }}"
+    tables:
+      - name: facebook__twhs
+
+  - name: dv360_raw__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__twh') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+  - name: dv360_raw__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__twhs') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__twh') }}"
+    tables:
+      - name: dv360_standard__twh
+      - name: dv360_youtube__twh
+  - name: dv360_transformed__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__twhs') }}"
+    tables:
+      - name: dv360_standard__twhs
+      - name: dv360_youtube__twhs
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_RAW_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+  - name: cm360_transformed__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__twh') }}"
+    tables:
+      - name: cm360_direct_buy__twh
+  - name: cm360_transformed__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__twhs') }}"
+    tables:
+      - name: cm360_direct_buy__twhs
+
+  - name: ga4_raw__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__twh') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+  - name: ga4_raw__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__twhs') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_transformed__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__twh') }}"
+    tables:
+      - name: ga4_goal_a__twh
+      - name: ga4_goal_a_session__twh
+      - name: ga4_goal_channel__twh
+      - name: ga4_goal_channel_goal__twh
+      - name: ga4_goal_channel_session__twh
+      - name: ga4_goal_channel_keyword__twh
+  - name: ga4_transformed__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__twhs') }}"
+    tables:
+      - name: ga4_goal_a__twhs
+      - name: ga4_goal_a_session__twhs
+      - name: ga4_goal_channel__twhs
+      - name: ga4_goal_channel_goal__twhs
+      - name: ga4_goal_channel_session__twhs
+      - name: ga4_goal_channel_keyword__twhs
+
+  - name: ga4_session_transformed__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__twh') }}"
+    tables:
+      - name: ga4_goal_channel_session__twh
+  - name: ga4_goal_transformed__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__twh') }}"
+    tables:
+      - name: ga4_goal_channel_goal__twh
+  - name: ga4_session_transformed__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__twhs') }}"
+    tables:
+      - name: ga4_goal_channel_session__twhs
+  - name: ga4_goal_transformed__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__twhs') }}"
+    tables:
+      - name: ga4_goal_channel_goal__twhs
+
+  - name: google_ads__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_BIGQUERY_DATASET', 'google_ads_search_transformed__twh') }}"
+    tables:
+      - name: google_ads_demand__twh
+      - name: google_ads_search__twh
+      - name: google_ads_keyword__twh
+      - name: bing_ads_search__twh
+      - name: bing_ads_keyword__twh
+  - name: google_ads__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_BIGQUERY_DATASET', 'google_ads_search_transformed__twhs') }}"
+    tables:
+      - name: google_ads_demand__twhs
+      - name: google_ads_search__twhs
+      - name: google_ads_keyword__twhs
+      - name: bing_ads_search__twhs
+      - name: bing_ads_keyword__twhs
+
+  - name: dash_union__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__twh') }}"
+    tables:
+      - name: dash_union__twh
+      - name: dash_table__twh
+  - name: dash_union__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__twhs') }}"
+    tables:
+      - name: dash_union__twhs
+      - name: dash_table__twhs
+
+  - name: dash_union_search__twh
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_SEARCH_BIGQUERY_DATASET', 'dash_table_search__twh') }}"
+    tables:
+      - name: dash_table_search__twh
+  - name: dash_union_search__twhs
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_SEARCH_BIGQUERY_DATASET', 'dash_table_search__twhs') }}"
+    tables:
+      - name: dash_table_search__twhs
+
+models:
+  - name: cm360_direct_buy__twh
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', 'cm360_transformed__twh') }}"
+
+  - name: cm360_direct_buy__twhs
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', 'cm360_transformed__twhs') }}"
+  
+  - name: facebook__twh
+    config:
+      schema: "{{ env_var('META_SUFFIX', 'facebook_transformed__twh') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+  - name: facebook__twhs
+    config:
+      schema: "{{ env_var('META_SUFFIX', 'facebook_transformed__twhs') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+  - name: dv360_standard__twh
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', 'dv360_transformed__twh') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+  - name: dv360_standard__twhs
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', 'dv360_transformed__twhs') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+  - name: dv360_youtube__twh
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', 'dv360_transformed__twh') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+  - name: dv360_youtube__twhs
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', 'dv360_transformed__twhs') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+ 

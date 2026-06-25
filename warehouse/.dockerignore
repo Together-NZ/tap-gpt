@@ -1,0 +1,8 @@
+.meltano/
+.git/
+__pycache__/
+*.pyc
+.env
+.meltano/
+transform/dbt_packages
+transform/package-lock.yml
