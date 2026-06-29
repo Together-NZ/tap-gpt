@@ -34,9 +34,7 @@ default_args = {
 
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_volvo_main", deserialize_json=True)
-    meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
-    meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
-    meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
+    meltano_env = {**meltano_env_unique}
     yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
