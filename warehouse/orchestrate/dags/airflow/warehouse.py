@@ -120,7 +120,7 @@ def set_env_vars_ga4(brand, goal):
     developer_creds.refresh(Request())
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
     env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-    property_key = f"TAP_GA4_PROPERTY_{brand.upper()}_ID"
+    property_key = f"TAP_GA4_PROPERTY_{brand}_ID"
     if property_key in env:
         env["TAP_GA4_PROPERTY_ID"] = env[property_key]
     return env
