@@ -17,7 +17,7 @@ environments:
           REFERENCE_DV360_RAW_BIGQUERY_DATASET: dbt_test_dv360_raw
           REPORT_NAME: amp_report
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
-          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
@@ -25,7 +25,16 @@ environments:
           TTD_SUFFIX: dbt_test_ttd
 
           HIVESTACK_SUFFIX: dbt_test_hivestack
-   
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw__volvo
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed__volvo
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed__volvo
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed__volvo
+          REFERENCE_GOOGLE_ADS_BIGQUERY_DATASET: dbt_test_google_ads_search_transformed__volvo
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table__volvo
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search__volvo
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search_transformed__volvo
+          PLAN_CODE_GA4: volvo
+
           PLAN_CODE: uow
 - name: prod
 #state_backend:
@@ -74,12 +83,12 @@ plugins:
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
-      - ads_insights.*
-      - ad_account.*
-      - ad_sets.*
-      - ads.*
-      - campaigns.*
-      - custom_conversions.*
+    - ads_insights.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+    - custom_conversions.*
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
@@ -107,10 +116,10 @@ plugins:
       start_date: ${START_DATE}
       _catalog_path: ./catalog.json
     select:
-      - campaign_groups.*
-      - creatives.*
-      - campaigns.*
-      - ad_analytics_by_creative.*
+    - campaign_groups.*
+    - creatives.*
+    - campaigns.*
+    - ad_analytics_by_creative.*
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -134,16 +143,11 @@ plugins:
   orchestrators:
   - name: airflow
     variant: apache
-    pip_url: apache-airflow==2.10.5 --constraint 
-      https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
+    pip_url: apache-airflow==2.10.5 --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
     pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
-    config:
-      project: volvo-main
-      location: australia-southeast1
-      method: oauth
     commands:
       cm360_volvo_models:
         args: run --select +cm360_direct_buy__volvo
@@ -160,23 +164,27 @@ plugins:
       facebook_volvo_models:
         args: run --select +facebook__volvo
         description: Run the Facebook ads model
-      facebook_geely_models:
-        args: run --select +facebook__geely
-      facebook_polestar_models:
-        args: run --select +facebook__polestar
-      ga4_volvo_goal_models:
-        args: run --select ga4_goal_a__volvo ga4_goal_channel__volvo_goal
-      ga4_volvo_session_models:
-        args: run --select ga4_goal_a__volvo_session ga4_goal_channel__volvo_session
-      ga4_volvo_final_models:
-        args: run --select ga4_goal_channel__volvo
-      linkedin_volvo_models:
-        args: run --select +linkedin__volvo
-      google_ads_volvo_models:
-        args: run --select +google_ads_search__volvo +google_ads_demand__volvo +google_ads_demand_2__volvo
+      facebook_geely_models: run --select +facebook__geely
+      facebook_polestar_models: run --select +facebook__polestar
+      ga4_volvo_goal_models: run --select ga4_goal_a__volvo ga4_goal_channel__volvo_goal
+      ga4_volvo_session_models: run --select ga4_goal_a__volvo_session ga4_goal_channel__volvo_session
+      ga4_volvo_keyword_models: run --select +ga4_goal_channel_keyword__volvo
+      ga4_volvo_final_models: run --select ga4_goal_channel__volvo
+      linkedin_volvo_models: run --select +linkedin__volvo
+      google_ads_volvo_models: run --select +google_ads_search__volvo +google_ads_demand__volvo +google_ads_demand_2__volvo +google_ads_keyword__volvo +google_ads_location__volvo
+    config:
+      project: volvo-main
+      location: australia-southeast1
+      method: oauth
+      auth_method: oauth
+      client_id: ''
+      client_secret: ''
+      refresh_token: ''
+      token_uri: ''
+      keyfile: ''
+      dataset: ''
 
   files:
   - name: files-airflow
     variant: meltano
     pip_url: git+https://github.com/meltano/files-airflow.git
-#

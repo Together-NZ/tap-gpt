@@ -6,6 +6,7 @@ sources:
     tables:
       - name: goal
       - name: session_goal
+      - name: keyword_goal
 
   - name: ga4_session_transformed__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
@@ -17,6 +18,17 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__volvo') }}"
     tables:
       - name: ga4_goal_channel__volvo_goal
+
+  - name: ga4_transformed__volvo
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__volvo') }}"
+    tables:
+      - name: ga4_goal_a__volvo
+      - name: ga4_goal_a__volvo_session
+      - name: ga4_goal_channel__volvo
+      - name: ga4_goal_channel__volvo_goal
+      - name: ga4_goal_channel__volvo_session
+      - name: ga4_goal_channel_keyword__volvo
 
   - name: dv360_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
@@ -97,6 +109,8 @@ sources:
       - name: google_ads_demand__volvo
       - name: google_ads_demand_2__volvo
       - name: google_ads_search__volvo
+      - name: google_ads_keyword__volvo
+      - name: google_ads_location__volvo
 
 
   - name: cm360_transformed
@@ -113,7 +127,7 @@ sources:
 
   - name: dash_union_search__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__volvo') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search__volvo') }}"
     tables:
       - name: dash_table_search__volvo
 
