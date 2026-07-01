@@ -19,7 +19,7 @@ environments:
               CM360_SUFFIX: dbt_test_cm360
               REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
               HIVESTACK_SUFFIX: dbt_test_hivestack
-              REFERENCE_TTD_RAW_BIGQUERY_DATASET: dbt_test_ttd_raw
+              REFERENCE_TTD_RAW_BIGQUERY_DATASET: dbt_test_ttd
               REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
               TTD_SUFFIX: dbt_test_ttd
               REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
@@ -31,8 +31,8 @@ environments:
               REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
               REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_tiktok
               TIKTOK_SUFFIX: dbt_test_tiktok
-              REPORT_NAME: warehouse
-              PLAN_CODE: twh
+              REPORT_NAME: amp_report
+              PLAN_CODE: uow
   - name: prod
 plugins:
   extractors: 

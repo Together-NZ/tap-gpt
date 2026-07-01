@@ -304,6 +304,31 @@ def make_dv360_comparison_youtube_check(brand):
     return dv360_comparison_youtube_check
 
 
+def make_snapchat_comparison_check(brand):
+    def snapchat_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table=f"snapchat_transformed__{brand}",
+            table_name=f"snapchat__{brand}",
+            source_name="snapchat",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_warehouse_main",
+            project_id=env["PROJECT_ID"],
+            brand=brand,
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                f"Snapchat data accuracy check failed for {brand} — "
+                "BQ data does not match source API."
+            )
+        return result
+
+    return snapchat_comparison_check
+
+
 # ---------------------------------------------------------------------------
 # DAG 1: Google Ads + TikTok + GA4 (schedule: 14:00 NZST daily)
 # Flow: [google_ads, tiktok] >> dash >> dash_search >> dash_union
@@ -566,7 +591,14 @@ with models.DAG(
             get_logs=True,
         )
 
-        kube_snapchat >> kube_snapchat_transform
+        task_snapchat_comparison = PythonOperator(
+            task_id=f"warehouse-snapchat_comparison__{brand}",
+            python_callable=make_snapchat_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+
+        kube_snapchat >> kube_snapchat_transform >> task_snapchat_comparison
 
         kube_pinterest = KubernetesPodOperator(
             name=f"warehouse-{brand}-pinterest-to-bigquery",

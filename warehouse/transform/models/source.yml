@@ -80,11 +80,13 @@ sources:
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__twh') }}"
     tables:
       - name: warehouse
+      - name: amp_report
   - name: hivestack_transformed__twh
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__twh') }}"
     tables:
       - name: hivestack__twh
+
 
   - name: ttd_raw__twh
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
@@ -289,7 +291,22 @@ sources:
       - name: dash_table_search__twhs
 
 models:
-
+  - name: hivestack__twh
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', 'hivestack_transformed__twh') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 15000.03
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 815604.65
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
   - name: facebook__twh
     config:
       schema: "{{ env_var('META_SUFFIX', 'facebook_transformed__twh') }}"
@@ -386,22 +403,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 4432
-  - name: hivestack__twh
-    config:
-      schema: "{{ env_var('HIVESTACK_SUFFIX', 'hivestack_transformed__twh') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 15000.03
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 815604.65
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 0
   - name: ttd_transformed__twh
     config:
       schema: "{{ env_var('TTD_SUFFIX', 'ttd_transformed__twh') }}"
@@ -418,36 +419,5 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 363
-  - name: snapchat__twh
-    config:
-      schema: "{{ env_var('SNAPCHAT_SUFFIX', 'snapchat_transformed__twh') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 14681.47
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 1974208
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 6867
-  - name: snapchat__twhs
-    config:
-      schema: "{{ env_var('SNAPCHAT_SUFFIX', 'snapchat_transformed__twhs') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 14681.47
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 1974208
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 6867
+
   
