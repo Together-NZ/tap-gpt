@@ -27,6 +27,32 @@ WITH dash_table AS (
         table_name='cm360_direct_buy__twhs'
     ) }}
     UNION ALL
+    {{ dash_table_general_process.tiktok(
+        source_name='tiktok_transformed__twhs',
+        table_name='tiktok__twhs'
+    ) }}
+    UNION ALL
+    SELECT
+        SAFE_CAST(media_cost AS FLOAT64) AS media_cost,
+        SAFE_CAST(impressions AS INT64) AS impressions,
+        SAFE_CAST(clicks AS INT64) AS clicks,
+        creative_name,
+        audience_name,
+        ad_format,
+        ad_format_detail,
+        SAFE_CAST(video_completion AS INT64) AS video_completion,
+        SAFE_CAST(video_25_completion AS INT64) AS video_25_completion,
+        SAFE_CAST(video_50_completion AS INT64) AS video_50_completion,
+        SAFE_CAST(video_75_completion AS INT64) AS video_75_completion,
+        SAFE_CAST(video_views AS INT64) AS video_views,
+        campaign_name,
+        publisher,
+        campaign_descr,
+        creative_descr,
+        DATE(date) AS date,
+        CAST(NULL AS FLOAT64) AS conversions
+    FROM {{ ref('pinterest__twhs') }}
+    UNION ALL
     {{ dash_table_general_process.google_ads(
         source_name='google_ads__twhs',
         table_name='google_ads_demand__twhs'
