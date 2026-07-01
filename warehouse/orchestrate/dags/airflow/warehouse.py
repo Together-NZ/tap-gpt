@@ -119,11 +119,9 @@ def set_env_vars_snapchat(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     ad_account_key = f"TAP_SNAPCHAT_ADS_AD_ACCOUNT_{brand}_ID"
-    if ad_account_key in env:
-        env["TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS"] = env[ad_account_key]
-    org_account_key = f"TAP_SNAPCHAT_ADS_ORG_ACCOUNT_{brand}_ID"
-    if org_account_key in env:
-        env["TAP_SNAPCHAT_ADS_ORG_ACCOUNT_IDS"] = env[org_account_key]
+
+    env["TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS"] = env[ad_account_key]
+
     return env
 
 
@@ -142,9 +140,7 @@ def set_env_vars_pinterest(brand):
     env["END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    account_key = f"TAP_PINTEREST_ADS_AD_ACCOUNT_{brand}_ID"
-    if account_key in env:
-        env["AD_ACCOUNT_ID"] = env[account_key]
+    env["TAP_PINTEREST_ADS_AD_ACCOUNT_ID"] = env[f"TAP_PINTEREST_ADS_AD_ACCOUNT_{brand}_ID"]
     return env
 
 
