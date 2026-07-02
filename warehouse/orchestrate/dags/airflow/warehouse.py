@@ -13,7 +13,7 @@ from comparison_package import ComparisonTrigger
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from kubernetes.client import models as k8s_models
-
+from datetime import datetime
 IMAGE = "australia-southeast1-docker.pkg.dev/warehouse-main/meltano/meltano-warehouse-main:prod"
 PROJECT_NAME = "warehouse-main"
 
@@ -92,10 +92,10 @@ def set_env_vars_hivestack(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"hivestack_transformed__{brand}"
-    env["REPORT_NAME"] = f"{brand}_report"
     report_key = f"TAP_HIVESTACK_REPORT_{brand}_ID"
     if report_key in env:
         env["TAP_HIVESTACK_REPORT_ID"] = env[report_key]
+        env["REPORT_NAME"] = f"{brand}_report"
     return env
 
 
@@ -140,8 +140,9 @@ def set_env_vars_pinterest(brand):
     env["END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    env["TAP_PINTEREST_ADS_AD_ACCOUNT_ID"] = env[f"TAP_PINTEREST_ADS_AD_ACCOUNT_{brand}_ID"]
+    env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
     return env
+
 
 
 def set_env_vars_tiktok(brand):
