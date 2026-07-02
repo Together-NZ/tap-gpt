@@ -17,7 +17,22 @@ environments:
               DV360_SUFFIX: dbt_test_dv360
               REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
               CM360_SUFFIX: dbt_test_cm360
-              PLAN_CODE: twh
+              REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+              HIVESTACK_SUFFIX: dbt_test_hivestack
+              REFERENCE_TTD_RAW_BIGQUERY_DATASET: dbt_test_ttd
+              REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+              TTD_SUFFIX: dbt_test_ttd
+              REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
+              REFERENCE_SNAPCHAT_TRANSFORMED_BIGQUERY_DATASET: dbt_test_snapchat
+              SNAPCHAT_SUFFIX: dbt_test_snapchat
+              REFERENCE_PINTEREST_BIGQUERY_DATASET: dbt_test_pinterest
+              REFERENCE_PINTEREST_TRANSFORMED_BIGQUERY_DATASET: dbt_test_pinterest
+              PINTEREST_SUFFIX: dbt_test_pinterest
+              REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+              REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_tiktok
+              TIKTOK_SUFFIX: dbt_test_tiktok
+              REPORT_NAME: amp_report
+              PLAN_CODE: uow
   - name: prod
 plugins:
   extractors: 
@@ -60,6 +75,54 @@ plugins:
     - ads.*
     - campaigns.*
     - custom_conversions.*
+  - name: tap-hivestack
+    namespace: tap-hivestack
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
+    executable: tap-hivestack
+    config:
+      api_key: ${TAP_HIVESTACK_API_KEY}
+      report_id: "98510"
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date:
+      manual: false
+      advertiser_id: 'z8k4ccy'
+  - name: tap-snapchat-ads
+    namespace: tap-snapchat-ads
+    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git setuptools<82.0
+    executable: tap-snapchat-ads
+    capabilities:
+    - catalog
+    config:
+      client_id: ${TAP_SNAPCHAT_ADS_CLIENT_ID}
+      client_secret: ${TAP_SNAPCHAT_ADS_CLIENT_SECRET}
+      refresh_token: ${TAP_SNAPCHAT_ADS_REFRESH_TOKEN}
+      start_date: ${START_DATE}T00:00:00Z
+      user_agent: Meltano
+      org_account_ids: ${TAP_SNAPCHAT_ADS_ORG_ACCOUNT_IDS}
+      ad_account_ids: ${TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS}
+    catalog: snapchat_catalog.json
+  - name: tap-pinterest-ads
+    namespace: tap-pinterest-ads
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-pinterest-ads.git setuptools<82.0
+    config:
+      client_id: ${PINTEREST_CLIENT_ID}
+      client_secret: ${PINTEREST_CLIENT_SECRET}
+      refresh_token: ${PINTEREST_REFRESH_TOKEN}
+      ad_account_id: ${AD_ACCOUNT_ID}
+      start_date: ${START_DATE}
+      end_date: ${END_DATE}
+  - name: tap-tiktok
+    variant: gthesheep
+    pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: ${TAP_TIKTOK_ADVERTISER_ID}
   loaders:
     - name: target-bigquery
       variant: z3z1ma
@@ -102,10 +165,26 @@ plugins:
         args: run --select dv360_standard__twh dv360_youtube__twh
       dv360_twhs_models:
         args: run --select dv360_standard__twhs dv360_youtube__twhs
+      hivestack_twh_models:
+        args: run --select hivestack__twh
+      ttd_twh_models:
+        args: run --select +ttd_transformed__twh
+      snapchat_twh_models:
+        args: run --select +snapchat__twh
+      snapchat_twhs_models:
+        args: run --select +snapchat__twhs
+      pinterest_twh_models:
+        args: run --select +pinterest__twh
+      pinterest_twhs_models:
+        args: run --select +pinterest__twhs
+      tiktok_twh_models:
+        args: run --select +tiktok__twh
+      tiktok_twhs_models:
+        args: run --select +tiktok__twhs
       google_ads_twh_models:
-        args: run --select +google_ads_search__twh +google_ads_demand__twh +google_ads_keyword__twh +bing_ads_search__twh
+        args: run --select +google_ads_search__twh +google_ads_demand__twh +google_ads_keyword__twh +google_ads_location__twh +bing_ads_search__twh
       google_ads_twhs_models:
-        args: run --select +google_ads_search__twhs +google_ads_demand__twhs +google_ads_keyword__twhs +bing_ads_search__twhs
+        args: run --select +google_ads_search__twhs +google_ads_demand__twhs +google_ads_keyword__twhs +google_ads_location__twhs +bing_ads_search__twhs
       bing_ads_twh_models:
         args: run --select bing_ads_search__twh bing_ads_keyword__twh
       bing_ads_twhs_models:
@@ -122,6 +201,10 @@ plugins:
         args: run --select ga4_goal_channel_keyword__twh
       ga4_twhs_keyword_models:
         args: run --select ga4_goal_channel_keyword__twhs
+      ga4_twh_ecommerce_models:
+        args: run --select ga4_goal_ecommerce__twh
+      ga4_twhs_ecommerce_models:
+        args: run --select ga4_goal_ecommerce__twhs
       ga4_twh_final_models:
         args: run --select ga4_goal_channel__twh
       ga4_twhs_final_models:

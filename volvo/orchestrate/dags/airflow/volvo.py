@@ -34,8 +34,7 @@ default_args = {
 
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_volvo_main", deserialize_json=True)
-    meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
-    meltano_env = meltano_env_unique
+    meltano_env = {**meltano_env_unique}
     yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
@@ -77,41 +76,6 @@ def set_env_vars_facebook(label):
     env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
     env["DBT_BIGQUERY_DATASET"] = f'facebook_transformed__{label}'
     return env
-def set_env_vars_ga4_final():
-    env = get_meltano_env()
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
-    env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed__volvo'
-    return env
-
-def set_env_vars_ga4(goal,brand):
-        env = get_meltano_env()
-        #if goal == 'ecommerce':
-        if goal == 'sessions':
-            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
-            env["GA4_GOAL"] = 'session_goal'
-        else:
-            env["TAP_GA4_REPORTS"] = "./report.json"
-            env["GA4_GOAL"] = 'goal'   
-        env["BQ_DATASET"] = f"ga4_raw__{brand}"
-        env["BQ_METHOD"] = "gcs_stage"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
-        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
-        env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{brand}'       
-        developer_creds = Credentials(
-            None,
-            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
-            token_uri="https://oauth2.googleapis.com/token",
-            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
-            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
-        )
-        developer_creds.refresh(Request())
-        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
-        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-        return env
-
-
 def set_env_vars_linkedin(label):
     env = get_meltano_env()
     env["BQ_DATASET"] = f"linkedin_raw__{label}"
@@ -170,7 +134,7 @@ def set_env_vars_dash_search(label):
 
 # ---------------------------------------------------------------------------
 # DAG 1: Google Ads + GA4 (schedule: 14:00 NZST daily)
-# Flow: google_ads >> dash >> dash_search >> dash_union >> ga4
+# Flow: google_ads >> dash >> dash_search >> dash_union >> ga4 (goal, session, keyword) >> ga4_final
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="volvo-google-ads-ga4",
@@ -178,9 +142,52 @@ with models.DAG(
     default_args=default_args
 ) as dag_google:
 
+    def set_env_vars_ga4(goal, brand):
+        env = get_meltano_env()
+        if goal == 'session':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        elif goal == 'keyword':
+            env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = 'keyword_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'
+        env["BQ_DATASET"] = f"ga4_raw__{brand}"
+        env["BQ_METHOD"] = "gcs_stage"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
+        env["DBT_BIGQUERY_AUTH_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{brand}'
+        env["PLAN_CODE_GA4"] = brand
+        developer_creds = Credentials(
+            None,
+            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
+            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
+        )
+        developer_creds.refresh(Request())
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
+        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        property_key = f"{brand}_TAP_GA4_PROPERTY_ID"
+        if property_key in env:
+            env["TAP_GA4_PROPERTY_ID"] = env[property_key]
+        elif f"TAP_GA4_PROPERTY_{brand}_ID" in env:
+            env["TAP_GA4_PROPERTY_ID"] = env[f"TAP_GA4_PROPERTY_{brand}_ID"]
+        return env
+
+    def set_env_vars_ga4_final(brand):
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
+        env["DBT_BIGQUERY_DATASET"] = f'ga4_transformed__{brand}'
+        env["PLAN_CODE_GA4"] = brand
+        return env
+
     brands = ['volvo']
     for brand in brands:
-        
+
         kube_google_ads = KubernetesPodOperator(
             name=f"{brand}-google-ads-to-bigquery",
             task_id=f"{brand}-google-ads_to_bigquery",
@@ -212,7 +219,7 @@ with models.DAG(
             task_id=f"{brand}-dash_search_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table_search__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -235,25 +242,32 @@ with models.DAG(
             task_id=f"{brand}-ga4_final_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke","dbt-bigquery:ga4_volvo_final_models"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_volvo_final_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
-            env_vars=set_env_vars_ga4_final(),
+            env_vars=set_env_vars_ga4_final(brand),
+            get_logs=True,
         )
-        goal_list = ['goal','session']
+        goal_list = ['goal', 'session', 'keyword']
         kube_ga4_list = []
         for goal in goal_list:
             kube_ga4 = KubernetesPodOperator(
-                name=f"{brand}-ga4-to-bigquery",
-                task_id=f"{brand}-{goal}-ga4_to_bigquery",
+                name=f"{brand}-ga4-{goal}-to-bigquery",
+                task_id=f"{brand}-ga4_{goal}_to_bigquery",
                 namespace="composer-user-workloads",
                 image=IMAGE,
-                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery", f"dbt-bigquery:ga4_{brand}_{goal}_models"],
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-ga4",
+                    "target-bigquery",
+                    f"dbt-bigquery:ga4_{brand}_{goal}_models",
+                ],
                 container_resources=k8s_models.V1ResourceRequirements(
                     limits={"memory": "1000M", "cpu": "500m"},
                 ),
-                env_vars=set_env_vars_ga4(goal,brand),
+                env_vars=set_env_vars_ga4(goal, brand),
                 get_logs=True,
             )
             kube_ga4_list.append(kube_ga4)
@@ -367,7 +381,7 @@ with models.DAG(
             task_id=f"{brand}-dash_search_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table_search__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
@@ -385,6 +399,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
+
         def linkedin_comparison_check(**context):
             env = get_meltano_env()
             trigger = ComparisonTrigger(

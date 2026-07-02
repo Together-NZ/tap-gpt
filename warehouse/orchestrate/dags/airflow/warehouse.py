@@ -85,6 +85,78 @@ def set_env_vars_cm360(brand):
     return env
 
 
+def set_env_vars_hivestack(brand):
+    env = get_meltano_env()
+    env["BQ_DATASET"] = f"hivestack_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"hivestack_transformed__{brand}"
+    env["REPORT_NAME"] = f"{brand}_report"
+    report_key = f"TAP_HIVESTACK_REPORT_{brand}_ID"
+    if report_key in env:
+        env["TAP_HIVESTACK_REPORT_ID"] = env[report_key]
+    return env
+
+
+def set_env_vars_ttd(brand):
+    env = get_meltano_env()
+    env["BQ_DATASET"] = f"ttd_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"ttd_transformed__{brand}"
+    advertiser_key = f"TAP_TTD_ADVERTISER_{brand}_ID"
+    if advertiser_key in env:
+        env["TAP_TTD_ADVERTISER_ID"] = env[advertiser_key]
+    return env
+
+
+def set_env_vars_snapchat(brand):
+    env = get_meltano_env()
+    env["BQ_DATASET"] = f"snapchat_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    ad_account_key = f"TAP_SNAPCHAT_ADS_AD_ACCOUNT_{brand}_ID"
+
+    env["TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS"] = env[ad_account_key]
+
+    return env
+
+
+def set_env_vars_snapchat_transform(brand):
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"snapchat_transformed__{brand}"
+    return env
+
+
+def set_env_vars_pinterest(brand):
+    env = get_meltano_env()
+    env["BQ_DATASET"] = f"pinterest_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
+    env["END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["TAP_PINTEREST_ADS_AD_ACCOUNT_ID"] = env[f"TAP_PINTEREST_ADS_AD_ACCOUNT_{brand}_ID"]
+    return env
+
+
+def set_env_vars_tiktok(brand):
+    env = get_meltano_env()
+    env["BQ_DATASET"] = f"tiktok_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"tiktok_transformed__{brand}"
+    advertiser_key = f"TAP_TIKTOK_ADVERTISER_{brand}_ID"
+    if advertiser_key in env:
+        env["TAP_TIKTOK_ADVERTISER_ID"] = env[advertiser_key]
+    return env
+
+
 def set_env_vars_google_ads(brand):
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
@@ -101,6 +173,9 @@ def set_env_vars_ga4(brand, goal):
     elif goal == "keyword":
         env["TAP_GA4_REPORTS"] = "./report_keyword.json"
         env["GA4_GOAL"] = "keyword_goal"
+    elif goal == "ecommerce":
+        env["TAP_GA4_REPORTS"] = "./ecommerce_report.json"
+        env["GA4_GOAL"] = "ecommerce_goal"
     else:
         env["TAP_GA4_REPORTS"] = "./report.json"
         env["GA4_GOAL"] = "goal"
@@ -225,16 +300,41 @@ def make_dv360_comparison_youtube_check(brand):
     return dv360_comparison_youtube_check
 
 
+def make_snapchat_comparison_check(brand):
+    def snapchat_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table=f"snapchat_transformed__{brand}",
+            table_name=f"snapchat__{brand}",
+            source_name="snapchat",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_warehouse_main",
+            project_id=env["PROJECT_ID"],
+            brand=brand,
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                f"Snapchat data accuracy check failed for {brand} — "
+                "BQ data does not match source API."
+            )
+        return result
+
+    return snapchat_comparison_check
+
+
 # ---------------------------------------------------------------------------
-# DAG 1: Google Ads + GA4 (schedule: 14:00 NZST daily)
-# Flow: google_ads >> dash >> dash_search >> dash_union
-#       >> ga4 goal/session/keyword >> ga4_final
+# DAG 1: Google Ads + TikTok + GA4 (schedule: 14:00 NZST daily)
+# Flow: [google_ads, tiktok] >> dash >> dash_search >> dash_union
+#       >> ga4 goal/session/keyword/ecommerce >> ga4_final
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="warehouse-google-ads-ga4",
     schedule_interval="0 14 * * *",
     default_args=default_args,
-    tags=["warehouse", "meltano", "google-ads", "ga4"],
+    tags=["warehouse", "meltano", "google-ads", "tiktok", "ga4"],
 ) as dag_google_ads_ga4:
     brands = ["twh", "twhs"]
 
@@ -251,6 +351,23 @@ with models.DAG(
             ],
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_google_ads(brand),
+            get_logs=True,
+        )
+
+        kube_tiktok = KubernetesPodOperator(
+            name=f"warehouse-{brand}-tiktok-to-bigquery",
+            task_id=f"warehouse-tiktok__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-tiktok",
+                "target-bigquery",
+                f"dbt-bigquery:tiktok_{brand}_models",
+            ],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_tiktok(brand),
             get_logs=True,
         )
 
@@ -310,7 +427,7 @@ with models.DAG(
         )
 
         kube_ga4_list = []
-        for goal in ["goal", "session", "keyword"]:
+        for goal in ["goal", "session", "keyword", "ecommerce"]:
             kube_ga4 = KubernetesPodOperator(
                 name=f"warehouse-{brand}-{goal}-ga4-to-bigquery",
                 task_id=f"warehouse-ga4__{brand}_{goal}_to_bigquery",
@@ -345,7 +462,7 @@ with models.DAG(
         )
 
         (
-            kube_google_ads
+            [kube_google_ads, kube_tiktok]
             >> kube_dash
             >> kube_dash_search
             >> kube_dash_union
@@ -356,7 +473,7 @@ with models.DAG(
 
 # ---------------------------------------------------------------------------
 # DAG 2: Social / Display / Programmatic (schedule: 05:00 NZST daily)
-# Flow: [facebook, dv360, cm360] >> dash >> dash_search >> dash_union
+# Flow: [facebook, dv360, cm360, snapchat, pinterest (+ hivestack, ttd for twh)] >> dash >> dash_search >> dash_union
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="warehouse-social-display-programmatic",
@@ -422,6 +539,8 @@ with models.DAG(
             trigger_rule="all_done",
         )
 
+        kube_dv360 >> [task_dv360_comparison_standard, task_dv360_comparison_youtube]
+
         kube_cm360 = KubernetesPodOperator(
             name=f"warehouse-{brand}-cm360-to-bigquery",
             task_id=f"warehouse-cm360__{brand}_to_bigquery",
@@ -436,6 +555,101 @@ with models.DAG(
             env_vars=set_env_vars_cm360(brand),
             get_logs=True,
         )
+
+        kube_snapchat = KubernetesPodOperator(
+            name=f"warehouse-{brand}-snapchat-to-bigquery",
+            task_id=f"warehouse-snapchat__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-snapchat-ads",
+                "target-bigquery",
+            ],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_snapchat(brand),
+            get_logs=True,
+        )
+
+        kube_snapchat_transform = KubernetesPodOperator(
+            name=f"warehouse-{brand}-snapchat-transformation",
+            task_id=f"warehouse-snapchat_transformation__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                f"dbt-bigquery:snapchat_{brand}_models",
+            ],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_snapchat_transform(brand),
+            get_logs=True,
+        )
+
+        task_snapchat_comparison = PythonOperator(
+            task_id=f"warehouse-snapchat_comparison__{brand}",
+            python_callable=make_snapchat_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+
+        kube_snapchat >> kube_snapchat_transform >> task_snapchat_comparison
+
+        kube_pinterest = KubernetesPodOperator(
+            name=f"warehouse-{brand}-pinterest-to-bigquery",
+            task_id=f"warehouse-pinterest__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-pinterest-ads",
+                "target-bigquery",
+                "--full-refresh",
+                f"dbt-bigquery:pinterest_{brand}_models",
+            ],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_pinterest(brand),
+            get_logs=True,
+        )
+
+        before_dash = [kube_facebook, kube_dv360, kube_cm360, kube_snapchat_transform, kube_pinterest]
+        if brand == "twh":
+            kube_hivestack = KubernetesPodOperator(
+                name=f"warehouse-{brand}-hivestack-to-bigquery",
+                task_id=f"warehouse-hivestack__{brand}_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-hivestack",
+                    "target-bigquery",
+                    f"dbt-bigquery:hivestack_{brand}_models",
+                ],
+                container_resources=KUBE_RESOURCES,
+                env_vars=set_env_vars_hivestack(brand),
+                get_logs=True,
+            )
+            kube_ttd = KubernetesPodOperator(
+                name=f"warehouse-{brand}-ttd-to-bigquery",
+                task_id=f"warehouse-ttd__{brand}_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-ttd",
+                    "target-bigquery",
+                    f"dbt-bigquery:ttd_{brand}_models",
+                ],
+                container_resources=KUBE_RESOURCES,
+                env_vars=set_env_vars_ttd(brand),
+                get_logs=True,
+            )
+            kube_cm360 >> kube_ttd
+            before_dash.extend([kube_hivestack, kube_ttd])
 
         kube_dash = KubernetesPodOperator(
             name=f"warehouse-{brand}-dash-to-bigquery",
@@ -493,11 +707,5 @@ with models.DAG(
         )
 
         kube_facebook >> task_facebook_comparison
-        kube_dv360 >> [task_dv360_comparison_standard, task_dv360_comparison_youtube]
 
-        (
-            [kube_facebook, kube_dv360, kube_cm360]
-            >> kube_dash
-            >> kube_dash_search
-            >> kube_dash_union
-        )
+        before_dash >> kube_dash >> kube_dash_search >> kube_dash_union
