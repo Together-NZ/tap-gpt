@@ -141,6 +141,9 @@ def set_env_vars_pinterest(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
+    advertiser_key = f"TAP_PINTEREST_ADS_AD_ACCOUNT_{brand}_ID"
+    if advertiser_key in env:
+        env["TAP_PINTEREST_ADS_AD_ACCOUNT_ID"] = env[advertiser_key]    
     return env
 
 
