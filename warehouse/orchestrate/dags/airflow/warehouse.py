@@ -13,7 +13,7 @@ from comparison_package import ComparisonTrigger
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from kubernetes.client import models as k8s_models
-from datetime import datetime
+
 IMAGE = "australia-southeast1-docker.pkg.dev/warehouse-main/meltano/meltano-warehouse-main:prod"
 PROJECT_NAME = "warehouse-main"
 
