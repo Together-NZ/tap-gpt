@@ -114,7 +114,7 @@ plugins:
       client_id: ${PINTEREST_CLIENT_ID}
       client_secret: ${PINTEREST_CLIENT_SECRET}
       refresh_token: ${PINTEREST_REFRESH_TOKEN}
-      ad_account_id: ${AD_ACCOUNT_ID}
+      ad_account_id: ${TAP_PINTEREST_ADS_AD_ACCOUNT_ID}
       start_date: ${START_DATE}
       end_date: ${END_DATE}
   - name: tap-tiktok

@@ -92,10 +92,10 @@ def set_env_vars_hivestack(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"hivestack_transformed__{brand}"
-    env["REPORT_NAME"] = f"{brand}_report"
     report_key = f"TAP_HIVESTACK_REPORT_{brand}_ID"
     if report_key in env:
         env["TAP_HIVESTACK_REPORT_ID"] = env[report_key]
+        env["REPORT_NAME"] = f"{brand}_report"
     return env
 
 
