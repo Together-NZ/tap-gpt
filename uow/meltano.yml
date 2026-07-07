@@ -66,7 +66,7 @@ plugins:
       start_date: ${START_DATE}
   - name: tap-snapchat-ads
     namespace: tap-snapchat-ads
-    pip_url: -e /Users/peter/work/tap_snapchat_ads pyhumps setuptools<82.0
+    pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git pyhumps setuptools<82.0
     executable: tap-snapchat-ads
     capabilities:
     - catalog
