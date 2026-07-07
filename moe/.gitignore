@@ -1,0 +1,9 @@
+/venv
+/.meltano
+.env
+.DS_Store
+.peter/
+.venv/
+transform/logs/
+transform/dbt_packages/
+transform/package-lock.yml
