@@ -13,7 +13,7 @@ from comparison_package import ComparisonTrigger
 from google.auth.transport.requests import Request
 from google.oauth2.credentials import Credentials
 from kubernetes.client import models as k8s_models
-from datetime import datetime
+
 IMAGE = "australia-southeast1-docker.pkg.dev/warehouse-main/meltano/meltano-warehouse-main:prod"
 PROJECT_NAME = "warehouse-main"
 
@@ -118,18 +118,11 @@ def set_env_vars_snapchat(brand):
     env["BQ_METHOD"] = "batch_job"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    ad_account_key = f"TAP_SNAPCHAT_ADS_AD_ACCOUNT_{brand}_ID"
-
-    env["TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS"] = env[ad_account_key]
-
-    return env
-
-
-def set_env_vars_snapchat_transform(brand):
-    env = get_meltano_env()
-    env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"snapchat_transformed__{brand}"
+    ad_account_key = f"TAP_SNAPCHAT_ADS_AD_ACCOUNT_{brand}_ID"
+    if ad_account_key in env:
+        env["TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS"] = env[ad_account_key]
+ 
     return env
 
 
@@ -141,6 +134,9 @@ def set_env_vars_pinterest(brand):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
+    advertiser_key = f"TAP_PINTEREST_ADS_AD_ACCOUNT_{brand}_ID"
+    if advertiser_key in env:
+        env["TAP_PINTEREST_ADS_AD_ACCOUNT_ID"] = env[advertiser_key]    
     return env
 
 
@@ -567,24 +563,10 @@ with models.DAG(
                 "run",
                 "tap-snapchat-ads",
                 "target-bigquery",
-            ],
-            container_resources=KUBE_RESOURCES,
-            env_vars=set_env_vars_snapchat(brand),
-            get_logs=True,
-        )
-
-        kube_snapchat_transform = KubernetesPodOperator(
-            name=f"warehouse-{brand}-snapchat-transformation",
-            task_id=f"warehouse-snapchat_transformation__{brand}_to_bigquery",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=[
-                "--environment=prod",
-                "invoke",
                 f"dbt-bigquery:snapchat_{brand}_models",
             ],
             container_resources=KUBE_RESOURCES,
-            env_vars=set_env_vars_snapchat_transform(brand),
+            env_vars=set_env_vars_snapchat(brand),
             get_logs=True,
         )
 
@@ -595,7 +577,7 @@ with models.DAG(
             trigger_rule="all_done",
         )
 
-        kube_snapchat >> kube_snapchat_transform >> task_snapchat_comparison
+        kube_snapchat >> task_snapchat_comparison
 
         kube_pinterest = KubernetesPodOperator(
             name=f"warehouse-{brand}-pinterest-to-bigquery",
@@ -615,7 +597,7 @@ with models.DAG(
             get_logs=True,
         )
 
-        before_dash = [kube_facebook, kube_dv360, kube_cm360, kube_snapchat_transform, kube_pinterest]
+        before_dash = [kube_facebook, kube_dv360, kube_cm360, kube_snapchat, kube_pinterest]
         if brand == "twh":
             kube_hivestack = KubernetesPodOperator(
                 name=f"warehouse-{brand}-hivestack-to-bigquery",
