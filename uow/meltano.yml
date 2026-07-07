@@ -14,7 +14,7 @@ environments:
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
-          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
           REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
           REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
@@ -26,7 +26,7 @@ environments:
           TTD_SUFFIX: dbt_test_ttd
           TIKTOK_SUFFIX: dbt_test_tiktok
           SNAPCHAT_SUFFIX: dbt_test_snapchat
-      
+
 - name: prod
 #state_backend:
 #  uri: gs://uowaikato-main-meltano-state-staging
@@ -79,10 +79,11 @@ plugins:
       org_account_ids: ${TAP_SNAPCHAT_ADS_ORG_ACCOUNT_IDS}
       ad_account_ids: ${TAP_SNAPCHAT_ADS_AD_ACCOUNT_IDS}
     select:
-      - ad_stats_daily
-      - ads 
-      - ad_squads
-      - campaigns
+    - ad_stats_daily
+    - ads
+    - ad_squads
+    - campaigns
+    - ad_stats_daily 
     catalog: snapchat_catalog.json
   - name: tap-ga4
     variant: meltanolabs
@@ -163,13 +164,11 @@ plugins:
       snapchat_models:
         args: run --select +snapchat
         description: Run the Snapchat ads model
-      ga4_goal_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+      ga4_goal_models: run --select +ga4_goal_a +ga4_goal_channel_goal
       ga4_session_models:
         args: run --select +ga4_goal_a_session +ga4_goal_channel_session
         description: Run the Google Analytics models
-      ga4_final_models:
-        args: run --select ga4_goal_channel
+      ga4_final_models: run --select ga4_goal_channel
       google_ads_models:
         args: run --select +google_ads
         description: Run the Google Ads model
