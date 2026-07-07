@@ -1,0 +1,1 @@
+resource "google_project_iam_member" "sa_object_admin" {

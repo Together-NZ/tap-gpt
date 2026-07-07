@@ -1,0 +1,169 @@
+class ReportStream(PinterestStream):
+    name = 'reports'
+    #parent_stream_type = AdStream
+    
+    path = ""
+    records_jsonpath = "$[*]"
+    ignore_parent_replication_keys = True
+    primary_keys = ""
+    replication_key = ""
+    state_partitioning_keys = ""
+  
+    schema = PropertiesList(
+        Property("AD_ACCOUNT_ID", NumberType),
+        Property("CAMPAIGN_DAILY_SPEND_CAP", NumberType),
+        Property("AD_ID", NumberType),
+        Property("AD_GROUP_ID", StringType),
+        Property("CAMPAIGN_ID", NumberType),
+        Property("CAMPAIGN_LIFETIME_SPEND_CAP", NumberType),
+        Property("IMPRESSION_1", NumberType),
+        Property("IMPRESSION_1_GROSS", NumberType),
+        Property("OUTBOUND_CLICK_1", NumberType),
+        Property("OUTBOUND_CLICK_2", NumberType),
+        Property("SPEND_IN_DOLLAR", NumberType),
+        Property("SPEND_IN_MICRO_DOLLAR", NumberType),
+        Property("TOTAL_CHECKOUT", NumberType),
+        Property("TOTAL_CHECKOUT_VALUE_IN_MICRO_DOLLAR", NumberType),
+        Property("TOTAL_VIDEO_3SEC_VIEWS", NumberType),
+        Property("TOTAL_VIDEO_MRC_VIEWS", NumberType),
+        Property("TOTAL_VIDEO_P0_COMBINED", NumberType),
+        Property("TOTAL_VIDEO_P100_COMPLETE", NumberType),
+        Property("TOTAL_VIDEO_P25_COMBINED", NumberType),
+        Property("TOTAL_VIDEO_P50_COMBINED", NumberType),
+        Property("TOTAL_VIDEO_P75_COMBINED", NumberType),
+        Property("TOTAL_VIDEO_P95_COMBINED", NumberType),
+        Property("TOTAL_VIEW_CHECKOUT", NumberType),
+        Property("TOTAL_VIEW_CHECKOUT_VALUE_IN_MICRO_DOLLAR", NumberType),
+        Property("VIDEO_3SEC_VIEWS_2", NumberType),
+        Property("VIDEO_MRC_VIEWS_2", NumberType),
+        Property("VIDEO_P0_COMBINED_2", NumberType),
+        Property("VIDEO_P100_COMPLETE_2", NumberType),
+        Property("VIDEO_P25_COMBINED_2", NumberType),
+        Property("VIDEO_P50_COMBINED_2", NumberType),
+        Property("VIDEO_P75_COMBINED_2", NumberType),
+        Property("VIDEO_P95_COMBINED_2", NumberType),
+    ).to_dict()
+    @property
+    def rest_method(self) -> str:
+        return "POST"
+
+    def get_url(self, context: Optional[dict]) -> str:
+        ad_account_id = self.config['ad_account_id']
+        self.logger.info(f"{self.url_base}/ad_accounts/{ad_account_id}/reports")
+        self.path = f"{self.url_base}ad_accounts/{ad_account_id}/reports"
+        return f"{self.url_base}ad_accounts/{ad_account_id}/reports"
+
+    def prepare_request_payload(
+        self, context: Optional[dict], next_page_token: Optional[Any]
+    ) -> Optional[dict]:
+
+        start_date = self.config['start_date']
+        end_date = self.config['end_date']
+
+        payload = {
+            'start_date': start_date,
+            'end_date': end_date,
+            'granularity': 'DAY',
+            'columns': REPORT_COLUMNS,
+            'level': 'PIN_PROMOTION',
+            'report_format': 'JSON'
+        }
+
+        self.logger.debug(f"POST payload: {payload}")
+        return payload
+
+
+
+
+    def parse_response(self, response: requests.Response) -> Iterable[dict]:
+        # Remove print statements that interfere with JSON output
+        # print(response.json())
+        # print(response)
+        response_data = response.json()
+        self.logger.info(f"Report status: {response_data.get('report_status')}")
+        report_token=response_data.get('token')
+        # Poll until report_status is FINISHED with exponential backoff
+        retries = 0
+        max_retries = 10
+        base_wait_seconds = 30  # Start with 5 seconds
+        max_wait_seconds = 300  # Cap at 5 minutes
+
+        while response_data.get("report_status") != "FINISHED":
+            self.logger.info(f"⏳ Report not ready yet. Status: {response_data.get('report_status')}")
+            if retries >= max_retries:
+                raise Exception("Report did not finish after maximum retries.")
+
+            # Calculate exponential backoff with jitter
+            wait_seconds = min(base_wait_seconds * (2 ** retries), max_wait_seconds)
+            # Add jitter (±20% random variation) to prevent thundering herd
+            jitter = wait_seconds * 0.2 * (2 * random.random() - 1)
+            wait_seconds = max(1, wait_seconds + jitter)  # Ensure minimum 1 second wait
+            
+            self.logger.info(f"🔄 Retry {retries + 1}/{max_retries}, waiting {wait_seconds:.1f} seconds...")
+            time.sleep(wait_seconds)
+            retries += 1
+
+            # Re-send the request and update response_data with new response
+            # Use direct HTTP request to check report status
+            ad_account_id = self.config['ad_account_id']
+            report_url = f"{self.url_base}ad_accounts/{ad_account_id}/reports"
+            headers = self.http_headers
+            
+            # Make the same POST request to check status
+            payload = self.prepare_request_payload(context=None, next_page_token=None)
+            response = requests.post(
+                url=report_url,
+                headers=headers,
+                json=payload
+            )
+            
+            response_data = response.json()  # Update with new response data
+            self.logger.info(f"📊 Updated report status: {response_data.get('report_status')}")
+            # print(response)  # Remove print statement
+
+        self.logger.info("✅ Report finished. Parsing data...")
+
+        if not report_token:
+            raise Exception("No report token found in response.")
+
+        # Make GET request to fetch actual report data
+        ad_account_id = self.config["ad_account_id"]
+        report_url = f"{self.url_base}ad_accounts/{ad_account_id}/reports"
+        headers = self.http_headers
+
+        report_response = requests.get(
+            url=report_url,
+            headers=headers,
+            params={"token": report_token},
+        )
+        
+       
+        self.logger.info(f"📡 GET {report_url}?token={report_token}")
+        self.logger.info(f"📬 Headers: {headers}")
+        self.logger.info(f"📬 Status: {report_response.status_code}")
+        self.logger.info(f"📬 Body: {report_response.text}")
+        self.logger.info(report_response.json().get('url'))
+        result = requests.get(url=report_response.json().get('url'))
+        if result.status_code == 200:
+            #print(result.json())
+            self.logger.info(result.json())
+        # The API returns data with a 'data' field containing an array of records
+        # We need to yield each individual record from the data array
+        response_data = result.json()
+        
+        if 'data' in response_data and isinstance(response_data['data'], list):
+            #print(f"Found {len(response_data['data'])} records in data array")
+            for record in response_data['data']:
+                #print(f"Yielding record: {record}")
+                yield record
+        else:
+            # Fallback: if data structure is different, try to process as before
+            for ad_id, records_list in response_data.items():
+                #print(f"Processing AD_ID: {ad_id}")
+                if isinstance(records_list, list):
+                    for record in records_list:
+                        #print(f"Yielding record: {record}")
+                        yield record
+                else:
+                    #print(f"Yielding single record: {records_list}")
+                    yield records_list
