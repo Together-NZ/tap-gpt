@@ -12,6 +12,12 @@ from comparison_package import ComparisonTrigger
 from airflow.operators.python import PythonOperator
 from datetime import timedelta
 from google.cloud import storage
+import json
+
+
+client = storage.Client(project = "together-internal")
+bucket = client.bucket("datapipeline-nonretryable-error")
+blob = bucket.blob("non_retryable_error.json")
 
 
 IMAGE = "australia-southeast1-docker.pkg.dev/kiwibank-main/meltano/meltano-kiwibank-main:prod"
@@ -32,6 +38,7 @@ default_args = {
     "start_date": datetime.datetime(2026, 4, 23, tzinfo=local_tz)
 }
 
+non_retryable_error = 
 
 def get_meltano_env():
     # Generated function here, create your own secret, the first one stroes the specific ad account id,
@@ -196,7 +203,7 @@ def set_env_vars_cm360():
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="kiwibank-social-display-programmatic",
-    schedule_interval="0 5 * * *",
+    schedule_interval="0 1 * * *",
     default_args=default_args
 ) as dag_social:
 
