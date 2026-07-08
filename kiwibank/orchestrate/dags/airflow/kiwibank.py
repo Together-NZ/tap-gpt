@@ -38,7 +38,7 @@ default_args = {
     "start_date": datetime.datetime(2026, 4, 23, tzinfo=local_tz)
 }
 
-non_retryable_error = 
+
 
 def get_meltano_env():
     # Generated function here, create your own secret, the first one stroes the specific ad account id,
