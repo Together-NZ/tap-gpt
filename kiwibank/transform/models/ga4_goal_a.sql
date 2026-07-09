@@ -90,6 +90,7 @@ WITH deduplicated_data AS (
         WHEN LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%twitter%' 
             AND (LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%cpm%' 
                   OR LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%cpc%') THEN 'twitter'
+        WHEN LOWER(JSON_VALUE(data, '$.sessionSourceMedium')) LIKE '%google / cpc%' THEN 'google_ads_search'
         ELSE SPLIT(JSON_VALUE(data, '$.sessionSourceMedium'),'/')[OFFSET(0)]
     END AS site_name,
     
