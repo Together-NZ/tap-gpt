@@ -408,6 +408,7 @@ with models.DAG(
         'business_banking',
         'ao_social_boosting',
         'home_loans',
+        'generic',
         "unattributed",
     ]
 
@@ -424,7 +425,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(brand),
         )
-
+        
         kube_dash_search = KubernetesPodOperator(
             name=f"kb-{brand}-dash-search-to-bq",
             task_id=f"kb-{brand}-dash_search_to_bigquery",
@@ -525,6 +526,7 @@ with models.DAG(
         'business_banking',
         'ao_social_boosting',
         'home_loans',
+        'generic',
         'unattributed',
     ]
     bing_task_list = []

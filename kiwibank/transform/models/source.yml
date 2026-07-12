@@ -169,6 +169,13 @@ sources:
       - name: dash_table__home_loans
       - name: dash_union__home_loans
 
+  - name: dash_union__generic
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__generic') }}"
+    tables:
+      - name: dash_table__generic
+      - name: dash_union__generic
+
   - name: dash_union_search__home_loans
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__home_loans') }}"
