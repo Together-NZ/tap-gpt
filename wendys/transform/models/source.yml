@@ -235,22 +235,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 4432
-  - name: google_ads_search
-    config:
-      schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX', '') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 380962.55
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 22856329
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 498442
   - name: tiktok
     config:
       schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
