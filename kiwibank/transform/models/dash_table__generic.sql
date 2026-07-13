@@ -5,23 +5,19 @@
     materialized='table',
 ) }}
 WITH dash_table AS (
-{{dash_table_general_process.tiktok(source_name='tiktok_transformed', table_name='tiktok')          }} WHERE campaign_name LIKE '%00005%'
+{{dash_table_general_process.tiktok(source_name='tiktok_transformed', table_name='tiktok')          }} WHERE campaign_name LIKE '%000009%'
 UNION ALL
-{{dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook')}} WHERE campaign_name LIKE '%00005%'
+{{dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook')}} WHERE campaign_name LIKE '%000009%'
 UNION ALL
-{{dash_table_general_process.linkedin(source_name='linkedin_transformed', table_name='linkedin')}} WHERE campaign_name LIKE '%00005%'
+{{dash_table_general_process.linkedin(source_name='linkedin_transformed', table_name='linkedin')}} WHERE campaign_name LIKE '%000009%'
 UNION ALL
-{{dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard',yt_source_name='dv360_transformed',yt_table_name='dv360_youtube')}} AND campaign_name LIKE '%00005%'
+{{dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard',yt_source_name='dv360_transformed',yt_table_name='dv360_youtube')}} AND campaign_name LIKE '%000009%'
 UNION ALL
-{{dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube')}} WHERE campaign_name LIKE '%00005%'
+{{dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube')}} WHERE campaign_name LIKE '%000009%'
 UNION ALL
-{{dash_table_general_process.hivestack(source_name='hivestack_transformed', table_name='hivestack')}} WHERE campaign_name LIKE '%00005%'
+{{dash_table_general_process.hivestack(source_name='hivestack_transformed', table_name='hivestack')}} WHERE campaign_name LIKE '%000009%'
 UNION ALL
-{{dash_table_general_process.google_ads(source_name='google_ads__everyday_banking_retail_deposit', table_name='google_ads_demand__everyday_banking_retail_deposit1')}}
-UNION ALL
-{{dash_table_general_process.google_ads(source_name='google_ads__everyday_banking_retail_deposit', table_name='google_ads_demand__everyday_banking_retail_deposit2')}}
-UNION ALL
-{{dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy')}} WHERE campaign_name LIKE '%00005%'
+{{dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy')}} WHERE campaign_name LIKE '%000009%'
 UNION ALL
 {{dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd')}} WHERE campaign_name LIKE '%000009%'
 ),
