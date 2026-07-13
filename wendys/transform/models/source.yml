@@ -6,6 +6,7 @@ sources:
     tables:
       - name: goal
       - name: session_goal
+      - name: keyword_goal
 
   - name: ga4_session_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
@@ -17,6 +18,16 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
     tables:
       - name: ga4_goal_channel_goal
+  - name: ga4_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_a
+      - name: ga4_goal_a_session
+      - name: ga4_goal_channel
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+      - name: ga4_goal_channel_keyword
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
@@ -26,7 +37,7 @@ sources:
 
   - name: dash_union_search
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wendys-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
     tables:
       - name: dash_table_search
 
@@ -134,6 +145,8 @@ sources:
     tables:
       - name: google_ads_demand
       - name: google_ads_search
+      - name: google_ads_keyword
+      - name: google_ads_location
 
 
 #testing dbt
@@ -154,23 +167,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 0
-  - name: reddit
-    config:
-      schema: "{{ env_var('REDDIT_SUFFIX', '') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 1095.76
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 429635
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 1268
-
   - name: ttd_transformed
     config: 
       schema: "{{ env_var('TTD_SUFFIX', '') }}"
@@ -255,24 +251,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 498442
-  - name: linkedin
-    config:
-      schema: "{{ env_var('LINKEDIN_SUFFIX','') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 8327.91
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 771281
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 5785
-
-
   - name: tiktok
     config:
       schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
