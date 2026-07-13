@@ -1,0 +1,16 @@
+[
+    {
+        "name": "keyword_goal",
+        "dimensions": [
+            "date",
+            "eventName",
+            "googleAdsKeyword",
+            "sessionSourceMedium",
+            "sessionCampaignName",
+            "sessionManualAdContent"
+        ],
+        "metrics": [
+            "keyEvents"
+        ]
+    }
+]

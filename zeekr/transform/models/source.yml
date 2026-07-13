@@ -6,6 +6,8 @@ sources:
     tables:
       - name: goal
       - name: session_goal
+      - name: keyword_goal
+      - name: ecommerce_goal
   - name: ga4_session_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
@@ -16,6 +18,17 @@ sources:
     schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
     tables:
       - name: ga4_goal_channel_goal
+  - name: ga4_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_a
+      - name: ga4_goal_a_session
+      - name: ga4_goal_channel
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+      - name: ga4_goal_channel_keyword
+      - name: ga4_goal_ecommerce
 
 
 
@@ -77,14 +90,17 @@ sources:
 
   - name: dash_union_search
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
     tables:
       - name: dash_table_search
   - name: google_ads
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
-    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_DEMAND_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
     tables:
       - name: google_ads_demand
+      - name: google_ads_search
+      - name: google_ads_keyword
+      - name: google_ads_location
   - name: cm360_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'zeekr-main') }}"
     schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"

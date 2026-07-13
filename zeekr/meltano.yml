@@ -15,13 +15,21 @@ environments:
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_GOOGLE_ADS_SEARCH_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
           META_SUFFIX: dbt_test_facebook
 
           LINKEDIN_SUFFIX: dbt_test_linkedin
           TTD_SUFFIX: dbt_test_ttd
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
 
-   
-          PLAN_CODE: uow
+          PLAN_CODE: zeekr
 - name: prod
 #state_backend:
 #  uri: gs://zeekr-meltano-state-staging
@@ -127,6 +135,10 @@ plugins:
         args: run --select ga4_goal_a ga4_goal_channel_goal
       ga4_session_models:
         args: run --select ga4_goal_a_session ga4_goal_channel_session
+      ga4_keyword_models:
+        args: run --select ga4_goal_channel_keyword
+      ga4_ecommerce_models:
+        args: run --select ga4_goal_ecommerce
       ga4_final_models:
         args: run --select ga4_goal_channel
       facebook_models:
@@ -134,7 +146,11 @@ plugins:
       linkedin_models:
         args: run --select linkedin
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand
+        args: run --select +google_ads_search +google_ads_demand +google_ads_keyword +google_ads_location
+      dash_search_models:
+        args: run --select +dash_table_search
+      dash_union_models:
+        args: run --select +dash_union
       cm360_models:
         args: run --select +cm360_direct_buy
   files:
