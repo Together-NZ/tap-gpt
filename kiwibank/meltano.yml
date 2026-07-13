@@ -179,6 +179,8 @@ plugins:
         args: run --select ga4_goal_channel_keyword__everyday_banking_retail_deposit
       ga4_keyword_home_loans_models:
         args: run --select ga4_goal_channel_keyword__home_loans
+      ga4_keyword_generic_models:
+        args: run --select ga4_goal_channel_keyword__generic
       ga4_keyword_unattributed_models:
         args: run --select ga4_goal_channel_keyword__unattributed
       ga4_ao_social_boosting_models:
@@ -197,6 +199,12 @@ plugins:
         args: run --select ga4_goal_channel__home_loans
       ga4_unattributed_models:
         args: run --select ga4_goal_channel__unattributed
+      ga4_generic_models:
+        args: run --select ga4_goal_channel__generic
+      dash_generic_models:
+        args: run --select dash_table__generic
+      dash_generic_union_models:
+        args: run --select dash_union__generic
       google_ads_ao_social_boosting_models:
         args: run --select google_ads_search__ao_social_boosting google_ads_demand__ao_social_boosting
       google_ads_everyday_banking_retail_deposit_models:
@@ -213,6 +221,8 @@ plugins:
         args: run --select +google_ads_search__home_loans +google_ads_demand__home_loans +google_ads_keyword__home_loans
       google_ads_unattributed_models:
         args: run --select +google_ads_search__unattributed +google_ads_demand__unattributed
+      google_ads_generic_models:
+        args: run --select +google_ads_search__generic +google_ads_demand__generic +google_ads_keyword__generic
       bing_ads_home_loans_models:
         args: run --select +bing_ads_search__home_loans
       bing_ads_everyday_banking_retail_deposit_models:
