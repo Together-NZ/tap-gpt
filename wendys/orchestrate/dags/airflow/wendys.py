@@ -81,36 +81,33 @@ def set_env_vars_dash_search():
 
 
 def set_env_vars_ga4(goal):
-    env = get_meltano_env()
-    if goal == "session":
-        env["TAP_GA4_REPORTS"] = "./report_sessions.json"
-        env["GA4_GOAL"] = "session_goal"
-    elif goal == "keyword":
-        env["TAP_GA4_REPORTS"] = "./report_keyword.json"
-        env["GA4_GOAL"] = "keyword_goal"
-    else:
-        env["TAP_GA4_REPORTS"] = "./report.json"
-        env["GA4_GOAL"] = "goal"
-    env["BQ_DATASET"] = "ga4_raw"
-    env["BQ_METHOD"] = "gcs_stage"
-    env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    env["DBT_BIGQUERY_AUTH_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_DATASET"] = "ga4_transformed"
-    env["PLAN_CODE_GA4"] = "wendys"
-    developer_creds = Credentials(
-        None,
-        refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
-        client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
-    )
-    developer_creds.refresh(Request())
-    env["TAP_GA4_START_DATE"] = get_ga4_start_date()
-    env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-    if "TAP_GA4_PROPERTY_ID" in env:
-        pass
-    return env
+        env = get_meltano_env()
+        if goal == 'session':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        elif goal == 'keyword':
+            env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = 'keyword_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'
+        env["BQ_DATASET"] = "ga4_raw"
+        env["BQ_METHOD"] = "gcs_stage"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
+        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
+        developer_creds = Credentials(
+            None,
+            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
+            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
+        )
+        developer_creds.refresh(Request())
+        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
+        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        return env
 
 
 def set_env_vars_ga4_final():
