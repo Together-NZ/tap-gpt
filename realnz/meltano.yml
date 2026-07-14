@@ -36,6 +36,8 @@ environments:
           TIKTOK_SUFFIX: dbt_test_tiktok
           HIVESTACK_SUFFIX: dbt_test_hivestack
           GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          CM360_SUFFIX: dbt_test_cm360
+          CM360_DIRECT_BUY_TABLE: cm360_direct_buy
           REPORT_NAME: amp_report
           PLAN_CODE: uow
           PLAN_CODE_GA4: uow

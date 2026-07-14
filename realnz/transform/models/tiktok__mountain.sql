@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('TIKTOK_SUFFIX', ''),
     alias='tiktok__mountain'
 ) }}
 

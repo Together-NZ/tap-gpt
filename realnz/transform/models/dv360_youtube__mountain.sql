@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('DV360_SUFFIX', ''),
     alias='dv360_youtube__mountain'
 ) }}
 
@@ -8,5 +9,5 @@
     table_name='dv360_youtube',
     dv360_standard_name='dv360_standard__mountain',
     cm360_source_name='cm360_transformed__mountain',
-    cm360_table_name='cm360_direct_buy__mountain'
+    cm360_table_name=env_var('CM360_DIRECT_BUY_TABLE', 'cm360_direct_buy__mountain')
 ) }}

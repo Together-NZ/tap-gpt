@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('META_SUFFIX', ''),
     alias='facebook__mountain'
 ) }}
 

@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('CM360_SUFFIX', ''),
     alias='cm360_seralized__tourism'
 ) }}
 

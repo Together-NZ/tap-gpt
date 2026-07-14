@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('HIVESTACK_SUFFIX', ''),
     alias='hivestack__mountain'
 ) }}
 

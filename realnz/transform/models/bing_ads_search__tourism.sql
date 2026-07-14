@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('GOOGLE_ADS_SEARCH_SUFFIX', ''),
     alias='bing_ads_search__tourism'
 ) }}
 

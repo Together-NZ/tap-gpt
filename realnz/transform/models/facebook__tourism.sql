@@ -1,5 +1,6 @@
 {{ config(
-    materialized='table'
+    materialized='table',
+    schema=env_var('META_SUFFIX', ''),
 ) }}
 
 WITH {{ facebook.daily_breakdown(source_name='facebook_raw__tourism', table_name='ads_insights') }},
