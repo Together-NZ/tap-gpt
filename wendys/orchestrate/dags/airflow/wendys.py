@@ -45,7 +45,7 @@ def get_ttd_start_date():
 
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_wendys_main", deserialize_json=True)
-    meltano_env_common = Variable.get("meltano_common_secret_main", deserialize_json=True)
+    meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
 
     meltano_env = {**meltano_env_common, **meltano_env_unique}
     meltano_env["START_DATE"] = (
