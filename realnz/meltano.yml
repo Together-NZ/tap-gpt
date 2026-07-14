@@ -4,6 +4,50 @@ project_id: 123b8fab-a351-4b3e-a547-d5446bd5cc7g
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN: dbt_test_google_ads_search_mountain
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET_TOURISM: dbt_test_google_ads_search_tourism
+          REFERENCE_META_BIGQUERY_DATASET_MOUNTAIN: dbt_test_facebook
+          REFERENCE_META_BIGQUERY_DATASET_TOURISM: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET_TOURISM: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET_MOUNTAIN: dbt_test_dv360_raw
+          REFERENCE_DV360_BIGQUERY_DATASET_TOURISM: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN: dbt_test_dv360
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET_TOURISM: dbt_test_dv360
+          REFERENCE_TTD_BIGQUERY_DATASET_MOUNTAIN: dbt_test_ttd
+          REFERENCE_TTD_BIGQUERY_DATASET_TOURISM: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET_TOURISM: dbt_test_ttd
+          REFERENCE_TIKTOK_BIGQUERY_DATASET_MOUNTAIN: dbt_test_tiktok
+          REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN: dbt_test_tiktok
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET_MOUNTAIN: dbt_test_hivestack
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET_TOURISM: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET_TOURISM: dbt_test_hivestack
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET_TOURISM: dbt_test_cm360
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TTD_SUFFIX: dbt_test_ttd
+          TIKTOK_SUFFIX: dbt_test_tiktok
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          REPORT_NAME: amp_report
+          PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
+          BING_ADS_CLIENT_tourism_ID: '1704016095'
 - name: prod
 #state_backend:
 #  uri: gs://realnz-main-meltano-state-staging
@@ -68,7 +112,7 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ${GA4_REPORTS}
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
@@ -96,7 +140,7 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     config:
       method: oauth
       project: real-nz-main
@@ -105,6 +149,14 @@ plugins:
         args: run --select ga4_goal_a__mountain ga4_goal_channel__mountain
       ga4_tourism_goal_models:
         args: run --select ga4_goal_a__tourism ga4_goal_channel__tourism
+      ga4_mountain_session_models:
+        args: run --select ga4_goal_a_session__mountain ga4_goal_channel_session__mountain
+      ga4_tourism_session_models:
+        args: run --select ga4_goal_a_session__tourism ga4_goal_channel_session__tourism
+      ga4_mountain_keyword_models:
+        args: run --select ga4_goal_channel_keyword__mountain
+      ga4_tourism_keyword_models:
+        args: run --select ga4_goal_channel_keyword__tourism
       ga4_tourism_ecommerce_models:
         args: run --select ga4_goal_ecommerce__tourism
       ga4_mountain_ecommerce_models:
@@ -118,9 +170,6 @@ plugins:
       cm360_mountain_models:
         args: run --select cm360_seralized__mountain cm360_direct_buy__mountain
         description: Run the CM360 ads model
-      hivestack_realnz_models:
-        args: run --select +hivestack__realnz
-        description: Run the HiveStack model
       hivestack_tourism_models:
         args: run --select +hivestack__tourism
         description: Run the HiveStack model
@@ -128,8 +177,12 @@ plugins:
         args: run --select +hivestack__mountain
         description: Run the HiveStack model
       google_ads_dv_models__realnz:
-        args: run --select +google_ads_dv__realnz
-        description: Run the Google Ads model
+        args: run --select +google_ads_demand__tourism2
+        description: Run the Google Ads demand (DV) model into tourism search dataset
+      google_ads_mountain_models:
+        args: run --select +google_ads_search__mountain +google_ads_demand__mountain +google_ads_keyword__mountain +google_ads_location__mountain
+      google_ads_tourism_models:
+        args: run --select +google_ads_search__tourism +google_ads_demand__tourism +google_ads_demand__tourism2 +google_ads_keyword__tourism +google_ads_location__tourism +bing_ads_search__tourism
       facebook_mountain_models:
         args: run --select +facebook__mountain
         description: Run the Facebook ads model

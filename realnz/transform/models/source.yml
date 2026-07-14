@@ -1,0 +1,352 @@
+version: 2
+
+sources:
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: facebook_raw__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET_MOUNTAIN', 'facebook_raw__mountain') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: ads_insights_delivery_device
+      - name: custom_conversions
+
+  - name: facebook_raw__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET_TOURISM', 'facebook_raw__tourism') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: ads_insights_delivery_device
+      - name: custom_conversions
+
+  - name: dv360_raw__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET_MOUNTAIN', 'dv360_raw__mountain') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_raw__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET_TOURISM', 'dv360_raw__tourism') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: ttd_raw__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET_MOUNTAIN', 'ttd_raw__mountain') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_raw__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET_TOURISM', 'ttd_raw__tourism') }}"
+    tables:
+      - name: standard_streams
+
+  - name: tiktok_raw__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET_MOUNTAIN', 'tiktok_raw__mountain') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: hivestack_raw__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET_MOUNTAIN', 'hivestack_raw__mountain') }}"
+    tables:
+      - name: realnz_mountain_report
+      - name: amp_report
+
+  - name: hivestack_raw__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET_TOURISM', 'hivestack_raw__tourism') }}"
+    tables:
+      - name: realnz_tourism_report
+      - name: amp_report
+
+  - name: ga4_raw__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__mountain') }}"
+    tables:
+      - name: goal
+      - name: ecommerce_goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_raw__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__tourism') }}"
+    tables:
+      - name: goal
+      - name: ecommerce_goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: dash_union__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__mountain') }}"
+    tables:
+      - name: dash_table__mountain
+      - name: dash_union__mountain
+
+  - name: dash_union_search__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search__mountain') }}"
+    tables:
+      - name: dash_table_search__mountain
+
+  - name: dash_union__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__tourism') }}"
+    tables:
+      - name: dash_table__tourism
+      - name: dash_union__tourism
+
+  - name: dash_union_search__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search__tourism') }}"
+    tables:
+      - name: dash_table_search__tourism
+
+  # Transformed layer (datasets produced by dbt from raw taps) — use {{ source('…', '…') }} in models/tests.
+  - name: facebook_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'facebook_transformed__mountain') }}"
+    tables:
+      - name: facebook__mountain
+
+  - name: facebook_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'facebook_transformed__tourism') }}"
+    tables:
+      - name: facebook__tourism
+
+  - name: dv360_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'dv360_transformed__mountain') }}"
+    tables:
+      - name: dv360_standard__mountain
+      - name: dv360_youtube__mountain
+
+  - name: dv360_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'dv360_transformed__tourism') }}"
+    tables:
+      - name: dv360_standard__tourism
+      - name: dv360_youtube__tourism
+
+  - name: cm360_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'cm360_transformed__mountain') }}"
+    tables:
+      - name: cm360_direct_buy__mountain
+      - name: cm360_seralized__mountain
+
+  - name: cm360_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'cm360_transformed__tourism') }}"
+    tables:
+      - name: cm360_direct_buy__tourism
+      - name: cm360_seralized__tourism
+
+  - name: ttd_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'ttd_transformed__mountain') }}"
+    tables:
+      - name: ttd_transformed__mountain
+
+  - name: ttd_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'ttd_transformed__tourism') }}"
+    tables:
+      - name: ttd_transformed__tourism
+
+  - name: tiktok_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'tiktok_transformed__mountain') }}"
+    tables:
+      - name: tiktok__mountain
+
+  - name: google_ads_search_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'google_ads_search_transformed__mountain') }}"
+    tables:
+      - name: google_ads_demand__mountain
+      - name: google_ads_search__mountain
+      - name: google_ads_keyword__mountain
+      - name: google_ads_location__mountain
+
+  - name: google_ads_search_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'google_ads_search_transformed__tourism') }}"
+    tables:
+      - name: google_ads_demand__tourism
+      - name: google_ads_demand__tourism2
+      - name: google_ads_search__tourism
+      - name: google_ads_keyword__tourism
+      - name: google_ads_location__tourism
+      - name: bing_ads_search__tourism
+
+  - name: hivestack_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'hivestack_transformed__mountain') }}"
+    tables:
+      - name: hivestack__mountain
+
+  - name: hivestack_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'hivestack_transformed__tourism') }}"
+    tables:
+      - name: hivestack__tourism
+
+models:
+
+  - name: ttd_transformed__mountain
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
+
+  - name: ttd_transformed__tourism
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
+
+  - name: dv360_standard__mountain
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+
+  - name: dv360_standard__tourism
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+
+  - name: dv360_youtube__mountain
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+
+  - name: dv360_youtube__tourism
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+
+  - name: hivestack__mountain
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 15000.03
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 815604.65
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
+
+  - name: hivestack__tourism
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 15000.03
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 815604.65
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
