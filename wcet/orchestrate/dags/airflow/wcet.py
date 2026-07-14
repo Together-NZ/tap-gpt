@@ -167,7 +167,7 @@ with models.DAG(
                 env = get_meltano_env()
                 trigger = ComparisonTrigger(
                     project_name="wcet-main",
-                    destination_table=f"tiktok_transformed__beervana ",
+                    destination_table=f"tiktok_transformed__beervana",
                     table_name=f"tiktok__beervana",
                     source_name="tiktok",
                     start_date=comparison_start_date,
