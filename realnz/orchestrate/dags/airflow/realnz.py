@@ -227,6 +227,38 @@ with models.DAG(
         )
         per_brand_upstreams[brand].append(kube_facebook)
 
+        def make_facebook_comparison_check(brand_name):
+            def facebook_comparison_check(**context):
+                meltano_env = get_meltano_env()
+                trigger = ComparisonTrigger(
+                    project_name=PROJECT_NAME,
+                    destination_table=f"facebook_transformed__{brand_name}",
+                    table_name=f"facebook__{brand_name}",
+                    source_name="meta",
+                    start_date=comparison_start_date,
+                    end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                    secret_name="airflow-variables-meltano_realnz_main",
+                    project_id=meltano_env["PROJECT_ID"],
+                    brand=brand_name,
+                )
+                result = trigger.compare_data()
+                if not result:
+                    raise ValueError(
+                        f"Facebook data accuracy check failed for {brand_name} — "
+                        "BQ data does not match source API."
+                    )
+                return result
+
+            return facebook_comparison_check
+
+        task_facebook_comparison = PythonOperator(
+            task_id=f"task_facebook_comparison_{brand}",
+            python_callable=make_facebook_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+        kube_facebook >> task_facebook_comparison
+
         kube_cm360 = KubernetesPodOperator(
             name=f"realnz-cm360-to-bigquery-{brand}",
             task_id=f"realnz_cm360_to_bigquery_{brand}",
@@ -248,6 +280,68 @@ with models.DAG(
             env_vars=set_env_vars_dv360(env[f"TAP_DV360_ACCOUNT_{brand}_ID"], brand),
         )
         per_brand_upstreams[brand].append(kube_dv360)
+
+        def make_dv360_standard_comparison_check(brand_name):
+            def dv360_standard_comparison_check(**context):
+                meltano_env = get_meltano_env()
+                trigger = ComparisonTrigger(
+                    project_name=PROJECT_NAME,
+                    destination_table=f"dv360_transformed__{brand_name}",
+                    table_name=f"dv360_standard__{brand_name}",
+                    source_name="dv360_standard",
+                    start_date=comparison_start_date,
+                    end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                    secret_name="airflow-variables-meltano_realnz_main",
+                    project_id=meltano_env["PROJECT_ID"],
+                    brand=brand_name,
+                )
+                result = trigger.compare_data()
+                if not result:
+                    raise ValueError(
+                        f"DV360 standard data accuracy check failed for {brand_name} — "
+                        "BQ data does not match source API."
+                    )
+                return result
+
+            return dv360_standard_comparison_check
+
+        def make_dv360_youtube_comparison_check(brand_name):
+            def dv360_youtube_comparison_check(**context):
+                meltano_env = get_meltano_env()
+                trigger = ComparisonTrigger(
+                    project_name=PROJECT_NAME,
+                    destination_table=f"dv360_transformed__{brand_name}",
+                    table_name=f"dv360_youtube__{brand_name}",
+                    source_name="dv360_youtube",
+                    start_date=comparison_start_date,
+                    end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                    secret_name="airflow-variables-meltano_realnz_main",
+                    project_id=meltano_env["PROJECT_ID"],
+                    brand=brand_name,
+                )
+                result = trigger.compare_data()
+                if not result:
+                    raise ValueError(
+                        f"DV360 YouTube data accuracy check failed for {brand_name} — "
+                        "BQ data does not match source API."
+                    )
+                return result
+
+            return dv360_youtube_comparison_check
+
+        task_dv360_standard_comparison = PythonOperator(
+            task_id=f"task_dv360_standard_comparison_{brand}",
+            python_callable=make_dv360_standard_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+        task_dv360_youtube_comparison = PythonOperator(
+            task_id=f"task_dv360_youtube_comparison_{brand}",
+            python_callable=make_dv360_youtube_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+        kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
 
         kube_ttd = KubernetesPodOperator(
             name=f"realnz-ttd-to-bigquery-{brand}",
