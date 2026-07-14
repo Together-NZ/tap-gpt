@@ -1,7 +1,5 @@
 {{ config(
-    materialized='table',
-    schema='facebook_transformed__tourism',
-    alias='facebook__tourism',
+    materialized='table'
 ) }}
 
 WITH {{ facebook.daily_breakdown(source_name='facebook_raw__tourism', table_name='ads_insights') }},

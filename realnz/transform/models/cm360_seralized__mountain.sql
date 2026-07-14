@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='cm360_transformed__mountain',
-    alias='cm360_seralized__mountain',
+    alias='cm360_seralized__mountain'
 ) }}
 
 WITH cm360reference AS (

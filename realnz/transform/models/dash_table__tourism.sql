@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='dash_table__tourism',
-    alias='dash_table__tourism',
+    alias='dash_table__tourism'
 ) }}
 
 WITH dash_table AS (

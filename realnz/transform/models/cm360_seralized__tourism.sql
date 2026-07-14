@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='cm360_transformed__tourism',
-    alias='cm360_seralized__tourism',
+    alias='cm360_seralized__tourism'
 ) }}
 
 WITH cm360reference AS (

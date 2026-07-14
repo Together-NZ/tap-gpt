@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='tiktok_transformed__mountain',
-    alias='tiktok__mountain',
+    alias='tiktok__mountain'
 ) }}
 
 WITH

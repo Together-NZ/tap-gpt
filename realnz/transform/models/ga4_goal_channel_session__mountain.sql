@@ -1,5 +1,5 @@
 {{ config(
-    materialized='table',
+    materialized='table'
 ) }}
 
 {{ ga4.ga4_goal_channel(

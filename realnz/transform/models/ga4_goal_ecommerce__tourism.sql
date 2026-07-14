@@ -1,5 +1,5 @@
 {{ config(
-    materialized='table',
+    materialized='table'
 ) }}
 WITH ecommerce AS (
     SELECT JSON_VALUE(data,'$.sessionCampaignName') AS campaign_name,

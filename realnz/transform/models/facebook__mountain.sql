@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='facebook_transformed__mountain',
-    alias='facebook__mountain',
+    alias='facebook__mountain'
 ) }}
 
 WITH {{ facebook.daily_breakdown(source_name='facebook_raw__mountain', table_name='ads_insights') }},

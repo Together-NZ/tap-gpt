@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='dash_table_search__mountain',
-    alias='dash_table_search__mountain',
+    alias='dash_table_search__mountain'
 ) }}
 
 WITH dash_table AS (

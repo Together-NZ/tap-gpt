@@ -1,11 +1,10 @@
 {{ config(
     materialized='table',
-    schema='cm360_transformed__mountain',
-    alias='cm360_direct_buy__mountain',
+    alias='cm360_direct_buy__mountain'
 ) }}
 
 {{ cm360.cm360_direct_buy(
     source_name='cm360_raw',
     table_name='cm360_report_stream',
-    lower_advertiser_name='realnz - mountains',
+    lower_advertiser_name='realnz - mountains'
 ) }}

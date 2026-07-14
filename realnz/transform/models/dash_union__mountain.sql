@@ -1,7 +1,6 @@
 {{ config(
     materialized='table',
-    schema='dash_table__mountain',
-    alias='dash_union__mountain',
+    alias='dash_union__mountain'
 ) }}
 
 WITH final_result AS (

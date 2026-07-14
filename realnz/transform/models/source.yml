@@ -10,7 +10,7 @@ sources:
 
   - name: facebook_raw__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET_MOUNTAIN', 'facebook_raw__mountain') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__mountain') }}"
     tables:
       - name: ads_insights
       - name: ad_sets
@@ -21,7 +21,7 @@ sources:
 
   - name: facebook_raw__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET_TOURISM', 'facebook_raw__tourism') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__tourism') }}"
     tables:
       - name: ads_insights
       - name: ad_sets
@@ -32,33 +32,33 @@ sources:
 
   - name: dv360_raw__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET_MOUNTAIN', 'dv360_raw__mountain') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__mountain') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
 
   - name: dv360_raw__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET_TOURISM', 'dv360_raw__tourism') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__tourism') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
 
   - name: ttd_raw__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET_MOUNTAIN', 'ttd_raw__mountain') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__mountain') }}"
     tables:
       - name: standard_streams
 
   - name: ttd_raw__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET_TOURISM', 'ttd_raw__tourism') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__tourism') }}"
     tables:
       - name: standard_streams
 
   - name: tiktok_raw__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET_MOUNTAIN', 'tiktok_raw__mountain') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw__mountain') }}"
     tables:
       - name: ads
       - name: ads_basic_data_metrics_by_day
@@ -66,14 +66,14 @@ sources:
 
   - name: hivestack_raw__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET_MOUNTAIN', 'hivestack_raw__mountain') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__mountain') }}"
     tables:
       - name: realnz_mountain_report
       - name: amp_report
 
   - name: hivestack_raw__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET_TOURISM', 'hivestack_raw__tourism') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__tourism') }}"
     tables:
       - name: realnz_tourism_report
       - name: amp_report
@@ -125,65 +125,65 @@ sources:
   # Transformed layer (datasets produced by dbt from raw taps) — use {{ source('…', '…') }} in models/tests.
   - name: facebook_transformed__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'facebook_transformed__mountain') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__mountain') }}"
     tables:
       - name: facebook__mountain
 
   - name: facebook_transformed__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'facebook_transformed__tourism') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__tourism') }}"
     tables:
       - name: facebook__tourism
 
   - name: dv360_transformed__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'dv360_transformed__mountain') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__mountain') }}"
     tables:
       - name: dv360_standard__mountain
       - name: dv360_youtube__mountain
 
   - name: dv360_transformed__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'dv360_transformed__tourism') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__tourism') }}"
     tables:
       - name: dv360_standard__tourism
       - name: dv360_youtube__tourism
 
   - name: cm360_transformed__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'cm360_transformed__mountain') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__mountain') }}"
     tables:
       - name: cm360_direct_buy__mountain
       - name: cm360_seralized__mountain
 
   - name: cm360_transformed__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'cm360_transformed__tourism') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__tourism') }}"
     tables:
       - name: cm360_direct_buy__tourism
       - name: cm360_seralized__tourism
 
   - name: ttd_transformed__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'ttd_transformed__mountain') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__mountain') }}"
     tables:
       - name: ttd_transformed__mountain
 
   - name: ttd_transformed__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'ttd_transformed__tourism') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__tourism') }}"
     tables:
       - name: ttd_transformed__tourism
 
   - name: tiktok_transformed__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'tiktok_transformed__mountain') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__mountain') }}"
     tables:
       - name: tiktok__mountain
 
   - name: google_ads_search_transformed__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'google_ads_search_transformed__mountain') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__mountain') }}"
     tables:
       - name: google_ads_demand__mountain
       - name: google_ads_search__mountain
@@ -192,7 +192,7 @@ sources:
 
   - name: google_ads_search_transformed__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'google_ads_search_transformed__tourism') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__tourism') }}"
     tables:
       - name: google_ads_demand__tourism
       - name: google_ads_demand__tourism2
@@ -203,13 +203,13 @@ sources:
 
   - name: hivestack_transformed__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET_MOUNTAIN', 'hivestack_transformed__mountain') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__mountain') }}"
     tables:
       - name: hivestack__mountain
 
   - name: hivestack_transformed__tourism
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
-    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET_TOURISM', 'hivestack_transformed__tourism') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__tourism') }}"
     tables:
       - name: hivestack__tourism
 
