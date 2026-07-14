@@ -23,7 +23,7 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "retry_delay": timedelta(minutes=30),
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
+    "start_date": datetime.datetime(2026, 7, 12, tzinfo=local_tz),
 }
 
 comparison_start_date = (
@@ -45,9 +45,9 @@ def get_ttd_start_date():
 
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_wendys_main", deserialize_json=True)
-    meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
-    meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
-    meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
+    meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
+
+    meltano_env = {**meltano_env_common, **meltano_env_unique}
     meltano_env["START_DATE"] = (
         datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     ).strftime("%Y-%m-%d")
@@ -81,36 +81,33 @@ def set_env_vars_dash_search():
 
 
 def set_env_vars_ga4(goal):
-    env = get_meltano_env()
-    if goal == "session":
-        env["TAP_GA4_REPORTS"] = "./report_sessions.json"
-        env["GA4_GOAL"] = "session_goal"
-    elif goal == "keyword":
-        env["TAP_GA4_REPORTS"] = "./report_keyword.json"
-        env["GA4_GOAL"] = "keyword_goal"
-    else:
-        env["TAP_GA4_REPORTS"] = "./report.json"
-        env["GA4_GOAL"] = "goal"
-    env["BQ_DATASET"] = "ga4_raw"
-    env["BQ_METHOD"] = "gcs_stage"
-    env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    env["DBT_BIGQUERY_AUTH_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_DATASET"] = "ga4_transformed"
-    env["PLAN_CODE_GA4"] = "wendys"
-    developer_creds = Credentials(
-        None,
-        refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
-        token_uri="https://oauth2.googleapis.com/token",
-        client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
-        client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
-    )
-    developer_creds.refresh(Request())
-    env["TAP_GA4_START_DATE"] = get_ga4_start_date()
-    env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-    if "TAP_GA4_PROPERTY_ID" in env:
-        pass
-    return env
+        env = get_meltano_env()
+        if goal == 'session':
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = 'session_goal'
+        elif goal == 'keyword':
+            env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = 'keyword_goal'
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = 'goal'
+        env["BQ_DATASET"] = "ga4_raw"
+        env["BQ_METHOD"] = "gcs_stage"
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'zeekr-main'
+        env["DBT_BIGQUERY_AUTH_METHOD"]='oauth'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'       
+        developer_creds = Credentials(
+            None,
+            refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
+            token_uri="https://oauth2.googleapis.com/token",
+            client_id=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_ID"],
+            client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
+        )
+        developer_creds.refresh(Request())
+        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
+        env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        return env
 
 
 def set_env_vars_ga4_final():
