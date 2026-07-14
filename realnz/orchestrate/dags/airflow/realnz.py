@@ -355,6 +355,10 @@ with models.DAG(
         )
         per_brand_upstreams[brand].append(kube_ttd)
 
+        # DV360 / TTD join CM360 direct_buy (need video_* + dv360_* columns from package schema)
+        kube_cm360 >> kube_dv360
+        kube_cm360 >> kube_ttd
+
     for brand in BRANDS:
         kube_dash = KubernetesPodOperator(
             name=f"realnz-dash-to-bigquery-{brand}",
