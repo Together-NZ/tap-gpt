@@ -1,82 +1,96 @@
 import datetime
-from airflow import models
-from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
-from airflow.providers.google.cloud.operators.bigquery import BigQueryInsertJobOperator
-from airflow.models import Variable
-import pendulum
-from kubernetes.client import models as k8s_models
 from copy import deepcopy
-import logging
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
+from datetime import timedelta
 
-from datetime import timedelta, datetime as dt
-import json
+import pendulum
+from airflow import models
+from airflow.models import Variable
+from airflow.operators.python import PythonOperator
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from comparison_package import ComparisonTrigger
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from kubernetes.client import models as k8s_models
 
 IMAGE = "australia-southeast1-docker.pkg.dev/real-nz-main/meltano/meltano-real-nz-main:prod"
-
-log: logging.log = logging.getLogger("airflow.task")
-log.setLevel(logging.INFO)
+PROJECT_NAME = "real-nz-main"
+BRANDS = ["mountain", "tourism"]
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = dt.now(local_tz) - timedelta(days=13)
-ga4_start_date = dt.now(local_tz) - timedelta(days=40)
 
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
-    'retry_delay': datetime.timedelta(minutes=30),
-    "start_date": dt(2025, 1, 1, tzinfo=local_tz),
+    "retry_delay": timedelta(minutes=30),
+    "start_date": datetime.datetime(2026, 7, 12, tzinfo=local_tz),
 }
+
+comparison_start_date = (
+    datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
+).strftime("%Y-%m-%d")
+
+KUBE_RESOURCES = k8s_models.V1ResourceRequirements(
+    limits={"memory": "1000M", "cpu": "500m"},
+)
+
+
+def get_ga4_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+
+
+def get_ttd_start_date():
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
+
+
+def get_meta_start_date():
+    return (
+        datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)
+    ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_realnz_main", deserialize_json=True)
-    meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
-    meltano_env = {**meltano_env_common, **meltano_env_unique}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
-    start_date_str = yesterday.strftime("%Y-%m-%d")
-
-    meltano_env["START_DATE"] = start_date_str
+    meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
+    meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
+    meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
+    meltano_env["START_DATE"] = (
+        datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+    ).strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
-
     return deepcopy(meltano_env)
-def get_ga4_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-def get_ttd_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
 
-def get_meta_start_date():
-    return (
-        datetime.datetime.now(datetime.timezone.utc)
-        - datetime.timedelta(days=3)
-    ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
-def set_env_vars_hivestack(_id, label):
+
+def set_env_vars_hivestack(report_id, brand):
     env = get_meltano_env()
-    env["BQ_DATASET"] = f"hivestack_raw__{label}"
-    env["BQ_METHOD"] = "batch_job"
+    env["BQ_DATASET"] = f"hivestack_raw__{brand}"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"hivestack_transformed__{label}"
-    env["TAP_HIVESTACK_REPORT_ID"] = _id
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"hivestack_transformed__{brand}"
+    env["TAP_HIVESTACK_REPORT_ID"] = report_id
     return env
 
-def set_env_vars_ga4(_id, label, _type):
+
+def set_env_vars_ga4(property_id, brand, goal_type):
     env = get_meltano_env()
-    if _type == "goal":
-        env["GA4_REPORTS"] = "./report.json"
-        env["GA4_GOAL"] = "goal"
-    else:
-        env["GA4_REPORTS"] = "./ecommerce_report.json"
+    if goal_type == "session":
+        env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+        env["GA4_GOAL"] = "session_goal"
+    elif goal_type == "keyword":
+        env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+        env["GA4_GOAL"] = "keyword_goal"
+    elif goal_type == "ecommerce":
+        env["TAP_GA4_REPORTS"] = "./ecommerce_report.json"
         env["GA4_GOAL"] = "ecommerce_goal"
-    env["BQ_DATASET"] = f"ga4_raw__{label}"
+    else:
+        env["TAP_GA4_REPORTS"] = "./report.json"
+        env["GA4_GOAL"] = "goal"
+    env["BQ_DATASET"] = f"ga4_raw__{brand}"
     env["BQ_METHOD"] = "gcs_stage"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"ga4_transformed__{label}"
-
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"ga4_transformed__{brand}"
     developer_creds = Credentials(
         None,
         refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -86,365 +100,432 @@ def set_env_vars_ga4(_id, label, _type):
     )
     developer_creds.refresh(Request())
     env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-    env["TAP_GA4_PROPERTY_ID"] = _id
+    env["TAP_GA4_PROPERTY_ID"] = property_id
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
     return env
 
-def set_env_vars_facebook(account_id, value):
+
+def set_env_vars_facebook(account_id, brand):
     env = get_meltano_env()
-    env["BQ_DATASET"] = f"facebook_raw__{value}"
-    env["BQ_METHOD"] = "batch_job"
+    env["BQ_DATASET"] = f"facebook_raw__{brand}"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"facebook_transformed__{value}"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"facebook_transformed__{brand}"
     env["TAP_FACEBOOK_ACCOUNT_ID"] = account_id
     env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = account_id
-    env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"]=get_meta_start_date()
+    env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"] = get_meta_start_date()
     return env
 
-def set_env_vars_cm360(value):
+
+def set_env_vars_cm360(brand):
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"cm360_transformed__{value}"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"cm360_transformed__{brand}"
     return env
 
-def set_env_vars_dv360(account_id, value):
+
+def set_env_vars_dv360(account_id, brand):
     env = get_meltano_env()
-    env["BQ_DATASET"] = f"dv360_raw__{value}"
-    env["BQ_METHOD"] = "batch_job"
+    env["BQ_DATASET"] = f"dv360_raw__{brand}"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"dv360_transformed__{value}"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"dv360_transformed__{brand}"
     env["TAP_DV360_ADVERTISER_ID"] = account_id
     return env
 
-def set_env_vars_ttd(key, value):
+
+def set_env_vars_ttd(advertiser_id, brand):
     env = get_meltano_env()
-    env["BQ_DATASET"] = f"ttd_raw__{value}"
-    env["BQ_METHOD"] = "batch_job"
+    env["BQ_DATASET"] = f"ttd_raw__{brand}"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"ttd_transformed__{value}"
-    env["TAP_TTD_ADVERTISER_ID"] = key
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"ttd_transformed__{brand}"
+    env["TAP_TTD_ADVERTISER_ID"] = advertiser_id
     env["TAP_TTD_START_DATE"] = get_ttd_start_date()
     return env
 
-def set_env_vars_google_ads(value):
+
+def set_env_vars_tiktok(advertiser_id, brand):
     env = get_meltano_env()
+    env["BQ_DATASET"] = f"tiktok_raw__{brand}"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"google_ads_dv_transformed__{value}"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"tiktok_transformed__{brand}"
+    env["TAP_TIKTOK_ADVERTISER_ID"] = advertiser_id
     return env
 
-def set_env_vars_dash(value):
+
+def set_env_vars_google_ads_dv():
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"dash_table__{value}"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "google_ads_search_transformed__tourism"
     return env
 
-def set_env_vars_tiktok(_id, value):
+
+def set_env_vars_google_ads_search(brand):
     env = get_meltano_env()
-    env["BQ_DATASET"] = f"tiktok_raw__{value}"
-    env["BQ_METHOD"] = "batch_job"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"tiktok_transformed__{value}"
-    env["TAP_TIKTOK_ADVERTISER_ID"] = _id
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"google_ads_search_transformed__{brand}"
+    bing_key = f"BING_ADS_CLIENT_{brand}_ID"
+    if bing_key in env:
+        env["BING_ADS_CLIENT_ID"] = env[bing_key]
     return env
 
-def set_env_vars_google_ads_search(value):
+
+def set_env_vars_dash(brand):
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"google_ads_search_transformed__{value}"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"dash_table__{brand}"
     return env
 
-def set_env_vars_dash_search(value):
+
+def set_env_vars_dash_search(brand):
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = "real-nz-main"
-    env["DBT_BIGQUERY_DATASET"] = f"dash_table_search__{value}"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"dash_table_search__{brand}"
     return env
+
+
+# ---------------------------------------------------------------------------
+# DAG 1: Social / Display / Programmatic (schedule: 05:00 NZST daily)
+# Flow: extractors >> per-brand dash >> dash_search >> dash_union
+# ---------------------------------------------------------------------------
 with models.DAG(
-    dag_id="realnz-meltano-google_ads",
-    schedule_interval="0 14 * * *",
+    dag_id="realnz-social-display-programmatic",
+    schedule_interval="0 5 * * *",
     default_args=default_args,
-) as google_dag:
+    dagrun_timeout=timedelta(minutes=120),
+) as dag_social:
     env = get_meltano_env()
-    ga4_tasks = []  
-    dash_union_tasks = []   
-    kube_dash_by_label = {}
-    kube_dash_search_by_label = {}
-    kube_dash_union_by_label = {}
-    ga4_type_list = ["ecommerce", "goal"]
-    per_label_tasks_search = {}   # upstreams per label for dash_search
-    tiktok_list = {env["TAP_TIKTOK_ADVERTISER_ID_MOUNTAIN"]: "mountain"}
-    for key, label in tiktok_list.items():
-        kube_tiktok = KubernetesPodOperator(
-            name=f"realnz-tiktok-to-bigquery-{label}",
-            task_id=f"realnz_tiktok_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-tiktok", "target-bigquery","--full-refresh", f"dbt-bigquery:tiktok_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_tiktok(key, label),
-        )
-    list = ["mountain", "tourism"]
-    for label in list:
-        kube_google_ads_search = KubernetesPodOperator(
-            name=f"realnz-google-ads-search-to-bigquery-{label}",
-            task_id=f"realnz_google_ads_search_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"google_ads_search__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_google_ads_search(label),
-        )
-        per_label_tasks_search.setdefault(label, []).append(kube_google_ads_search)
-    for label in ["realnz"]:
-        kube_google_ads = KubernetesPodOperator(
-            name=f"realnz-google-ads-to-bigquery-{label}",
-            task_id=f"realnz-google_ads_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"google_ads_dv__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_google_ads(label),
-        )
-    dash_list = ["mountain", "tourism"]
-    for label in dash_list:
-        kube_google_ads_demand = KubernetesPodOperator(
-            name=f"realnz-google-ads-demand-to-bigquery-{label}",
-            task_id=f"realnz-google_ads_demand_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"google_ads_demand__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_google_ads_search(label),
-        )
-        kube_dash_union = KubernetesPodOperator(
-            name=f"realnz-dash-union-to-bigquery-{label}",
-            task_id=f"realnz-dash_union_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_dash(label),
-        )
-        kube_dash = KubernetesPodOperator(
-            name=f"realnz-dash-to-bigquery-{label}",
-            task_id=f"realnz-dash_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            trigger_rule="all_done",
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_dash(label),
-        )
-        if label=="mountain":
-            kube_tiktok >> kube_dash
-        kube_google_ads_demand >> kube_dash
-        kube_dash_by_label[label] = kube_dash
-        kube_dash_union_by_label[label] = kube_dash_union
-        dash_union_tasks.append(kube_dash_union)
-    dash_search_list = ["mountain", "tourism"]
-    for label in dash_search_list:
-        kube_dash_search = KubernetesPodOperator(
-            name=f"realnz-dash-search-to-bigquery-{label}",
-            task_id=f"realnz-dash_search_to_bigquery_{label}",
-            namespace="composer-user-workloads",
-            image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table_search__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_dash_search(label),
-        )
-        for upstream_task in per_label_tasks_search.get(label, []):
-            upstream_task >> kube_dash_search
-        kube_dash_search_by_label[label] = kube_dash_search
+    per_brand_upstreams = {brand: [] for brand in BRANDS}
 
-   # GA4 tasks (collect only; wire later)
-    ga4_list = {env["TAP_GA4_PROPERTY_ID_MOUNTAIN"]: "mountain",
-                env["TAP_GA4_PROPERTY_ID_TOURISM"]: "tourism"}
-    for key, label in ga4_list.items():
-        ga4_table_map = {"goal": "goal", "ecommerce": "ecommerce_goal"}
-        for _type in ga4_type_list:
-            table_name = ga4_table_map[_type]
-            
-            kube_ga4 = KubernetesPodOperator(
-                name=f"realnz-ga4-to-bigquery-{label}-{_type}",
-                task_id=f"realnz_ga4_to_bigquery_{label}_{_type}",
-                namespace="composer-user-workloads",
-                image=IMAGE,
-                arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery","--full-refresh", f"dbt-bigquery:ga4_{label}_{_type}_models"],
-                container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-                env_vars=set_env_vars_ga4(key, label, _type),
-            )
-            
-            ga4_tasks.append(kube_ga4)
-    # ===== Per-label strict order: dash -> dash_search -> dash_union =====
-    for label in ["mountain", "tourism"]:
-    
-            kube_google_ads >> kube_google_ads_demand >>kube_dash_by_label[label] >> kube_dash_search_by_label[label] >> kube_dash_union_by_label[label]
-    # ===== Global order: ALL dash_union must complete before ANY GA4 starts =====
-    for label in ["mountain", "tourism"]:
-        kube_dash_union_by_label[label] >> ga4_tasks   
-with models.DAG(
-    dag_id="realnz-meltano-extraction-transformation-dbt",
-    schedule_interval="0 2 * * *",
-    default_args=default_args,
-) as dag:
-
-    env = get_meltano_env()
-
-    # Containers for wiring
-    per_label_tasks = {}          # non-GA4 upstreams per label for dash
-
-    kube_dash_by_label = {}
-    kube_dash_search_by_label = {}
-    kube_dash_union_by_label = {}
-
-    dash_union_tasks = []         # collect ALL unions (for global dep)
-              # collect ALL GA4 tasks
-
-    # Static lists/inputs
-    hivestack_list = {env["TAP_HIVESTACK_REPORT_ID_MOUNTAIN"]: "mountain",
-                      env["TAP_HIVESTACK_REPORT_ID_TOURISM"]: "tourism"}
-
-
-    # Hivestack
-    for key, label in hivestack_list.items():
+    for brand in BRANDS:
         kube_hivestack = KubernetesPodOperator(
-            name=f"realnz-hivestack-to-bigquery-{label}",
-            task_id=f"realnz_hivestack_to_bigquery_{label}",
+            name=f"realnz-hivestack-to-bigquery-{brand}",
+            task_id=f"realnz_hivestack_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-hivestack", "target-bigquery", f"dbt-bigquery:hivestack_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_hivestack(key, label),
+            arguments=["--environment=prod", "run", "tap-hivestack", "target-bigquery", f"dbt-bigquery:hivestack_{brand}_models"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_hivestack(env[f"TAP_HIVESTACK_REPORT_{brand}_ID"], brand),
         )
-        per_label_tasks.setdefault(label, []).append(kube_hivestack)
-        #per_label_tasks.setdefault(label, []).append(kube_tiktok)
-    # Facebook + CM360 (+ optional TTD for tourism)
-    facebook_list = {env["TAP_FACEBOOK_ACCOUNT_ID_MOUNTAIN"]: "mountain",
-                     env["TAP_FACEBOOK_ACCOUNT_ID_TOURISM"]: "tourism"}
-    for key, label in facebook_list.items():
+        per_brand_upstreams[brand].append(kube_hivestack)
+
         kube_facebook = KubernetesPodOperator(
-            name=f"realnz-facebook-to-bigquery-{label}",
-            task_id=f"realnz_facebook_to_bigquery_{label}",
+            name=f"realnz-facebook-to-bigquery-{brand}",
+            task_id=f"realnz_facebook_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery", f"dbt-bigquery:facebook_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_facebook(key, label),
+            arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery", f"dbt-bigquery:facebook_{brand}_models"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_facebook(env[f"TAP_FACEBOOK_ACCOUNT_{brand}_ID"], brand),
         )
-        per_label_tasks.setdefault(label, []).append(kube_facebook)
+        per_brand_upstreams[brand].append(kube_facebook)
+
+        def make_facebook_comparison_check(brand_name):
+            def facebook_comparison_check(**context):
+                meltano_env = get_meltano_env()
+                trigger = ComparisonTrigger(
+                    project_name=PROJECT_NAME,
+                    destination_table=f"facebook_transformed__{brand_name}",
+                    table_name=f"facebook__{brand_name}",
+                    source_name="meta",
+                    start_date=comparison_start_date,
+                    end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                    secret_name="airflow-variables-meltano_realnz_main",
+                    project_id=meltano_env["PROJECT_ID"],
+                    brand=brand_name,
+                )
+                result = trigger.compare_data()
+                if not result:
+                    raise ValueError(
+                        f"Facebook data accuracy check failed for {brand_name} — "
+                        "BQ data does not match source API."
+                    )
+                return result
+
+            return facebook_comparison_check
+
+        task_facebook_comparison = PythonOperator(
+            task_id=f"task_facebook_comparison_{brand}",
+            python_callable=make_facebook_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+        kube_facebook >> task_facebook_comparison
 
         kube_cm360 = KubernetesPodOperator(
-            name=f"realnz-cm360-to-bigquery-{label}",
-            task_id=f"realnz_cm360_to_bigquery_{label}",
+            name=f"realnz-cm360-to-bigquery-{brand}",
+            task_id=f"realnz_cm360_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", f"dbt-bigquery:cm360_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_cm360(label),
+            arguments=["--environment=prod", "invoke", f"dbt-bigquery:cm360_{brand}_models"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_cm360(brand),
         )
-        per_label_tasks.setdefault(label, []).append(kube_cm360)
+        per_brand_upstreams[brand].append(kube_cm360)
 
-        if label == "tourism":
-            ttd_list = {env["TAP_TTD_TOURISM"]: "tourism",env["TAP_TTD_MOUNTAIN"]: "mountain"}
-            for key2, label2 in ttd_list.items():
-                kube_ttd = KubernetesPodOperator(
-                    name=f"realnz-ttd-to-bigquery-{label2}",
-                    task_id=f"realnz-ttd_to_bigquery_{label2}",
-                    namespace="composer-user-workloads",
-                    image=IMAGE,
-                    arguments=["--environment=prod", "run", "tap-ttd", "target-bigquery", f"dbt-bigquery:ttd_{label2}_models"],
-                    container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-                    env_vars=set_env_vars_ttd(key2, label2),
-                    execution_timeout=timedelta(minutes=60)
-                )
-                kube_cm360 >> kube_ttd
-                per_label_tasks.setdefault(label2, []).append(kube_ttd)
-
-    # DV360 + Google Ads Search (search-specific upstreams)
-    dv360_list = {env["TAP_DV360_ACCOUNT_ID_MOUNTAIN"]: "mountain",
-                  env["TAP_DV360_ACCOUNT_ID_TOURISM"]: "tourism"}
-    for key, label in dv360_list.items():
         kube_dv360 = KubernetesPodOperator(
-            name=f"realnz-dv360-to-bigquery-{label}",
-            task_id=f"realnz_dv360_to_bigquery_{label}",
+            name=f"realnz-dv360-to-bigquery-{brand}",
+            task_id=f"realnz_dv360_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery", f"dbt-bigquery:dv360_{label}_models"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_dv360(key, label),
+            arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery", f"dbt-bigquery:dv360_{brand}_models"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_dv360(env[f"TAP_DV360_ADVERTISER_{brand}_ID"], brand),
         )
-        per_label_tasks.setdefault(label, []).append(kube_dv360)
+        per_brand_upstreams[brand].append(kube_dv360)
 
+        def make_dv360_standard_comparison_check(brand_name):
+            def dv360_standard_comparison_check(**context):
+                meltano_env = get_meltano_env()
+                trigger = ComparisonTrigger(
+                    project_name=PROJECT_NAME,
+                    destination_table=f"dv360_transformed__{brand_name}",
+                    table_name=f"dv360_standard__{brand_name}",
+                    source_name="dv360_standard",
+                    start_date=comparison_start_date,
+                    end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                    secret_name="airflow-variables-meltano_realnz_main",
+                    project_id=meltano_env["PROJECT_ID"],
+                    brand=brand_name,
+                )
+                result = trigger.compare_data()
+                if not result:
+                    raise ValueError(
+                        f"DV360 standard data accuracy check failed for {brand_name} — "
+                        "BQ data does not match source API."
+                    )
+                return result
 
-    # TikTok
+            return dv360_standard_comparison_check
 
+        def make_dv360_youtube_comparison_check(brand_name):
+            def dv360_youtube_comparison_check(**context):
+                meltano_env = get_meltano_env()
+                trigger = ComparisonTrigger(
+                    project_name=PROJECT_NAME,
+                    destination_table=f"dv360_transformed__{brand_name}",
+                    table_name=f"dv360_youtube__{brand_name}",
+                    source_name="dv360_youtube",
+                    start_date=comparison_start_date,
+                    end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                    secret_name="airflow-variables-meltano_realnz_main",
+                    project_id=meltano_env["PROJECT_ID"],
+                    brand=brand_name,
+                )
+                result = trigger.compare_data()
+                if not result:
+                    raise ValueError(
+                        f"DV360 YouTube data accuracy check failed for {brand_name} — "
+                        "BQ data does not match source API."
+                    )
+                return result
 
-    # Google Ads (DV) - global
+            return dv360_youtube_comparison_check
 
-        # If this should feed into a specific label's dash, add it to that label as needed:
-        # per_label_tasks.setdefault("mountain", []).append(kube_google_ads)
+        task_dv360_standard_comparison = PythonOperator(
+            task_id=f"task_dv360_standard_comparison_{brand}",
+            python_callable=make_dv360_standard_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+        task_dv360_youtube_comparison = PythonOperator(
+            task_id=f"task_dv360_youtube_comparison_{brand}",
+            python_callable=make_dv360_youtube_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+        kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
 
-    # Dash per label
-    dash_list = ["mountain", "tourism"]
-    for label in dash_list:
-        kube_dash_union = KubernetesPodOperator(
-            name=f"realnz-dash-union-to-bigquery-{label}",
-            task_id=f"realnz-dash_union_to_bigquery_{label}",
+        kube_ttd = KubernetesPodOperator(
+            name=f"realnz-ttd-to-bigquery-{brand}",
+            task_id=f"realnz_ttd_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_dash(label),
+            arguments=["--environment=prod", "run", "tap-ttd", "target-bigquery", f"dbt-bigquery:ttd_{brand}_models"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_ttd(env[f"TAP_TTD_ADVERTISER_{brand}_ID"], brand),
+            execution_timeout=timedelta(minutes=60),
         )
+        per_brand_upstreams[brand].append(kube_ttd)
+
+        # DV360 / TTD join CM360 direct_buy (need video_* + dv360_* columns from package schema)
+        kube_cm360 >> kube_dv360
+        kube_cm360 >> kube_ttd
+
+    for brand in BRANDS:
         kube_dash = KubernetesPodOperator(
-            name=f"realnz-dash-to-bigquery-{label}",
-            task_id=f"realnz-dash_to_bigquery_{label}",
+            name=f"realnz-dash-to-bigquery-{brand}",
+            task_id=f"realnz_dash_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
             trigger_rule="all_done",
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_dash(label),
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table__{brand}"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_dash(brand),
         )
-
-        # non-GA4 sources -> dash
-        for upstream_task in per_label_tasks.get(label, []):
-            upstream_task >>  kube_dash
-        kube_dash_by_label[label] = kube_dash
-        kube_dash_union_by_label[label] = kube_dash_union
-        dash_union_tasks.append(kube_dash_union)
-
-    # Dash search per label
-    dash_search_list = ["mountain", "tourism"]
-    for label in dash_search_list:
         kube_dash_search = KubernetesPodOperator(
-            name=f"realnz-dash-search-to-bigquery-{label}",
-            task_id=f"realnz-dash_search_to_bigquery_{label}",
+            name=f"realnz-dash-search-to-bigquery-{brand}",
+            task_id=f"realnz_dash_search_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table_search__{label}"],
-            container_resources=k8s_models.V1ResourceRequirements(limits={"memory": "1000M", "cpu": "500m"}),
-            env_vars=set_env_vars_dash_search(label),
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_dash_search(brand),
+        )
+        kube_dash_union = KubernetesPodOperator(
+            name=f"realnz-dash-union-to-bigquery-{brand}",
+            task_id=f"realnz_dash_union_to_bigquery_{brand}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{brand}"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_dash(brand),
+        )
+        for upstream in per_brand_upstreams[brand]:
+            upstream >> kube_dash
+        kube_dash >> kube_dash_search >> kube_dash_union
+
+
+# ---------------------------------------------------------------------------
+# DAG 2: Google Ads + TikTok + GA4 (schedule: 14:00 NZST daily)
+# Flow: [google_ads (+ bing/dv), tiktok] >> dash >> dash_search >> dash_union >> ga4
+# ---------------------------------------------------------------------------
+with models.DAG(
+    dag_id="realnz-google-ads-ga4",
+    schedule_interval="0 14 * * *",
+    default_args=default_args,
+    dagrun_timeout=timedelta(minutes=120),
+) as dag_google:
+    env = get_meltano_env()
+
+    kube_google_ads_dv = KubernetesPodOperator(
+        name="realnz-google-ads-dv-to-bigquery",
+        task_id="realnz_google_ads_dv_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:google_ads_dv_models__realnz"],
+        container_resources=KUBE_RESOURCES,
+        env_vars=set_env_vars_google_ads_dv(),
+    )
+
+    kube_tiktok = KubernetesPodOperator(
+        name="realnz-tiktok-to-bigquery-mountain",
+        task_id="realnz_tiktok_to_bigquery_mountain",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-tiktok",
+            "target-bigquery",
+            "--full-refresh",
+            "dbt-bigquery:tiktok_mountain_models",
+        ],
+        container_resources=KUBE_RESOURCES,
+        env_vars=set_env_vars_tiktok(env["TAP_TIKTOK_ADVERTISER_mountain_ID"], "mountain"),
+    )
+
+    def tiktok_comparison_check(**context):
+        meltano_env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="tiktok_transformed__mountain",
+            table_name="tiktok__mountain",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_realnz_main",
+            project_id=meltano_env["PROJECT_ID"],
+            brand="mountain",
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("TikTok data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=tiktok_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_tiktok >> task_tiktok_comparison
+
+    for brand in BRANDS:
+        kube_google_ads = KubernetesPodOperator(
+            name=f"realnz-google-ads-to-bigquery-{brand}",
+            task_id=f"realnz_google_ads_to_bigquery_{brand}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", f"dbt-bigquery:google_ads_{brand}_models"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_google_ads_search(brand),
+            get_logs=True,
         )
 
+        kube_dash = KubernetesPodOperator(
+            name=f"realnz-google-dash-to-bigquery-{brand}",
+            task_id=f"realnz_google_dash_to_bigquery_{brand}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            trigger_rule="all_done",
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table__{brand}"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_dash(brand),
+        )
 
+        kube_dash_search = KubernetesPodOperator(
+            name=f"realnz-google-dash-search-to-bigquery-{brand}",
+            task_id=f"realnz_google_dash_search_to_bigquery_{brand}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_dash_search(brand),
+        )
 
-        kube_dash_search_by_label[label] = kube_dash_search
+        kube_dash_union = KubernetesPodOperator(
+            name=f"realnz-google-dash-union-to-bigquery-{brand}",
+            task_id=f"realnz_google_dash_union_to_bigquery_{brand}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{brand}"],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_dash(brand),
+        )
 
- 
+        ga4_tasks = []
+        for goal_type in ["goal", "ecommerce", "session", "keyword"]:
+            property_id = env[f"TAP_GA4_PROPERTY_{brand}_ID"]
+            kube_ga4 = KubernetesPodOperator(
+                name=f"realnz-ga4-{brand}-{goal_type}-to-bigquery",
+                task_id=f"realnz_ga4_to_bigquery_{brand}_{goal_type}",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-ga4",
+                    "target-bigquery",
+                    f"dbt-bigquery:ga4_{brand}_{goal_type}_models",
+                ],
+                container_resources=KUBE_RESOURCES,
+                env_vars=set_env_vars_ga4(property_id, brand, goal_type),
+                get_logs=True,
+            )
+            ga4_tasks.append(kube_ga4)
 
-    # ===== Per-label strict order: dash -> dash_search -> dash_union =====
-    for label in ["mountain", "tourism"]:
-        kube_dash_by_label[label] >> kube_dash_search_by_label[label] >> kube_dash_union_by_label[label]
-
-    # ===== Global order: ALL dash_union must complete before ANY GA4 starts =====
-    for label in ["mountain", "tourism"]:
-        kube_dash_union_by_label[label] 
+        dash_upstreams = [kube_google_ads, kube_tiktok]
+        if brand == "tourism":
+            dash_upstreams.append(kube_google_ads_dv)
+        dash_upstreams >> kube_dash
+        kube_dash >> kube_dash_search >> kube_dash_union
+        for ga4_task in ga4_tasks:
+            kube_dash_union >> ga4_task
