@@ -277,7 +277,7 @@ with models.DAG(
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery", f"dbt-bigquery:dv360_{brand}_models"],
             container_resources=KUBE_RESOURCES,
-            env_vars=set_env_vars_dv360(env[f"TAP_DV360_ACCOUNT_{brand}_ID"], brand),
+            env_vars=set_env_vars_dv360(env[f"TAP_DV360_ADVERTISER_{brand}_ID"], brand),
         )
         per_brand_upstreams[brand].append(kube_dv360)
 
