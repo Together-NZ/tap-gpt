@@ -223,7 +223,7 @@ with models.DAG(
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery", f"dbt-bigquery:facebook_{brand}_models"],
             container_resources=KUBE_RESOURCES,
-            env_vars=set_env_vars_facebook(env[f"TAP_FACEBOOK_ACCOUNT_{brand}_ID"], brand),
+            env_vars=set_env_vars_facebook(env[f"TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{brand}_ID"], brand),
         )
         per_brand_upstreams[brand].append(kube_facebook)
 

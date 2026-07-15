@@ -221,7 +221,7 @@ with models.DAG(
         ),
         env_vars=set_env_vars_ga4_final(),
     )
-    goal_list = ['goal','session']
+    goal_list = ['goal','session','keyword']
     kube_ga4_list = []
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
@@ -586,9 +586,31 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    def snapchat_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="uowaikato-main",
+            destination_table="snapchat_transformed",
+            table_name="snapchat",
+            source_name="snapchat",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_uowaikato_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Snapchat data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_snapchat_comparison = PythonOperator(
+        task_id="task_snapchat_comparison",
+        python_callable=snapchat_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
 
     set_env_task_facebook >> kube_facebook >> task_facebook_comparison
-    set_env_task_snapchat >> kube_snapchat 
+    set_env_task_snapchat >> kube_snapchat >> task_snapchat_comparison
     
     set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
     set_env_task_cm360 >> kube_cm360 >> set_env_task_dv360 >> kube_dv360
