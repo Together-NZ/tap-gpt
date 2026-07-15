@@ -80,10 +80,10 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
         env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
         if goal == "session":
-            env["GA4_REPORTS"] = "./report_sessions.json"
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
             env["GA4_GOAL"] = "session_goal"
         else:
-            env["GA4_REPORTS"] = "./report.json"
+            env["TAP_GA4_REPORTS"] = "./report.json"
             env["GA4_GOAL"] = "goal"
         developer_creds = Credentials(
             None,
@@ -367,6 +367,55 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    def dv360_standard_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="squirrel-together-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_squirrel_main",
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 standard data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    def dv360_youtube_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="squirrel-together-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_squirrel_main",
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 YouTube data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_dv360_standard_comparison = PythonOperator(
+        task_id="task_dv360_standard_comparison",
+        python_callable=dv360_standard_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    task_dv360_youtube_comparison = PythonOperator(
+        task_id="task_dv360_youtube_comparison",
+        python_callable=dv360_youtube_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
     kube_facebook >> task_facebook_comparison
-    kube_cm360 >> kube_dv360 >> kube_ttd
-    [kube_facebook, kube_hivestack, kube_ttd] >> kube_dash >> kube_dash_union
+    kube_cm360 >> kube_dv360
+    kube_cm360 >> kube_ttd
+    kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
+    [kube_facebook, kube_hivestack, kube_dv360, kube_ttd] >> kube_dash >> kube_dash_union

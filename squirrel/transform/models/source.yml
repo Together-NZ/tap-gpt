@@ -52,7 +52,7 @@ sources:
 
   - name: ttd_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'squirrel-together-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_RAW_BIGQUERY_DATASET', 'ttd_raw') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
     tables:
       - name: standard_streams
 
@@ -91,7 +91,7 @@ sources:
 
   - name: cm360_raw
     database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
-    schema: "{{ env_var('REFERENCE_CM360_RAW_BIGQUERY_DATASET', 'cm360_raw') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
     tables:
       - name: cm360_report_stream
 
@@ -194,3 +194,19 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 0
+  - name: tiktok
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 18983.49
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4422216
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 12747
