@@ -298,7 +298,8 @@ LEFT JOIN deduplicate_adset_data as adset
 
 ORDER BY sd.date_start
 )
-SELECT * EXCEPT(ad_name), ad_name as creative_name, 
+SELECT * EXCEPT(ad_name), ad_name as creative_name,
+CAST(NULL AS FLOAT64) AS conversions,
 'Meta' AS publisher,
 CASE WHEN ARRAY_LENGTH(SPLIT(media_buy_external_name, '_'))>=8 THEN
 SPLIT(media_buy_external_name, '_')[OFFSET(7)] 
