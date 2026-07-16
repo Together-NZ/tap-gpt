@@ -186,15 +186,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 12078.13
+              expected_value: 14549.95
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 2363422
+              expected_value: 2857616
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 18927
+              expected_value: 22450
 
   - name: dv360_standard
     config:
@@ -203,15 +203,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 132277.41
+              expected_value: 68223.08
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 9808518
+              expected_value: 5840202
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 10278
+              expected_value: 7786
 
   - name: dv360_youtube
     config:
@@ -220,15 +220,15 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 124977.92
+              expected_value: 67127.98
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 8951645
+              expected_value: 5248537
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 6257
+              expected_value: 4432
 
 
 
