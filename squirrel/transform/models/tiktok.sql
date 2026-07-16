@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('TIKTOK_SUFFIX', ''),
 ) }}
 WITH
 {{ tiktok.tk_ads(source_name='tiktok_raw', table_name='ads') }},
