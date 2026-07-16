@@ -157,8 +157,11 @@ plugins:
         args: run --select +ga4_goal_a_session +ga4_goal_channel_session
         description: Run GA4 session-level models
       dash_models:
-        args: run --select +dash_table +dash_union
-        description: Run dash_table and dash_union
+        args: run --select dash_table
+        description: Run dash_table (do not use + — upstream would land in dash_table dataset)
+      dash_union_models:
+        args: run --select dash_union
+        description: Run dash_union after dash_table
     config:
       project: squirrel-together-main
       location: australia-southeast1
