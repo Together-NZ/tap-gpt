@@ -72,6 +72,7 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
         env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
         return env
+    #
     def set_env_vars_ga4(goal):
         env = get_meltano_env()
         env["BQ_DATASET"] = "ga4_raw"
