@@ -4,6 +4,48 @@ project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_OUTBRAIN_BIGQUERY_DATASET: dbt_test_outbrain
+          REFERENCE_OUTBRAIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_outbrain
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_STARTERPLAN_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BRAND_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_MARKETING_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TTD_SUFFIX: dbt_test_ttd
+          TIKTOK_SUFFIX: dbt_test_tiktok
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          OUTBRAIN_SUFFIX: dbt_test_outbrain
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          REPORT_NAME: amp_report
+          PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
 - name: prod
 #state_backend:
 #  uri: gs://aia-nz-main-meltano-state-staging
@@ -72,11 +114,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-dv360
     namespace: tap-dv360
     pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
@@ -119,11 +161,11 @@ plugins:
         snake_case: true
       fail_fast: false
       bucket: australia-southeast1-meltan-00c049c-bigquery-staging
-      method: storage_write_api
+      method: ${BQ_METHOD}
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
       outbrain_models:
         args: run --select +outbrain
@@ -131,12 +173,10 @@ plugins:
       tiktok_models:
         args: run --select +tiktok
         description: Run the TikTok ads model
-      google_ads_models:
-        args: run --select +google_ads_dv 
       google_ads_brand_models:
-        args: run --select +google_ads_search_brand +google_ads_demand__brand
+        args: run --select +google_ads_search_brand +google_ads_demand__brand +google_ads_demand_2 +google_ads_keyword_brand +google_ads_location_brand
       google_ads_marketing_models:
-        args: run --select +google_ads_search_marketing +google_ads_demand__marketing
+        args: run --select +google_ads_search_marketing +google_ads_demand__marketing +google_ads_keyword_marketing +google_ads_location_marketing
         description: Run the Google Ads model
       facebook_models:
         args: run --select +facebook
@@ -153,9 +193,18 @@ plugins:
       linkedin_models:
         args: run --select +linkedin
         description: Run the Linkedin ads model
-      ga4_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
-        description: Run the GA4 model
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+        description: Run the GA4 goal model
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+        description: Run the GA4 session model
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+        description: Run the GA4 final channel model
+      ga4_keyword_models:
+        args: run --select ga4_goal_channel_keyword
+        description: Run the GA4 keyword model
 elt:
   buffer_size: 52428800
 

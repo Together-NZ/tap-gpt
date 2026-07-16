@@ -1,0 +1,267 @@
+version: 2
+
+# AIA BigQuery layout. Defaults match `aia-nz-main.*`.
+# Override with DBT_BIGQUERY_PROJECT and REFERENCE_* env vars per environment.
+
+sources:
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_session_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_session
+
+  - name: ga4_goal_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+
+  - name: ga4_starterplan_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_STARTERPLAN_RAW_BIGQUERY_DATASET', 'ga4_starterplan_raw') }}"
+    tables:
+      - name: goal
+
+  - name: dash_union
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_union
+      - name: dash_table
+
+  - name: dash_union_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
+
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: ttd_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd_transformed
+
+  - name: linkedin_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: ad_analytics_by_campaign
+      - name: creatives
+      - name: campaigns
+      - name: campaign_groups
+
+  - name: linkedin_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed') }}"
+    tables:
+      - name: linkedin
+
+  - name: outbrain_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_OUTBRAIN_BIGQUERY_DATASET', 'outbrain_raw') }}"
+    tables:
+      - name: ads
+      - name: campaigns
+      - name: reports
+
+  - name: outbrain_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_OUTBRAIN_TRANSFORMED_BIGQUERY_DATASET', 'outbrain_transformed') }}"
+    tables:
+      - name: outbrain
+
+  - name: tiktok_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed') }}"
+    tables:
+      - name: tiktok
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
+
+  - name: google_ads_search_transformed__brand
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BRAND_BIGQUERY_DATASET', 'google_ads_search_transformed__brand') }}"
+    tables:
+      - name: google_ads_demand__brand
+      - name: google_ads_demand_2
+      - name: google_ads_search_brand
+      - name: google_ads_keyword_brand
+      - name: google_ads_location_brand
+
+  - name: google_ads_search_transformed__marketing
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_MARKETING_BIGQUERY_DATASET', 'google_ads_search_transformed__marketing') }}"
+    tables:
+      - name: google_ads_demand__marketing
+      - name: google_ads_search_marketing
+      - name: google_ads_keyword_marketing
+      - name: google_ads_location_marketing
+
+models:
+  - name: ttd_transformed
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
+
+  - name: facebook
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+
+  - name: dv360_standard
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+
+  - name: dv360_youtube
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+
+
+
+  - name: linkedin
+    config:
+      schema: "{{ env_var('LINKEDIN_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 8327.91
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 771281
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5785
+
+  - name: tiktok
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 18983.49
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4422216
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 12747

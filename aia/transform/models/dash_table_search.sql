@@ -1,13 +1,23 @@
 {{ config(
     materialized='table',
 ) }}
---IF EXISTS (SELECT * FROM `arvida-main.google_ads_good_friends_search_transformed.google_ads_good_friends_search`)
-with dash_table AS ((SELECT * 
-    from `aia-nz-main.google_ads_search_transformed__brand.google_ads_search_brand`
-) UNION ALL (
-    SELECT * 
-    from `aia-nz-main.google_ads_search_transformed__marketing.google_ads_search_marketing`
-) ),
+with dash_table AS (
+    (
+        SELECT
+            * EXCEPT(conversions),
+            conversions AS metrics_conversions,
+            CASE WHEN LOWER(publisher) != 'demand gen' THEN campaign_name END AS campaign_name_selection
+        FROM `aia-nz-main.google_ads_search_transformed__brand.google_ads_search_brand`
+    )
+    UNION ALL
+    (
+        SELECT
+            * EXCEPT(conversions),
+            conversions AS metrics_conversions,
+            CASE WHEN LOWER(publisher) != 'demand gen' THEN campaign_name END AS campaign_name_selection
+        FROM `aia-nz-main.google_ads_search_transformed__marketing.google_ads_search_marketing`
+    )
+),
 funnels as (
     select distinct funnel from `aia-nz-main.dash_table.dash_table`
 )

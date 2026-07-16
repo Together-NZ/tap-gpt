@@ -39,7 +39,7 @@ SAFE_CAST(metrics_interaction_event_types AS STRING) AS metrics_interaction_even
 SAFE_CAST(metrics_interactions AS INT64) AS metrics_interactions,
 SAFE_CAST(metrics_view_through_conversions AS INT64) AS metrics_view_through_conversions,
 SAFE_CAST(segments_ad_network_type AS STRING) AS segments_ad_network_type,
-SAFE_CAST(segments_device AS STRING) AS segments_device,
+SAFE_CAST(device AS STRING) AS segments_device,
 SAFE_CAST(segments_slot AS STRING) AS segments_slot,
 SAFE_CAST(_LATEST_DATE AS STRING) AS _LATEST_DATE,
 SAFE_CAST(_DATA_DATE AS STRING) AS _DATA_DATE,

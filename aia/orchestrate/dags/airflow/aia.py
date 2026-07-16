@@ -13,6 +13,7 @@ import logging
 from google.oauth2.credentials import Credentials
 from google.auth.transport.requests import Request
 import json
+from comparison_package import ComparisonTrigger
 import time
 from datetime import timedelta,datetime, timezone
 import datetime
@@ -24,12 +25,15 @@ import json
 
 
 IMAGE = "australia-southeast1-docker.pkg.dev/aia-nz-main/meltano/meltano-aia-nz-main:prod"
+PROJECT_NAME = "aia-nz-main"
+COMPARISON_SECRET = "airflow-variables-aia_nz_meltano"
 
 
 log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
+comparison_start_date = (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -82,15 +86,6 @@ with models.DAG(
         env["DBT_BIGQUERY_DATASET"] = f'google_ads_search_transformed__{label}'
         
         return env
-
-    def set_env_vars_google_ads():
-        env = get_meltano_env()
-        env["BQ_DATASET"] = "google_ads_dv_raw"
-        env["BQ_METHOD"] = "batch_job"
-        env["DBT_BIGQUERY_METHOD"] = 'oauth'
-        env["DBT_BIGQUERY_PROJECT"] = 'aia-nz-main'
-        env["DBT_BIGQUERY_DATASET"] = 'google_ads_dv_transformed'
-        return env
     def set_env_vars_dash_search():
         env = get_meltano_env()
         env["BQ_METHOD"] = "batch_job"
@@ -105,14 +100,23 @@ with models.DAG(
         env["DBT_BIGQUERY_DATASET"] = 'dash_table'
         return env
     
-    def set_env_vars_ga4():
+    def set_env_vars_ga4(goal):
         env = get_meltano_env()
+        if goal == "session":
+            env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+            env["GA4_GOAL"] = "session_goal"
+        elif goal == "keyword":
+            env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = "keyword_goal"
+        else:
+            env["TAP_GA4_REPORTS"] = "./report.json"
+            env["GA4_GOAL"] = "goal"
         env["BQ_DATASET"] = "ga4_raw"
         env["BQ_METHOD"] = "gcs_stage"
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
         env["DBT_BIGQUERY_PROJECT"] = 'aia-nz-main'
-        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'   
- 
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+
         developer_creds = Credentials(
             None,
             refresh_token=env["TAP_GA4_OAUTH_CREDENTIALS_REFRESH_TOKEN"],
@@ -124,17 +128,16 @@ with models.DAG(
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         return env
-    set_env_task_ga4 = PythonOperator(
-        task_id="set_env_ga4",
-        python_callable=set_env_vars_ga4,
-    )
+
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'aia-nz-main'
+        env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+        return env
     set_env_task_tiktok = PythonOperator(
         task_id="set_env_tiktok",
         python_callable=set_env_vars_tiktok,
-    )
-    set_env_task_google_ads = PythonOperator(
-        task_id="set_env_google_ads",
-        python_callable=set_env_vars_google_ads,
     )
     kube_tiktok = KubernetesPodOperator(
         name="aia-tiktok-to-bigquery",
@@ -150,32 +153,38 @@ with models.DAG(
   
     )
 
-    kube_ga4 = KubernetesPodOperator(
-            name = "aia-ga4-to-bigquery",
-            task_id = "aia-ga4_to_bigquery",
-            namespace = "composer-user-workloads",
-            image = IMAGE,
-            arguments = ["--environment=prod", "run", "tap-ga4", "target-bigquery","dbt-bigquery:ga4_models"],
-            container_resources=k8s_models.V1ResourceRequirements(
-                limits={"memory": "1000M", "cpu": "500m"},
-            ),
-            env_vars=set_env_vars_ga4()
-            ),
-        
-
-    kube_google_ads = KubernetesPodOperator(
-        name="aia-google-ads-to-bigquery",
-        task_id="aia-google_ads_to_bigquery",
+    kube_ga4_final = KubernetesPodOperator(
+        name="aia-ga4-final-to-bigquery",
+        task_id="aia-ga4_final_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "google_ads_dv"],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_final_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars=set_env_vars_google_ads()
-        
-        
+        env_vars=set_env_vars_ga4_final(),
     )
+    kube_ga4_list = []
+    for goal in ["goal", "session", "keyword"]:
+        kube_ga4_t = KubernetesPodOperator(
+            name=f"aia-ga4-{goal}-to-bigquery",
+            task_id=f"aia-ga4_{goal}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-ga4",
+                "target-bigquery",
+                f"dbt-bigquery:ga4_{goal}_models",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(goal),
+        )
+        kube_ga4_list.append(kube_ga4_t)
+
     kube_dash_union  = KubernetesPodOperator(
         name = "aia-dash-union-to-bigquery",
         task_id = "aia-dash_union_to_bigquery",
@@ -239,16 +248,43 @@ with models.DAG(
         env_vars=set_env_vars_dash()
         
         )
-    for index in key_list:
-        for task in search_list.get(index,[]):
-            task >> kube_dash_search
+    def tiktok_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="tiktok_transformed",
+            table_name="tiktok",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=tiktok_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
+    # Extract / transform
     set_env_task_tiktok >> kube_tiktok
-    set_env_task_google_ads >> kube_google_ads >> kube_google_ads_search
-    set_env_task_ga4 >> kube_ga4
-    
-    kube_google_ads_search >> kube_dash_search
-    [kube_dash_search,kube_tiktok] >> kube_dash >> kube_dash_union >>set_env_task_ga4>>kube_ga4 
-    
+    kube_tiktok >> task_tiktok_comparison
+
+    # Brand + marketing search feed dash_search, then dash + ga4
+    for index in key_list:
+        for task in search_list.get(index, []):
+            task >> kube_dash_search
+
+    [kube_dash_search, kube_tiktok] >> kube_dash >> kube_dash_union
+    for task in kube_ga4_list:
+        kube_dash_union >> task >> kube_ga4_final
+
 with models.DAG(
     dag_id="aia-meltano-extraction-transformation-dbt",
     schedule_interval="0 6 * * *",
@@ -494,17 +530,100 @@ with models.DAG(
         
         
         )
-    for index in key_list:
-        for task in search_list.get(index,[]):
-            task >> kube_dash_search
+    def facebook_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
+        return result
 
- 
+    def dv360_standard_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 standard data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    def dv360_youtube_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 YouTube data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    task_dv360_standard_comparison = PythonOperator(
+        task_id="task_dv360_standard_comparison",
+        python_callable=dv360_standard_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    task_dv360_youtube_comparison = PythonOperator(
+        task_id="task_dv360_youtube_comparison",
+        python_callable=dv360_youtube_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
+    # Extract / transform (cm360 before dv360 + ttd for package joins)
     set_env_task_facebook >> kube_facebook
+    set_env_task_cm360 >> kube_cm360
     set_env_task_dv360 >> kube_dv360
-    set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd 
+    set_env_task_ttd >> kube_ttd
     set_env_task_linkedin >> kube_linkedin_ads
     set_env_task_outbrain >> kube_outbrain
-    kube_google_ads_search >> kube_dash_search
-    [kube_facebook,kube_dv360,kube_cm360,kube_ttd,kube_outbrain,kube_linkedin_ads] >> kube_dash
-    kube_dash >> kube_dash_search >> kube_dash_union
-    
+    kube_cm360 >> kube_dv360
+    kube_cm360 >> kube_ttd
+
+    # Source comparison (parallel to dash path)
+    kube_facebook >> task_facebook_comparison
+    kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
+
+    # Search feed + dash stack
+    for index in key_list:
+        for task in search_list.get(index, []):
+            task >> kube_dash_search
+
+    [
+        kube_facebook,
+        kube_dv360,
+        kube_ttd,
+        kube_outbrain,
+        kube_linkedin_ads,
+        kube_cm360,
+    ] >> kube_dash >> kube_dash_search >> kube_dash_union
