@@ -146,9 +146,35 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-google-ads-search",
             get_logs = True
     )
+
+    def google_ads_search_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="amp-main",
+            destination_table="google_ads_search_transformed",
+            table_name="google_ads_search",
+            source_name="google_ads_search",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_amp_main",
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Google Ads search data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_google_ads_search_comparison = PythonOperator(
+        task_id="task_google_ads_search_comparison",
+        python_callable=google_ads_search_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
     set_env_task_dash >> kube_dash
     set_env_task_dash_search >> kube_dash_search
     set_env_task_google_ads_search >> kube_google_ads_search
+    kube_google_ads_search >> task_google_ads_search_comparison
     kube_google_ads_search >> kube_dash
     brands = ['centralized','wealth','general_insurance']
     #task_list = [kube_cm360,kube_ttd,kube_linkedin,kube_hivestack,kube_facebook,kube_reddit] 
@@ -195,9 +221,6 @@ with models.DAG(
 ,
     default_args=default_args,
 ) as dag:
-    env = get_meltano_env()
-
-        
     def set_env_vars_hivestack():
 
         env = get_meltano_env()
@@ -335,29 +358,19 @@ with models.DAG(
         task_id="set_env_task_dv360",
         python_callable=set_env_vars_dv360,
     )
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="amp-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_amp_main",
-        project_id=env["PROJECT_ID"]
-        )
-    comparison_trigger_linkedin = ComparisonTrigger(
-        project_name="amp-main",
-        destination_table="linkedin_transformed",
-        table_name="linkedin",
-        source_name="linkedin",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_amp_main",
-        project_id=env["PROJECT_ID"]
-    )
-    comparison_trigger_linkedin.compare_data()
     def linkedin_comparison_check(**context):
-        result = comparison_trigger_linkedin.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="amp-main",
+            destination_table="linkedin_transformed",
+            table_name="linkedin",
+            source_name="linkedin",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_amp_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
         return result
@@ -368,7 +381,18 @@ with models.DAG(
         trigger_rule="all_done",
     )
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="amp-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_amp_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
         return result
@@ -376,6 +400,53 @@ with models.DAG(
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
         python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
+    def dv360_standard_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="amp-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_amp_main",
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 standard data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    def dv360_youtube_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="amp-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_amp_main",
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 YouTube data accuracy check failed — BQ data does not match source API.")
+        return result
+
+    task_dv360_standard_comparison = PythonOperator(
+        task_id="task_dv360_standard_comparison",
+        python_callable=dv360_standard_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    task_dv360_youtube_comparison = PythonOperator(
+        task_id="task_dv360_youtube_comparison",
+        python_callable=dv360_youtube_comparison_check,
         retries=0,
         trigger_rule="all_done",
     )
@@ -521,13 +592,16 @@ with models.DAG(
             get_logs = True
     )
     set_env_task_adobe_centralized >> kube_adobe_centralized
-    set_env_task_cm360 >> kube_cm360 >> set_env_task_ttd >> kube_ttd
+    set_env_task_cm360 >> kube_cm360
+    kube_cm360 >> kube_dv360
+    kube_cm360 >> kube_ttd
+    set_env_task_ttd >> kube_ttd
+    set_env_task_dv360 >> kube_dv360
     set_env_task_linkedin >> kube_linkedin >> task_linkedin_comparison
     set_env_task_reddit >> kube_reddit
     set_env_task_hivestack >> kube_hivestack
-    set_env_task_facebook >> kube_facebook
-    set_env_task_dv360 >> kube_dv360
     set_env_task_facebook >> kube_facebook >> task_facebook_comparison
+    kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
     set_env_task_dash_search >> kube_dash_search
     kube_dash >> kube_dash_search
     

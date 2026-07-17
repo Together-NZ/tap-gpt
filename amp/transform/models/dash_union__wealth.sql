@@ -1,4 +1,7 @@
 {{ config(
     materialized='table',
 ) }}
-SELECT * FROM `amp-main.dash_table.dash_union__centralized` WHERE sub_brands='Wealth'
+
+SELECT *
+FROM {{ source('dash_union', 'dash_union__centralized') }}
+WHERE sub_brands = 'Wealth'

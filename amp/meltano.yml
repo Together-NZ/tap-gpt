@@ -12,11 +12,22 @@ environments:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
-          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
           REFERENCE_REDDIT_BIGQUERY_DATASET: dbt_test_reddit
+          REFERENCE_REDDIT_TRANSFORMED_BIGQUERY_DATASET: dbt_test_reddit
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
@@ -24,7 +35,7 @@ environments:
           TTD_SUFFIX: dbt_test_ttd
           REDDIT_SUFFIX: dbt_test_reddit
           HIVESTACK_SUFFIX: dbt_test_hivestack
-          PLAN_CODE: uow
+          PLAN_CODE: amp
           REPORT_NAME: amp_report
 - name: prod
 #state_backend:
@@ -103,7 +114,7 @@ plugins:
     executable: tap-hivestack
     config:
       api_key: ${TAP_HIVESTACK_API_KEY}
-      report_id: '69296'
+      report_id: '47996'
   - name: tap-reddit-ads
     namespace: tap-reddit-ads
     pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git setuptools<82.0
@@ -133,7 +144,7 @@ plugins:
         lower: true
         snake_case: true
       fail_fast: false
-      method: storage_write_api
+      method: ${BQ_METHOD}
       bucket: australia-southeast1-meltan-00c049c-bigquery-staging
   transformers:
   - name: dbt-bigquery
@@ -145,7 +156,7 @@ plugins:
       REFERENCE_META_BIGQUERY_DATASET: facebook_raw
     commands:
       dv360_models:
-        args: run --select dv360_standard dv360_youtube
+        args: run --select +dv360_standard +dv360_youtube
       adobe_centralized_models: 
         args: run --select adobe
       adobe_general_insurance_models:
@@ -154,15 +165,25 @@ plugins:
         args: run --select ga4_goal_channel__wealth
       adobe_direct_models:
         args: run --select ga4_goal_channel__direct
-      facebook_models: run --select facebook
+      facebook_models:
+        args: run --select +facebook
       reddit_models:
-        args: run --select reddit
-      ttd_models: run --select ttd_transformed
-      linkedin_models: run --select linkedin
-      hivestack_models: run --select hivestack
-      cm360_models: run --select cm360_seralized cm360_direct_buy
-      dash_models: run --select dash_table
-      dash_search_models: run --select dash_table_search
-      google_ads_models: run --select google_ads_search google_ads_demand
+        args: run --select +reddit
+      ttd_models:
+        args: run --select +ttd_transformed
+      linkedin_models:
+        args: run --select +linkedin
+      hivestack_models:
+        args: run --select +hivestack
+      cm360_models:
+        args: run --select +cm360_seralized +cm360_direct_buy
+      dash_models:
+        args: run --select dash_table
+      dash_search_models:
+        args: run --select dash_table_search
+      dash_union_models:
+        args: run --select dash_union__centralized dash_union__wealth dash_union__general_insurance
+      google_ads_models:
+        args: run --select +google_ads_search +google_ads_demand
 elt:
   buffer_size: 52428800
