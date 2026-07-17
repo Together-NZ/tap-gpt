@@ -1,5 +1,6 @@
 {{ config(
     materialized='table',
+    schema=env_var('REDDIT_SUFFIX', ''),
 ) }}
 with {{reddit.reddit_ads(source_name='reddit_raw', table_name='ads')}},
 {{reddit.reddit_campaigns(source_name='reddit_raw', table_name='campaigns')}},

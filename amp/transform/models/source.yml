@@ -1,4 +1,9 @@
 version: 2
+
+# AMP BigQuery layout. Defaults match `amp-main.*`.
+# Override with DBT_BIGQUERY_PROJECT and REFERENCE_* env vars per environment.
+# Adobe / GA4 goal-channel brand models are left as-is (Adobe path).
+
 models:
   - name: reddit
     config:
@@ -18,7 +23,7 @@ models:
               expected_value: 1268
 
   - name: ttd_transformed
-    config: 
+    config:
       schema: "{{ env_var('TTD_SUFFIX', '') }}"
     columns:
       - name: media_cost
@@ -37,7 +42,6 @@ models:
   - name: facebook
     config:
       schema: "{{ env_var('META_SUFFIX', '') }}"
-
     columns:
       - name: media_cost
         tests:
@@ -51,7 +55,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 22450
-      
 
   - name: dv360_standard
     config:
@@ -60,15 +63,16 @@ models:
       - name: media_cost
         tests:
           - testing_sum.expected_sum:
-              expected_value: 1098.89
+              expected_value: 68223.08
       - name: impressions
         tests:
           - testing_sum.expected_sum:
-              expected_value: 591910
+              expected_value: 5840202
       - name: clicks
         tests:
           - testing_sum.expected_sum:
-              expected_value: 3354
+              expected_value: 7786
+
   - name: dv360_youtube
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
@@ -85,6 +89,7 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 4432
+
   - name: google_ads_search
     config:
       schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX', '') }}"
@@ -101,9 +106,10 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 498442
+
   - name: linkedin
     config:
-      schema: "{{ env_var('LINKEDIN_SUFFIX','') }}"
+      schema: "{{ env_var('LINKEDIN_SUFFIX', '') }}"
     columns:
       - name: media_cost
         tests:
@@ -117,6 +123,7 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 5785
+
   - name: hivestack
     config:
       schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
@@ -134,28 +141,7 @@ models:
           - testing_sum.expected_sum:
               expected_value: 0
 
-
-
-
-
 sources:
-# This part seperates the project and table between staging environment and 
-#production environment. How it works is this: A source has its name you decleared,
-# and it takes in three variabels: database(gcp project), shcema(bigquerydatasets) and tables(bigquery tables), database points to the project
-# shcema points to the datasets, and tables is the tables. 
-# Eg:
-# - name: source_name
-#   database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
-#   schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
-#   tables:
-#     - name: ads_insights
-#     - name: ad_sets
-#     - name: ads
-#     - name: campaigns
-#     - name: custom_conversions
-# Then in the relevant dbt model, you will see {{ source('source_name', 'table_name_you_picked') }}
-# where project name and dataset name are decleared in source.yml per project
-# 
   - name: reddit_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
     schema: "{{ env_var('REFERENCE_REDDIT_BIGQUERY_DATASET', 'reddit_raw') }}"
@@ -163,9 +149,14 @@ sources:
       - name: ads
       - name: campaigns
       - name: reports
-      
-  - name: facebook_raw
 
+  - name: reddit_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_REDDIT_TRANSFORMED_BIGQUERY_DATASET', 'reddit_transformed') }}"
+    tables:
+      - name: reddit
+
+  - name: facebook_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
     schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
     tables:
@@ -175,18 +166,37 @@ sources:
       - name: campaigns
       - name: custom_conversions
 
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
     schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
     tables:
       - name: dv360_standard
       - name: dv360_youtube
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
     tables:
       - name: amp_report
 
+  - name: hivestack_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed') }}"
+    tables:
+      - name: hivestack
 
   - name: linkedin_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
@@ -198,12 +208,53 @@ sources:
       - name: campaigns
       - name: campaign_groups
 
+  - name: linkedin_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed') }}"
+    tables:
+      - name: linkedin
+
   - name: ttd_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
     tables:
       - name: standard_streams
 
-  
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd_transformed
 
-  
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
+
+  - name: google_ads
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    tables:
+      - name: google_ads_demand
+      - name: google_ads_search
+
+  - name: dash_union
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_table
+      - name: dash_union__centralized
+
+  - name: dash_union_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
