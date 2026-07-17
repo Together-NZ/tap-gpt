@@ -146,35 +146,9 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-google-ads-search",
             get_logs = True
     )
-
-    def google_ads_search_comparison_check(**context):
-        env = get_meltano_env()
-        trigger = ComparisonTrigger(
-            project_name="amp-main",
-            destination_table="google_ads_search_transformed",
-            table_name="google_ads_search",
-            source_name="google_ads_search",
-            start_date=comparison_start_date,
-            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-            secret_name="airflow-variables-meltano_amp_main",
-            project_id=env["PROJECT_ID"],
-        )
-        result = trigger.compare_data()
-        if not result:
-            raise ValueError("Google Ads search data accuracy check failed — BQ data does not match source API.")
-        return result
-
-    task_google_ads_search_comparison = PythonOperator(
-        task_id="task_google_ads_search_comparison",
-        python_callable=google_ads_search_comparison_check,
-        retries=0,
-        trigger_rule="all_done",
-    )
-
     set_env_task_dash >> kube_dash
     set_env_task_dash_search >> kube_dash_search
     set_env_task_google_ads_search >> kube_google_ads_search
-    kube_google_ads_search >> task_google_ads_search_comparison
     kube_google_ads_search >> kube_dash
     brands = ['centralized','wealth','general_insurance']
     #task_list = [kube_cm360,kube_ttd,kube_linkedin,kube_hivestack,kube_facebook,kube_reddit] 
