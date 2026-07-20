@@ -243,6 +243,7 @@ sources:
       - name: google_ads_search__everyday_banking_retail_deposit1
       - name: google_ads_demand__everyday_banking_retail_deposit2
       - name: google_ads_search__everyday_banking_retail_deposit2
+      - name: bing_ads_search__everyday_banking_retail_deposit
 
   - name: google_ads__fraud_and_scams
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
@@ -257,6 +258,7 @@ sources:
     tables:
       - name: google_ads_demand__home_loans
       - name: google_ads_search__home_loans
+      - name: bing_ads_search__home_loans
 models:
   - name: facebook
     config:
