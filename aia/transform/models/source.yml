@@ -105,9 +105,9 @@ sources:
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
     schema: "{{ env_var('REFERENCE_OUTBRAIN_BIGQUERY_DATASET', 'outbrain_raw') }}"
     tables:
-      - name: ads
+      - name: ad_report
+      - name: ad
       - name: campaigns
-      - name: reports
 
   - name: outbrain_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'aia-nz-main') }}"
@@ -265,3 +265,7 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 12747
+
+  - name: outbrain
+    config:
+      schema: "{{ env_var('OUTBRAIN_SUFFIX', '') }}"

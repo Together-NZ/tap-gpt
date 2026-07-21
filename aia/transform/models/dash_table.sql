@@ -30,26 +30,7 @@ WITH dash_table AS (
     {{ dash_table_general_process.google_ads(source_name='google_ads_search_transformed__marketing', table_name='google_ads_demand__marketing') }}
 
     UNION ALL
-    SELECT
-        SAFE_CAST(media_cost AS FLOAT64) AS media_cost,
-        SAFE_CAST(impressions AS INT64) AS impressions,
-        SAFE_CAST(clicks AS INT64) AS clicks,
-        creative_name,
-        audience_name,
-        ad_format,
-        ad_format_detail,
-        CAST(0 AS INT64) AS video_completion,
-        CAST(0 AS INT64) AS video_25_completion,
-        CAST(0 AS INT64) AS video_50_completion,
-        CAST(0 AS INT64) AS video_75_completion,
-        CAST(0 AS INT64) AS video_views,
-        campaign_name,
-        publisher,
-        campaign_descr,
-        creative_descr,
-        DATE(date) AS date,
-        CAST(NULL AS FLOAT64) AS conversions
-    FROM {{ source('outbrain_transformed', 'outbrain') }}
+    {{ dash_table_general_process.outbrain(source_name='outbrain_transformed', table_name='outbrain') }}
 
     UNION ALL
     {{ dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy') }}
