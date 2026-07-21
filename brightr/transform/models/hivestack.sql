@@ -5,5 +5,5 @@
 
 {{ hivestack.hivestack(
     table_name='hivestack_raw',
-    report_name='brightr_report'
+    report_name=env_var('REPORT_NAME', 'brightr_report')
 ) }}
