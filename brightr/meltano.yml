@@ -4,6 +4,31 @@ project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          META_SUFFIX: dbt_test_facebook
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          PLAN_CODE: uow
+          REPORT_NAME: amp_report
 - name: prod
 #state_backend:
 #  uri: gs://brightr-main-meltano-state-staging
@@ -38,11 +63,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -50,11 +75,8 @@ plugins:
         airbyte_config:
           start_date: ${START_DATE}T00:00:00Z
     select:
-        - ads_insights.*
-        - ad_account.*
-        - ad_sets.*
-        - ads.*
-        - campaigns.*
+  
+        - custom_conversions.*
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
@@ -95,16 +117,22 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand
+        args: run --select google_ads_search google_ads_demand google_ads_keyword
       cm360_models:
         args: run --select +cm360_seralized +cm360_direct_buy
       facebook_models:
         args: run --select +facebook
-      ga4_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+      ga4_keyword_models:
+        args: run --select ga4_goal_channel_keyword
+      ga4_final_models:
+        args: run --select ga4_goal_channel
       hivestack_models:
         args: run --select +hivestack
       linkedin_models:

@@ -4,14 +4,11 @@ FROM meltano/meltano:latest
 # Enable SSH agent forwarding
 # Required for cloning private GitHub repos via SSH
 # Must be enabled via `--ssh default` during build
-RUN apt-get update && apt-get install -y openssh-client git
+RUN apt-get update && apt-get install -y openssh-client git curl
 
 # Set working directory
 WORKDIR /project
 
-# Copy requirements first to leverage Docker layer caching
-COPY requirements.txt .
-RUN pip install -r requirements.txt
 # Mount SSH and trust GitHub SSH host key
 # Mount SSH and trust GitHub host key
 RUN --mount=type=ssh \
@@ -33,6 +30,7 @@ RUN --mount=type=ssh \
         retry meltano install extractor tap-facebook && \
         retry meltano install extractor tap-ga4 && \
         retry meltano install extractor tap-hivestack && \
+        retry meltano install extractor tap-linkedin-ads && \
         retry meltano install loader target-bigquery && \
         retry meltano install transformer dbt-bigquery\
     '
@@ -54,6 +52,12 @@ RUN for v in /project/.meltano/*/*/venv/bin/python; do \
 "$v" -m ensurepip --upgrade || true; \
 "$v" -m pip install -U "setuptools<81" || true; \
 done
+
+RUN --mount=type=ssh \
+    mkdir -p /root/.ssh && \
+    ssh-keyscan github.com >> /root/.ssh/known_hosts && \
+    ssh -T git@github.com || true && \
+    meltano invoke dbt-bigquery deps
 
 # Entrypoint for container
 ENTRYPOINT ["meltano"]
