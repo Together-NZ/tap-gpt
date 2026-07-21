@@ -23,8 +23,8 @@ environments:
           TTD_SUFFIX: dbt_test_ttd
           HIVESTACK_SUFFIX: dbt_test_hivestack
           LINKEDIN_SUFFIX: dbt_test_linkedin
-          PLAN_CODE: bnt
-          REPORT_NAME: barfoot_report
+          PLAN_CODE: uow
+          REPORT_NAME: amp_report
           REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
           REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
           REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
