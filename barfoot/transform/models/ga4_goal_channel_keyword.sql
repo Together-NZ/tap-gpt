@@ -4,9 +4,9 @@
     partition_by={'field': 'date', 'data_type': 'date'},
 ) }}
 
-{{ ga4.ga4_goal_a(
+{{ ga4.ga4_goal_channel_keyword(
     source_name='ga4_raw',
-    table_name='goal',
+    table_name='keyword_goal',
     dash_union_source_name='dash_union',
     dash_union_table_name='dash_union'
 ) }}

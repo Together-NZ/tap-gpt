@@ -13,14 +13,21 @@ environments:
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           TTD_SUFFIX: dbt_test_ttd
           HIVESTACK_SUFFIX: dbt_test_hivestack
+          LINKEDIN_SUFFIX: dbt_test_linkedin
           PLAN_CODE: uow
           REPORT_NAME: amp_report
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
 - name: prod
 #state_backend:
 #  uri: gs://barfoot-main-meltano-state-staging
@@ -31,11 +38,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
     pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
@@ -58,6 +65,9 @@ plugins:
     select:
     - ad_analytics_by_creative.*
     - ad_analytics_by_campaign.*
+    - campaigns.*
+    - campaign_groups.*
+    - creatives.*
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -138,7 +148,7 @@ plugins:
       method: oauth
     commands:
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand
+        args: run --select google_ads_search google_ads_demand google_ads_keyword
       cm360_models: run --select +cm360_seralized +cm360_direct_buy
       dv360_models:
         args: run --select dv360_standard dv360_youtube
@@ -154,10 +164,20 @@ plugins:
       hivestack_models:
         args: run --select hivestack
         description: Run the Hivestack ads models
-      ga4_models:
-        args: run --select ga4_goal_a ga4_goal_channel
-        description: Run the GA4 ads modelss
-      dash_models: run --select +dash_table
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+      ga4_keyword_models:
+        args: run --select ga4_goal_channel_keyword
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+      dash_models:
+        args: run --select dash_table
+      dash_search_models:
+        args: run --select dash_table_search
+      dash_union_models:
+        args: run --select dash_union
   files:
   - name: files-airflow
     variant: meltano
