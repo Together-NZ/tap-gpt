@@ -114,7 +114,7 @@ plugins:
     executable: tap-hivestack
     config:
       api_key: ${TAP_HIVESTACK_API_KEY}
-      report_id: '47996'
+      report_id: '69296'
   - name: tap-reddit-ads
     namespace: tap-reddit-ads
     pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git setuptools<82.0
