@@ -228,6 +228,7 @@ sources:
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
     schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
     tables:
+      - name: bing_ads_search
       - name: google_ads_demand
       - name: google_ads_search
 
