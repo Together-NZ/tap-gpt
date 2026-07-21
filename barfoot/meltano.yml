@@ -13,12 +13,16 @@ environments:
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           TTD_SUFFIX: dbt_test_ttd
           HIVESTACK_SUFFIX: dbt_test_hivestack
+          LINKEDIN_SUFFIX: dbt_test_linkedin
           PLAN_CODE: bnt
           REPORT_NAME: barfoot_report
           REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
