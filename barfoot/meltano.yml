@@ -148,7 +148,7 @@ plugins:
       method: oauth
     commands:
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand google_ads_keyword
+        args: run --select google_ads_search google_ads_demand google_ads_keyword google_ads_location
       cm360_models: run --select +cm360_seralized +cm360_direct_buy
       dv360_models:
         args: run --select dv360_standard dv360_youtube

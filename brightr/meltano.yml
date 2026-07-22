@@ -120,7 +120,7 @@ plugins:
     pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand google_ads_keyword
+        args: run --select google_ads_search google_ads_demand google_ads_keyword google_ads_location
       cm360_models:
         args: run --select +cm360_seralized +cm360_direct_buy
       facebook_models:
