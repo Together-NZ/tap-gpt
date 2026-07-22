@@ -1,0 +1,178 @@
+version: 2
+
+sources:
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_account
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: linkedin_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: campaigns
+      - name: campaign_groups
+      - name: creatives
+
+  - name: ttd_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
+    tables:
+      - name: standard_streams
+
+  - name: hivestack_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
+    tables:
+      - name: brightr_report
+      - name: amp_report # for testing only
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
+  - name: linkedin_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed') }}"
+    tables:
+      - name: linkedin
+
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd_transformed
+
+  - name: hivestack_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed') }}"
+    tables:
+      - name: hivestack
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
+
+  - name: google_ads
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    tables:
+      - name: google_ads_search
+      - name: google_ads_demand
+      - name: google_ads_keyword
+      - name: google_ads_location
+
+  - name: dash_table
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_table
+      - name: dash_union
+
+  - name: dash_table_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'brightr-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
+
+models:
+  - name: facebook
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+
+  - name: linkedin
+    config:
+      schema: "{{ env_var('LINKEDIN_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 8327.91
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 771281
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5785
+
+  - name: ttd_transformed
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
+
+  - name: hivestack
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 15000.03
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 815604.65
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
