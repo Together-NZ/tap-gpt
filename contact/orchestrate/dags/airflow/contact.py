@@ -399,7 +399,7 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash_brand(brand),
             get_logs=True,
-        )
+        )#
         kube_dash_union >> kube_brand_dash_union
 
 
