@@ -557,7 +557,12 @@ with models.DAG(
         )
 
         kube_dash_union >> kube_brand_dash_union
-        [kube_brand_dash_union, kube_ga4_final] >> [
+        kube_brand_dash_union >> [
+            kube_ga4_brand,
+            kube_ga4_keyword,
+            kube_ga4_ecommerce,
+        ]
+        kube_ga4_final >> [
             kube_ga4_brand,
             kube_ga4_keyword,
             kube_ga4_ecommerce,
