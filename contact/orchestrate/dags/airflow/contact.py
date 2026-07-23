@@ -342,6 +342,66 @@ with models.DAG(
     kube_facebook >> task_facebook_comparison
     kube_dv360 >> [task_dv360_comparison_standard, task_dv360_comparison_youtube]
 
+    kube_dash = KubernetesPodOperator(
+        name="contact-dash-to-bq",
+        task_id="contact_dash_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        trigger_rule="all_done",
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        get_logs=True,
+    )
+    kube_dash_search = KubernetesPodOperator(
+        name="contact-dash-search-to-bq",
+        task_id="contact_dash_search_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_search_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash_search(),
+        get_logs=True,
+    )
+    kube_dash_union = KubernetesPodOperator(
+        name="contact-dash-union-to-bq",
+        task_id="contact_dash_union_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_union_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        get_logs=True,
+    )
+
+    [kube_facebook, kube_dv360, kube_hivestack, kube_ttd] >> kube_dash
+    kube_dash >> kube_dash_search >> kube_dash_union
+
+    for brand in BRANDS:
+        kube_brand_dash_union = KubernetesPodOperator(
+            name=f"contact-{brand}-dash-union-to-bq",
+            task_id=f"contact-{brand}_dash_union_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                f"dbt-bigquery:dash_union_{brand}_models",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash_brand(brand),
+            get_logs=True,
+        )
+        kube_dash_union >> kube_brand_dash_union
+
 
 # ---------------------------------------------------------------------------
 # DAG 2: Google Ads + TikTok + central dash → brand dash_union → GA4
