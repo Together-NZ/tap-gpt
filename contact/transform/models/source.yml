@@ -1,0 +1,155 @@
+version: 2
+
+sources:
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_account
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: tiktok_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: ttd_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
+    tables:
+      - name: standard_streams
+
+  - name: hivestack_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
+    tables:
+      - name: contact_report
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw__contact') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+      - name: ecommerce_goal
+
+  - name: ga4_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+      - name: ga4_goal_a
+      - name: ga4_goal_a_session
+
+  - name: ga4_central
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_CENTRAL_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_a
+      - name: ga4_goal_a_session
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+      - name: ga4_goal_channel_keyword
+      - name: ga4_goal_ecommerce
+      - name: ga4_goal_channel
+
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: tiktok_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed') }}"
+    tables:
+      - name: tiktok
+
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd
+
+  - name: hivestack_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed') }}"
+    tables:
+      - name: hivestack
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
+
+  - name: google_ads_central
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_CENTRAL_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    tables:
+      - name: google_ads_search
+      - name: google_ads_demand
+      - name: google_ads_keyword
+      - name: google_ads_location
+      - name: bing_ads_search
+
+  - name: dash_table
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_table
+      - name: dash_union
+
+  - name: dash_table_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
+
+  - name: dash_union_mobile
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: dash_table__mobile
+    tables:
+      - name: dash_union__mobile
+
+  - name: dash_union_broadband
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: dash_table__broadband
+    tables:
+      - name: dash_union__broadband
+
+  - name: dash_union_energy
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: dash_table__energy
+    tables:
+      - name: dash_union__energy
