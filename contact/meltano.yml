@@ -4,6 +4,40 @@ project_id: 9581b380-7374-4cd8-a337-4f24fe125b2b
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          CM360_RAW_BIGQUERY_PROJECT: together-internal
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GOOGLE_ADS_CENTRAL_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_CENTRAL_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_DASH_TABLE_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TIKTOK_SUFFIX: dbt_test_tiktok
+          TTD_SUFFIX: dbt_test_ttd
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          CM360_SUFFIX: dbt_test_cm360
+          PLAN_CODE: con
+          REPORT_NAME: contact_report
 - name: prod
 #state_backend:
 #  uri: gs://contact-main-meltano-state-staging
