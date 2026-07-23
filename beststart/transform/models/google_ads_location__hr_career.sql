@@ -3,4 +3,4 @@
     schema=env_var('GOOGLE_ADS_SEARCH_SUFFIX', ''),
 ) }}
 
-{{ google_ads.google_ads_demand(client_id=9671916287) }}
+{{ google_ads.google_ads_search_location(client_id=6433737339) }}

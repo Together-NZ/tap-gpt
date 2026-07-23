@@ -1,0 +1,188 @@
+version: 2
+
+models:
+  - name: facebook
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+
+  - name: tiktok
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1095.76
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 429635
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 1268
+
+  - name: dv360_standard
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+
+  - name: dv360_youtube
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+
+sources:
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_account
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
+  - name: tiktok_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed') }}"
+    tables:
+      - name: tiktok
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
+
+  - name: google_ads__beststart
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_BESTSTART_BIGQUERY_DATASET', 'google_ads_search_transformed__beststart') }}"
+    tables:
+      - name: google_ads_search__beststart
+      - name: google_ads_demand__beststart
+      - name: google_ads_demand2
+      - name: google_ads_keyword__beststart
+      - name: google_ads_location__beststart
+
+  - name: google_ads__hr_career
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_HR_CAREER_BIGQUERY_DATASET', 'google_ads_search_transformed__hr_career') }}"
+    tables:
+      - name: google_ads_search__hr_career
+      - name: google_ads_demand__hr_career
+      - name: google_ads_keyword__hr_career
+      - name: google_ads_location__hr_career
+
+  - name: dash_table
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_table
+      - name: dash_union
+
+  - name: dash_table_search
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
+    tables:
+      - name: dash_table_search
+
+  - name: dash_table_search__beststart
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BESTSTART_BIGQUERY_DATASET', 'dash_table_search__beststart') }}"
+    tables:
+      - name: dash_table_search__beststart
+
+  - name: dash_table_search__hr_career
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_HR_CAREER_BIGQUERY_DATASET', 'dash_table_search__hr_career') }}"
+    tables:
+      - name: dash_table_search__hr_career

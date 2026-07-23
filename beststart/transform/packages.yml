@@ -1,0 +1,16 @@
+packages:
+  - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
+
+  - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
+
+  - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
