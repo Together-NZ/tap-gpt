@@ -1,0 +1,70 @@
+---
+description: Standard checklist when migrating or "doing the same thing" for a Meltano/dbt/Airflow client
+alwaysApply: true
+---
+
+# Client pipeline migration
+
+When the user asks to migrate a client, "do the same thing" for a client, or fill missing data / packages / DAG work, treat it as this full checklist. Primary reference: **Kiwibank**. Also use Barfoot / AIA when closer to the client's shape.
+
+## Always do
+
+1. **Missing Google Ads + GA4 data/transforms**
+   - Add missing Google Ads models (**search, demand, keyword, location** as applicable) via shared `google_ads` package macros (`google_ads_search`, `google_ads_demand`, `google_ads_search_keyword`, `google_ads_search_location`).
+   - Wire all of them into the client's `google_ads_models` (or brand-specific) Meltano command and `source.yml`.
+   - Location reference: RealNZ / AIA (`google_ads_location` / `google_ads_location__{brand}`); use the same `client_id` as that brand's search model.
+   - Add missing GA4 paths (goal / session / keyword / ecommerce as the client needs) via shared `ga4` package macros.
+   - Add report JSON + Meltano `TAP_GA4_REPORTS` / `GA4_GOAL` wiring when GA4 multi-type extracts are needed.
+
+2. **Replace inline SQL with dbt packages where possible**
+   - Prefer shared Impact-CI packages (facebook, linkedin, dv360, ttd, hivestack, cm360, google_ads, ga4, dash_table_general_process, testing_sum, etc.).
+   - Add missing entries to `transform/packages.yml`.
+   - Keep client-specific filters/IDs (advertiser, `client_id`, report name, plan code) as macro args.
+
+3. **Sources + expected sums**
+   - Add/update `transform/models/source.yml` for raw and transformed sources.
+   - Add `testing_sum.expected_sum` on relevant transformed models for staging/test datasets.
+   - **Canonical expected values** come from **Kiwibank** `transform/models/source.yml` (shared staging fixtures). Copy these — do not invent or subtract YouTube from standard:
+
+     | model | media_cost | impressions | clicks |
+     |---|---:|---:|---:|
+     | facebook | 14549.95 | 2857616 | 22450 |
+     | dv360_standard | 68223.08 | 5840202 | 7786 |
+     | dv360_youtube | 67127.98 | 5248537 | 4432 |
+     | linkedin | 8327.91 | 771281 | 5785 |
+     | hivestack | 15000.03 | 815604.65 | 0 |
+     | tiktok | 18983.49 | 4422216 | 12747 |
+
+   - **TTD** is not in Kiwibank; use **Contact**: media_cost `52112.58`, impressions `798906`, clicks `363`.
+   - Multi-brand: put expecteds on one brand model only (usually the first / primary brand); sibling brands share the same staging reference data and do not need duplicate tests.
+   - Before finishing a migration, cross-check every `expected_value` against Kiwibank (and Contact for TTD).
+
+4. **DAG: comparisons + env helpers**
+   - Add `ComparisonTrigger` tasks for platforms the comparison package supports (typically Meta, LinkedIn, DV360, TikTok, etc. — only if the client has them).
+   - For **multi-brand** clients, pass `brand=` into `ComparisonTrigger` (and use a factory that closes over brand) so source API lookups use the brand-specific secret keys — same as Warehouse / RealNZ / WCET.
+   - Update DAG env setters, especially **GA4** (`set_env_vars_ga4(goal)` reading different report JSON types).
+   - Reorder dependencies like Kiwibank/Barfoot (e.g. CM360 before DV360/TTD; platforms → dash → dash_search → dash_union → GA4 → ga4_final).
+   - Prefer direct `KubernetesPodOperator` / `PythonOperator` style (Kiwibank), not ad-hoc wrappers unless the client already uses one consistently.
+
+5. **Meltano / Docker alignment**
+   - Add dbt commands for new models; bump dbt pins if needed for packages.
+   - Dockerfile: `dbt deps`, schema curls, extractor installs as peers do.
+   - Expand `.dockerignore` like Kiwibank (`.meltano/`, `dbt_packages`, package-lock).
+   - **Staging env conventions** (match Kiwibank / AIA / AMP / BestStart / Barfoot — do not invent client-specific staging report/plan values):
+     - If the client has **Hivestack**: set `REPORT_NAME: amp_report` in staging. Staging fixtures always use `amp_report`, never the prod brand report name (`waitoa_report`, `inghams_report`, `contact_report`, etc.). Prod DAG/env may still set `{brand}_report` / client report at runtime.
+     - Set staging **plan code(s) to `uow`**: `PLAN_CODE: uow`, or for multi-brand `PLAN_CODE_{BRAND}: uow` for every brand (Kiwirail pattern). Do not use prod-looking placeholders like `ing` / `wai` / client acronyms in staging — GA4 staging fixtures are keyed to `uow`.
+     - If the client has **CM360**: staging uses `REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360` and table **`cm360_direct_buy`** (no brand suffix) for **DV360/TTD transforms only**. Prod multi-brand keeps suffixed tables (`cm360_direct_buy__{brand}`). In DV360/TTD models only: `cm360_table_name=env_var('CM360_DIRECT_BUY_TABLE', 'cm360_direct_buy__{brand}')` with staging `CM360_DIRECT_BUY_TABLE: cm360_direct_buy`. Do **not** apply this override to dash_table — dash always reads the brand-suffixed prod table names. Declare both table names on the brand CM360 transformed source so either resolves.
+
+6. **Necessary macros**
+   - Ensure `transform/macros/generate_schema_name.sql` exists (Kiwibank/Barfoot pattern): use the custom schema as-is when set; otherwise fall back to `target.schema`. Required so empty `*_SUFFIX` env vars do not produce invalid BigQuery dataset names like `_facebook`.
+   - Add any other client macros only when peers already use them for the same pattern — do not invent extras.
+
+## Suffix / single-file adaptability
+
+- **Multi-brand clients** (Contact, Kiwibank): use `__{brand}` models, brand loops in DAG, and `CONTACT_LABEL` / brand dataset suffixes.
+- **Single-brand clients** (Barfoot, Brightr): use **single files** without brand suffix; point `REFERENCE_*` / `*_SUFFIX` env vars at that client's datasets.
+- Always adapt to **what the current client already points at** (project, dataset names, existing env keys) — do not force multi-brand structure onto a single-file client.
+
+## Do not invent platforms
+
+Only add extractors/models/comparisons for platforms the client already has or the user explicitly requests (e.g. no DV360 if absent; Bing only when asked).

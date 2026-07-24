@@ -2,7 +2,6 @@
     materialized='table',
 ) }}
 WITH cm360reference AS (
-    -- cm360 seralized dataset
     SELECT
         JSON_VALUE(JSON_EXTRACT(data, "$.placementId")) AS placement_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.advertiser")) AS advertiser,
@@ -28,7 +27,7 @@ WITH cm360reference AS (
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.clicks")) AS INT64) AS clicks,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.impressions")) AS INT64) AS impressions,
         ROW_NUMBER() OVER (
-            PARTITION BY 
+            PARTITION BY
                 JSON_VALUE(JSON_EXTRACT(data, "$.placementId")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.advertiser")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.creativeType")),
@@ -50,16 +49,14 @@ WITH cm360reference AS (
                 SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementStartDate"))),
                 JSON_VALUE(JSON_EXTRACT(data, "$.placementStrategy")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.siteKeyname"))
-            ORDER BY 
+            ORDER BY
                 SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))) DESC
         ) AS row_num
-    FROM 
-        `together-internal.cm360_raw.cm360_report_stream`
-    WHERE 
+    FROM {{ source('cm360_raw', 'cm360_report_stream') }}
+    WHERE
         LOWER(JSON_VALUE(JSON_EXTRACT(data, "$.advertiser"))) = 'inghams'
-)    
-select * from cm360reference where  row_num = 1
+)
+SELECT * FROM cm360reference WHERE row_num = 1
 {% if is_incremental() %}
-  -- Only include new or updated rows
   AND date >= (SELECT MAX(date) FROM {{ this }})
 {% endif %}
