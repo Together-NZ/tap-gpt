@@ -35,7 +35,7 @@ environments:
           CM360_SUFFIX: dbt_test_cm360
           PLAN_CODE_INGHAMS: ing
           PLAN_CODE_WAITOA: wai
-          REPORT_NAME: waitoa_report
+          REPORT_NAME: amp_report
 - name: prod
 #state_backend:
 #  uri: gs://inghams-main-meltano-state-staging
