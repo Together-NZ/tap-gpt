@@ -274,6 +274,7 @@ sources:
     schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__inghams') }}"
     tables:
       - name: cm360_direct_buy__inghams
+      - name: cm360_direct_buy
       - name: cm360_seralized__inghams
 
   - name: cm360_transformed__waitoa
@@ -281,6 +282,7 @@ sources:
     schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__waitoa') }}"
     tables:
       - name: cm360_direct_buy__waitoa
+      - name: cm360_direct_buy
       - name: cm360_seralized__waitoa
 
   - name: ga4_raw__inghams

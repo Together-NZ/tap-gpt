@@ -24,6 +24,7 @@ environments:
           REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
           REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          CM360_DIRECT_BUY_TABLE: cm360_direct_buy
           REFERENCE_GA4_BIGQUERY_DATASET: dbt_test_ga4_raw
           REFERENCE_DASH_TABLE_BIGQUERY_DATASET: dbt_test_dash_table
           REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
@@ -33,8 +34,8 @@ environments:
           TTD_SUFFIX: dbt_test_ttd
           HIVESTACK_SUFFIX: dbt_test_hivestack
           CM360_SUFFIX: dbt_test_cm360
-          PLAN_CODE_INGHAMS: ing
-          PLAN_CODE_WAITOA: wai
+          PLAN_CODE_INGHAMS: uow
+          PLAN_CODE_WAITOA: uow
           REPORT_NAME: amp_report
 - name: prod
 #state_backend:
