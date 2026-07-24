@@ -227,6 +227,7 @@ with models.DAG(
                     end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
                     secret_name=COMPARISON_SECRET,
                     project_id=meltano_env["PROJECT_ID"],
+                    brand=b,
                 )
                 result = trigger.compare_data()
                 if not result:
@@ -316,6 +317,7 @@ with models.DAG(
                     end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
                     secret_name=COMPARISON_SECRET,
                     project_id=meltano_env["PROJECT_ID"],
+                    brand=b,
                 )
                 result = trigger.compare_data()
                 if not result:
@@ -335,6 +337,7 @@ with models.DAG(
                     end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
                     secret_name=COMPARISON_SECRET,
                     project_id=meltano_env["PROJECT_ID"],
+                    brand=b,
                 )
                 result = trigger.compare_data()
                 if not result:
@@ -477,6 +480,7 @@ with models.DAG(
             end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
             secret_name=COMPARISON_SECRET,
             project_id=meltano_env["PROJECT_ID"],
+            brand="waitoa",
         )
         result = trigger.compare_data()
         if not result:

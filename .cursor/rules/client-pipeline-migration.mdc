@@ -24,9 +24,24 @@ When the user asks to migrate a client, "do the same thing" for a client, or fil
 3. **Sources + expected sums**
    - Add/update `transform/models/source.yml` for raw and transformed sources.
    - Add `testing_sum.expected_sum` on relevant transformed models for staging/test datasets.
+   - **Canonical expected values** come from **Kiwibank** `transform/models/source.yml` (shared staging fixtures). Copy these — do not invent or subtract YouTube from standard:
+
+     | model | media_cost | impressions | clicks |
+     |---|---:|---:|---:|
+     | facebook | 14549.95 | 2857616 | 22450 |
+     | dv360_standard | 68223.08 | 5840202 | 7786 |
+     | dv360_youtube | 67127.98 | 5248537 | 4432 |
+     | linkedin | 8327.91 | 771281 | 5785 |
+     | hivestack | 15000.03 | 815604.65 | 0 |
+     | tiktok | 18983.49 | 4422216 | 12747 |
+
+   - **TTD** is not in Kiwibank; use **Contact**: media_cost `52112.58`, impressions `798906`, clicks `363`.
+   - Multi-brand: put expecteds on one brand model only (usually the first / primary brand); sibling brands share the same staging reference data and do not need duplicate tests.
+   - Before finishing a migration, cross-check every `expected_value` against Kiwibank (and Contact for TTD).
 
 4. **DAG: comparisons + env helpers**
    - Add `ComparisonTrigger` tasks for platforms the comparison package supports (typically Meta, LinkedIn, DV360, TikTok, etc. — only if the client has them).
+   - For **multi-brand** clients, pass `brand=` into `ComparisonTrigger` (and use a factory that closes over brand) so source API lookups use the brand-specific secret keys — same as Warehouse / RealNZ / WCET.
    - Update DAG env setters, especially **GA4** (`set_env_vars_ga4(goal)` reading different report JSON types).
    - Reorder dependencies like Kiwibank/Barfoot (e.g. CM360 before DV360/TTD; platforms → dash → dash_search → dash_union → GA4 → ga4_final).
    - Prefer direct `KubernetesPodOperator` / `PythonOperator` style (Kiwibank), not ad-hoc wrappers unless the client already uses one consistently.
