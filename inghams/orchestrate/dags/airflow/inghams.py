@@ -106,7 +106,10 @@ def set_env_vars_hivestack(report_id, brand):
     env["DBT_BIGQUERY_DATASET"] = f"hivestack_transformed__{brand}"
     env["HIVESTACK_REPORT_ID"] = report_id
     env["TAP_HIVESTACK_REPORT_ID"] = report_id
-    env["REPORT_NAME"] = f"{brand}_report"
+    # Do not set REPORT_NAME here — dbt parses all brand models and a shared
+    # REPORT_NAME would make waitoa resolve to inghams_report (and vice versa).
+    # Prod uses each model's SQL default (waitoa_report / inghams_report);
+    # staging meltano sets REPORT_NAME=amp_report (RealNZ pattern).
     return env
 
 

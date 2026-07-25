@@ -12,6 +12,7 @@ on:
     paths-ignore:
       - "README.md"
       - ".github/**"
+      - ".cursor/**"
       - "terraform/**"
      
       #- "**/orchestrate/**"
@@ -70,6 +71,7 @@ jobs:
               - "**"
               - "!README.md"
               - "!.github/**"
+              - "!.cursor/**"
               - "!terraform/**"
               - "!**/orchestrate/**"
    
@@ -85,6 +87,7 @@ jobs:
             | grep -v 'README.md' \
             | grep -v 'terraform/' \
             | grep -v '.github/' \
+            | grep -v '.cursor/' \
             | grep -v '/ci_test.sh' \
             | grep -v '/client_name.py' \
             | grep -v '/ci_pre_test.sh' \
@@ -92,7 +95,11 @@ jobs:
             | grep -v '/dv360_youtube.json' \
             | grep -v '/dv360_standard.json' \
             | cut -d/ -f1 | sort -u \
-            | while read dir; do [ -d "$dir" ] && echo "$dir"; done \
+            | while read dir; do
+                # Skip dot-dirs (.cursor, .github, .dev, …) — not client Docker builds
+                case "$dir" in .* ) continue ;; esac
+                [ -d "$dir" ] && echo "$dir"
+              done \
             | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
 
@@ -180,6 +187,7 @@ jobs:
               - "**"
               - "!README.md"
               - "!.github/**"
+              - "!.cursor/**"
               - "!terraform/**"
               - "!**/orchestrate/**"
        
@@ -192,7 +200,10 @@ jobs:
           FOLDERS=$(git diff --name-only HEAD^ HEAD \
             | grep '/orchestrate/' \
             | cut -d/ -f1 | sort -u \
-            | while read dir; do [ -d "$dir" ] && echo "$dir"; done \
+            | while read dir; do
+                case "$dir" in .* ) continue ;; esac
+                [ -d "$dir" ] && echo "$dir"
+              done \
             | jq -R . | jq -s -c .)
           echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
 
