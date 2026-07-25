@@ -1,23 +1,30 @@
 import datetime
-from airflow import models
-from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
-from airflow.models import Variable
-import pendulum
-from kubernetes.client import models as k8s_models
-from copy import deepcopy
 import logging
-from google.oauth2.credentials import Credentials
-from google.auth.transport.requests import Request
+from copy import deepcopy
 from datetime import timedelta
-from google.cloud import storage
+
+import pendulum
+from airflow import models
+from airflow.models import Variable
+from airflow.operators.python import PythonOperator
+from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
+from comparison_package import ComparisonTrigger
+from google.auth.transport.requests import Request
+from google.oauth2.credentials import Credentials
+from kubernetes.client import models as k8s_models
 
 
 IMAGE = "australia-southeast1-docker.pkg.dev/colorsteel-main/meltano/meltano-colorsteel-main:prod"
+PROJECT_NAME = "colorsteel-main"
+COMPARISON_SECRET = "airflow-variables-meltano_colorsteel_main"
 
 log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
+comparison_start_date = (
+    datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
+).strftime("%Y-%m-%d")
 
 default_args = {
     "retries": 3,
@@ -25,7 +32,7 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "retry_delay": timedelta(minutes=30),
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
+    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
 }
 
 
@@ -33,36 +40,40 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_colorsteel_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
-    start_date_str = (datetime.datetime.now(local_tz) - datetime.timedelta(days=13)).strftime("%Y-%m-%d")
-    meltano_env["START_DATE"] = start_date_str
+    meltano_env["START_DATE"] = (
+        datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+    ).strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
-
     return deepcopy(meltano_env)
 
 
 def get_ga4_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime(
+        "%Y-%m-%d"
+    )
 
 
 def get_ttd_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime(
+        "%Y-%m-%d"
+    )
 
 
 def set_env_vars_facebook():
     env = get_meltano_env()
     env["BQ_DATASET"] = "facebook_raw"
     env["BQ_METHOD"] = "batch_job"
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-    env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "facebook_transformed"
     return env
 
 
 def set_env_vars_cm360():
     env = get_meltano_env()
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-    env["DBT_BIGQUERY_DATASET"] = 'cm360_transformed'
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "cm360_transformed"
     return env
 
 
@@ -70,10 +81,12 @@ def set_env_vars_pinterest():
     env = get_meltano_env()
     env["BQ_DATASET"] = "pinterest_raw"
     env["BQ_METHOD"] = "batch_job"
-    env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-    env["DBT_BIGQUERY_DATASET"] = 'pinterest_transformed'
+    env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime(
+        "%Y-%m-%d"
+    )
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "pinterest_transformed"
     return env
 
 
@@ -81,9 +94,9 @@ def set_env_vars_dv360():
     env = get_meltano_env()
     env["BQ_DATASET"] = "dv360_raw"
     env["BQ_METHOD"] = "batch_job"
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-    env["DBT_BIGQUERY_DATASET"] = 'dv360_transformed'
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "dv360_transformed"
     return env
 
 
@@ -91,20 +104,31 @@ def set_env_vars_ttd():
     env = get_meltano_env()
     env["BQ_DATASET"] = "ttd_raw"
     env["BQ_METHOD"] = "batch_job"
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-    env["DBT_BIGQUERY_DATASET"] = 'ttd_transformed'
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "ttd_transformed"
     env["TAP_TTD_START_DATE"] = get_ttd_start_date()
+    env["REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET"] = "cm360_transformed"
     return env
 
 
-def set_env_vars_ga4():
+def set_env_vars_ga4(goal):
     env = get_meltano_env()
+    if goal == "session":
+        env["TAP_GA4_REPORTS"] = "./report_sessions.json"
+        env["GA4_GOAL"] = "session_goal"
+    elif goal == "keyword":
+        env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+        env["GA4_GOAL"] = "keyword_goal"
+    else:
+        env["TAP_GA4_REPORTS"] = "./report.json"
+        env["GA4_GOAL"] = "goal"
     env["BQ_DATASET"] = "ga4_raw"
     env["BQ_METHOD"] = "gcs_stage"
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-    env["DBT_BIGQUERY_DATASET"] = 'ga4_transformed'
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "ga4_transformed"
+    env["PLAN_CODE"] = "colorsteel"
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
     developer_creds = Credentials(
         None,
@@ -120,9 +144,9 @@ def set_env_vars_ga4():
 
 def set_env_vars_dash():
     env = get_meltano_env()
-    env["DBT_BIGQUERY_METHOD"] = 'oauth'
-    env["DBT_BIGQUERY_PROJECT"] = 'colorsteel-main'
-    env["DBT_BIGQUERY_DATASET"] = 'dash_table'
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "dash_table"
     return env
 
 
@@ -131,33 +155,49 @@ with models.DAG(
     schedule_interval="0 14 * * *",
     default_args=default_args,
 ) as dag:
-
     kube_facebook = KubernetesPodOperator(
         name="colorsteel-facebook-to-bigquery",
         task_id="colorsteel-facebook_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery", "dbt-bigquery:facebook_models"],
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-facebook",
+            "target-bigquery",
+            "dbt-bigquery:facebook_models",
+        ],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_facebook(),
-        get_logs=True
+        get_logs=True,
     )
 
-    kube_ttd = KubernetesPodOperator(
-        name="colorsteel-ttd-to-bigquery",
-        task_id="colorsteel-ttd_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-ttd", "target-bigquery", "dbt-bigquery:ttd_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_ttd(),
-        get_logs=True,
-        execution_timeout=timedelta(minutes=60)
+    def facebook_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Facebook data accuracy check failed.")
+        return result
+
+    task_facebook_comparison = PythonOperator(
+        task_id="task_facebook_comparison",
+        python_callable=facebook_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
     )
+    kube_facebook >> task_facebook_comparison
 
     kube_cm360 = KubernetesPodOperator(
         name="colorsteel-cm360-to-bigquery",
@@ -169,7 +209,27 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_cm360(),
-        get_logs=True
+        get_logs=True,
+    )
+
+    kube_ttd = KubernetesPodOperator(
+        name="colorsteel-ttd-to-bigquery",
+        task_id="colorsteel-ttd_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-ttd",
+            "target-bigquery",
+            "dbt-bigquery:ttd_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ttd(),
+        get_logs=True,
+        execution_timeout=timedelta(minutes=60),
     )
 
     kube_dv360 = KubernetesPodOperator(
@@ -177,38 +237,88 @@ with models.DAG(
         task_id="colorsteel-dv360_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery", "dbt-bigquery:dv360_models"],
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-dv360",
+            "target-bigquery",
+            "dbt-bigquery:dv360_models",
+        ],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_dv360(),
-        get_logs=True
+        get_logs=True,
     )
+
+    def dv360_comparison_standard_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 standard data accuracy check failed.")
+        return result
+
+    def dv360_comparison_youtube_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("DV360 YouTube data accuracy check failed.")
+        return result
+
+    task_dv360_comparison_standard = PythonOperator(
+        task_id="task_dv360_comparison_standard",
+        python_callable=dv360_comparison_standard_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    task_dv360_comparison_youtube = PythonOperator(
+        task_id="task_dv360_comparison_youtube",
+        python_callable=dv360_comparison_youtube_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
+    kube_cm360 >> [kube_ttd, kube_dv360]
+    kube_dv360 >> [task_dv360_comparison_standard, task_dv360_comparison_youtube]
 
     kube_pinterest = KubernetesPodOperator(
         name="colorsteel-pinterest-to-bigquery",
         task_id="colorsteel-pinterest_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-pinterest-ads", "target-bigquery", "--full-refresh", "dbt-bigquery:pinterest_models"],
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-pinterest-ads",
+            "target-bigquery",
+            "--full-refresh",
+            "dbt-bigquery:pinterest_models",
+        ],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_pinterest(),
-        get_logs=True
-    )
-
-    kube_ga4 = KubernetesPodOperator(
-        name="colorsteel-ga4-to-bigquery",
-        task_id="colorsteel-ga4_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=["--environment=prod", "run", "tap-ga4", "target-bigquery", "dbt-bigquery:ga4_models"],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_ga4(),
-        get_logs=True
+        get_logs=True,
     )
 
     kube_dash = KubernetesPodOperator(
@@ -216,13 +326,13 @@ with models.DAG(
         task_id="colorsteel-dash_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        trigger_rule='all_done',
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "dash_table"],
+        trigger_rule="all_done",
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_dash(),
-        get_logs=True
+        get_logs=True,
     )
 
     kube_dash_union = KubernetesPodOperator(
@@ -230,12 +340,34 @@ with models.DAG(
         task_id="colorsteel-dash_union_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", "dash_union"],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_union_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_dash(),
-        get_logs=True
+        get_logs=True,
     )
 
-    [kube_facebook, kube_ttd, kube_cm360, kube_dv360, kube_pinterest] >> kube_dash >> kube_dash_union >> kube_ga4
+    [kube_facebook, kube_ttd, kube_dv360, kube_pinterest] >> kube_dash
+    kube_dash >> kube_dash_union
+
+    for goal in ["goal", "session", "keyword"]:
+        kube_ga4 = KubernetesPodOperator(
+            name=f"colorsteel-ga4-{goal}-to-bigquery",
+            task_id=f"colorsteel-ga4_{goal}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "run",
+                "tap-ga4",
+                "target-bigquery",
+                f"dbt-bigquery:ga4_{goal}_models",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_ga4(goal),
+            get_logs=True,
+        )
+        kube_dash_union >> kube_ga4

@@ -189,25 +189,6 @@ with models.DAG(
         env_vars=set_env_vars_facebook(),
         get_logs=True,
     )
-    kube_tiktok = KubernetesPodOperator(
-        name="beststart-tiktok-to-bigquery",
-        task_id="beststart-tiktok_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "run",
-            "tap-tiktok",
-            "target-bigquery",
-            "--full-refresh",
-            "dbt-bigquery:tiktok_models",
-        ],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_tiktok(),
-        get_logs=True,
-    )
     kube_cm360 = KubernetesPodOperator(
         name="beststart-cm360-to-bigquery",
         task_id="beststart-cm360_to_bigquery",
@@ -278,25 +259,6 @@ with models.DAG(
             )
         return result
 
-    def tiktok_comparison_check(**context):
-        env = get_meltano_env()
-        trigger = ComparisonTrigger(
-            project_name=PROJECT_NAME,
-            destination_table="tiktok_transformed",
-            table_name="tiktok",
-            source_name="tiktok",
-            start_date=comparison_start_date,
-            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-            secret_name=COMPARISON_SECRET,
-            project_id=env["PROJECT_ID"],
-        )
-        result = trigger.compare_data()
-        if not result:
-            raise ValueError(
-                "TikTok data accuracy check failed — BigQuery does not match the source API."
-            )
-        return result
-
     def dv360_standard_comparison_check(**context):
         env = get_meltano_env()
         trigger = ComparisonTrigger(
@@ -341,12 +303,6 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    task_tiktok_comparison = PythonOperator(
-        task_id="task_tiktok_comparison",
-        python_callable=tiktok_comparison_check,
-        retries=0,
-        trigger_rule="all_done",
-    )
     task_dv360_standard_comparison = PythonOperator(
         task_id="task_dv360_standard_comparison",
         python_callable=dv360_standard_comparison_check,
@@ -361,20 +317,38 @@ with models.DAG(
     )
 
     kube_facebook >> task_facebook_comparison
-    kube_tiktok >> task_tiktok_comparison
     kube_cm360 >> kube_dv360
     kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
-    [kube_facebook, kube_tiktok, kube_cm360, kube_dv360] >> kube_dash
+    [kube_facebook, kube_cm360, kube_dv360] >> kube_dash
 
 
 # ---------------------------------------------------------------------------
-# DAG 2: Google Ads / dash search / GA4
+# DAG 2: TikTok / Google Ads / dash search / GA4
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="beststart-meltano-google-ads",
     schedule_interval="00 14 * * *",
     default_args=default_args,
 ) as google_dag:
+    kube_tiktok = KubernetesPodOperator(
+        name="beststart-tiktok-to-bigquery",
+        task_id="beststart-tiktok_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-tiktok",
+            "target-bigquery",
+            "--full-refresh",
+            "dbt-bigquery:tiktok_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_tiktok(),
+        get_logs=True,
+    )
     kube_dash = KubernetesPodOperator(
         name="beststart-dash-to-bigquery",
         task_id="beststart-dash_to_bigquery",
@@ -446,6 +420,32 @@ with models.DAG(
         get_logs=True,
     )
 
+    def tiktok_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="tiktok_transformed",
+            table_name="tiktok",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                "TikTok data accuracy check failed — BigQuery does not match the source API."
+            )
+        return result
+
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=tiktok_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+
     google_ads_tasks = []
     dash_search_tasks = []
     for label in BRANDS:
@@ -510,7 +510,8 @@ with models.DAG(
         )
         ga4_tasks.append(kube_ga4)
 
-    google_ads_tasks >> kube_dash
+    kube_tiktok >> task_tiktok_comparison
+    [*google_ads_tasks, kube_tiktok] >> kube_dash
     dash_search_tasks >> kube_dash_search_union
     [kube_dash, kube_dash_search_union] >> kube_dash_union
     for task in ga4_tasks:
