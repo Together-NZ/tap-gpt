@@ -11,14 +11,25 @@ environments:
         env:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
+          CM360_RAW_BIGQUERY_PROJECT: together-internal
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
           REFERENCE_PINTEREST_BIGQUERY_DATASET: dbt_test_pinterest
+          REFERENCE_PINTEREST_TRANSFORMED_BIGQUERY_DATASET: dbt_test_pinterest
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           TTD_SUFFIX: dbt_test_ttd
-         
+          PINTEREST_SUFFIX: dbt_test_pinterest
+          CM360_SUFFIX: dbt_test_cm360
           PLAN_CODE: uow
 - name: prod
 # state_backend:
@@ -29,11 +40,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -113,24 +124,36 @@ plugins:
       method: oauth
     commands:
       pinterest_models:
-        args: run --select +pinterest
+        args: run --select pinterest
         description: Run the Pinterest ads model
-      ga4_models:
-        args: run --select +ga4_goal_a +ga4_goal_channel
-        description: Run the Google Analytics models
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+        description: Run GA4 goal models
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+        description: Run GA4 session models
+      ga4_keyword_models:
+        args: run --select ga4_goal_channel_keyword
+        description: Run GA4 keyword models
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+        description: Run the GA4 final union model
       ttd_models:
-        args: run --select +ttd_transformed
+        args: run --select ttd_transformed
         description: Run the TTD ads model
       facebook_models:
-        args: run --select +facebook
+        args: run --select facebook
         description: Run the Facebook ads model
       cm360_models:
-        args: run --select +cm360_direct_buy +cm360_seralized
+        args: run --select cm360_direct_buy cm360_seralized
         description: Run the CM360 ads model
       dv360_models:
-        args: run --select +dv360_standard +dv360_youtube
+        args: run --select dv360_standard dv360_youtube
         description: Run the DV360 ads model
+      dash_models:
+        args: run --select dash_table
+      dash_union_models:
+        args: run --select dash_union
 
 elt:
   buffer_size: 52428800
-

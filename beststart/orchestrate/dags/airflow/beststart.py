@@ -6,7 +6,8 @@ from datetime import timedelta
 import pendulum
 from airflow import models
 from airflow.models import Variable
-from airflow.operators.python import PythonOperator
+from airflow.operators.python import BranchPythonOperator, PythonOperator
+from airflow.operators.trigger_dagrun import TriggerDagRunOperator
 from airflow.providers.cncf.kubernetes.operators.pod import KubernetesPodOperator
 from comparison_package import ComparisonTrigger
 from google.auth.transport.requests import Request
@@ -18,6 +19,11 @@ IMAGE = "australia-southeast1-docker.pkg.dev/best-start-main/meltano/meltano-bes
 PROJECT_NAME = "best-start-main"
 COMPARISON_SECRET = "airflow-variables-meltano_beststart_main"
 BRANDS = ["beststart", "hr_career"]
+
+REPAIR_DAG_ID = "beststart-comparison-repair"
+# Repair extracts must cover the whole comparison window, otherwise drift older
+# than the normal 13-day extract window can never be corrected by a re-run.
+REPAIR_WINDOW_DAYS = 30
 
 log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
@@ -162,9 +168,54 @@ def set_env_vars_ga4_final():
     return env
 
 
+def widen_to_repair_window(env):
+    env["START_DATE"] = (
+        datetime.datetime.now(local_tz) - datetime.timedelta(days=REPAIR_WINDOW_DAYS)
+    ).strftime("%Y-%m-%d")
+    return env
+
+
+def make_comparison_check(destination_table, table_name, source_name, label):
+    def comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table=destination_table,
+            table_name=table_name,
+            source_name=source_name,
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                f"{label} data accuracy check failed — BigQuery does not match the source API."
+            )
+        return result
+
+    return comparison_check
+
+
+def make_repair_trigger(task_id, platform):
+    return TriggerDagRunOperator(
+        task_id=task_id,
+        trigger_dag_id=REPAIR_DAG_ID,
+        conf={"platform": platform},
+        trigger_run_id=f"repair_{platform}__{{{{ run_id }}}}",
+        reset_dag_run=True,
+        wait_for_completion=False,
+        trigger_rule="one_failed",
+        retries=0,
+    )
+
+
 # ---------------------------------------------------------------------------
 # DAG 1: Social / display
-# Flow: CM360 -> DV360; platforms -> dash. Comparisons after source transforms.
+# Flow: CM360 -> DV360; platforms -> dash_table -> dash_union.
+# Every client DAG ends with dash_table + dash_union; dash_table_search only
+# when the DAG also runs Google Ads (see DAG 2).
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="beststart-meltano-extraction-transformation-dbt",
@@ -187,25 +238,6 @@ with models.DAG(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_facebook(),
-        get_logs=True,
-    )
-    kube_tiktok = KubernetesPodOperator(
-        name="beststart-tiktok-to-bigquery",
-        task_id="beststart-tiktok_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "run",
-            "tap-tiktok",
-            "target-bigquery",
-            "--full-refresh",
-            "dbt-bigquery:tiktok_models",
-        ],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_tiktok(),
         get_logs=True,
     )
     kube_cm360 = KubernetesPodOperator(
@@ -258,123 +290,95 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         get_logs=True,
     )
-
-    def facebook_comparison_check(**context):
-        env = get_meltano_env()
-        trigger = ComparisonTrigger(
-            project_name=PROJECT_NAME,
-            destination_table="facebook_transformed",
-            table_name="facebook",
-            source_name="meta",
-            start_date=comparison_start_date,
-            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-            secret_name=COMPARISON_SECRET,
-            project_id=env["PROJECT_ID"],
-        )
-        result = trigger.compare_data()
-        if not result:
-            raise ValueError(
-                "Facebook data accuracy check failed — BigQuery does not match the source API."
-            )
-        return result
-
-    def tiktok_comparison_check(**context):
-        env = get_meltano_env()
-        trigger = ComparisonTrigger(
-            project_name=PROJECT_NAME,
-            destination_table="tiktok_transformed",
-            table_name="tiktok",
-            source_name="tiktok",
-            start_date=comparison_start_date,
-            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-            secret_name=COMPARISON_SECRET,
-            project_id=env["PROJECT_ID"],
-        )
-        result = trigger.compare_data()
-        if not result:
-            raise ValueError(
-                "TikTok data accuracy check failed — BigQuery does not match the source API."
-            )
-        return result
-
-    def dv360_standard_comparison_check(**context):
-        env = get_meltano_env()
-        trigger = ComparisonTrigger(
-            project_name=PROJECT_NAME,
-            destination_table="dv360_transformed",
-            table_name="dv360_standard",
-            source_name="dv360_standard",
-            start_date=comparison_start_date,
-            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-            secret_name=COMPARISON_SECRET,
-            project_id=env["PROJECT_ID"],
-        )
-        result = trigger.compare_data()
-        if not result:
-            raise ValueError(
-                "DV360 standard data accuracy check failed — BigQuery does not match the source API."
-            )
-        return result
-
-    def dv360_youtube_comparison_check(**context):
-        env = get_meltano_env()
-        trigger = ComparisonTrigger(
-            project_name=PROJECT_NAME,
-            destination_table="dv360_transformed",
-            table_name="dv360_youtube",
-            source_name="dv360_youtube",
-            start_date=comparison_start_date,
-            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-            secret_name=COMPARISON_SECRET,
-            project_id=env["PROJECT_ID"],
-        )
-        result = trigger.compare_data()
-        if not result:
-            raise ValueError(
-                "DV360 YouTube data accuracy check failed — BigQuery does not match the source API."
-            )
-        return result
+    kube_dash_union = KubernetesPodOperator(
+        name="beststart-dash-union-to-bigquery",
+        task_id="beststart-dash_union_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "invoke",
+            "dbt-bigquery",
+            "run",
+            "--select",
+            "dash_union",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        get_logs=True,
+    )
 
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
-        python_callable=facebook_comparison_check,
-        retries=0,
-        trigger_rule="all_done",
-    )
-    task_tiktok_comparison = PythonOperator(
-        task_id="task_tiktok_comparison",
-        python_callable=tiktok_comparison_check,
+        python_callable=make_comparison_check(
+            "facebook_transformed", "facebook", "meta", "Facebook"
+        ),
         retries=0,
         trigger_rule="all_done",
     )
     task_dv360_standard_comparison = PythonOperator(
         task_id="task_dv360_standard_comparison",
-        python_callable=dv360_standard_comparison_check,
+        python_callable=make_comparison_check(
+            "dv360_transformed", "dv360_standard", "dv360_standard", "DV360 standard"
+        ),
         retries=0,
         trigger_rule="all_done",
     )
     task_dv360_youtube_comparison = PythonOperator(
         task_id="task_dv360_youtube_comparison",
-        python_callable=dv360_youtube_comparison_check,
+        python_callable=make_comparison_check(
+            "dv360_transformed", "dv360_youtube", "dv360_youtube", "DV360 YouTube"
+        ),
         retries=0,
         trigger_rule="all_done",
     )
 
-    kube_facebook >> task_facebook_comparison
-    kube_tiktok >> task_tiktok_comparison
+    trigger_repair_facebook = make_repair_trigger(
+        "trigger_repair_facebook", "facebook"
+    )
+    trigger_repair_dv360 = make_repair_trigger("trigger_repair_dv360", "dv360")
+
+    kube_facebook >> task_facebook_comparison >> trigger_repair_facebook
     kube_cm360 >> kube_dv360
     kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
-    [kube_facebook, kube_tiktok, kube_cm360, kube_dv360] >> kube_dash
+    [
+        task_dv360_standard_comparison,
+        task_dv360_youtube_comparison,
+    ] >> trigger_repair_dv360
+    [kube_facebook, kube_cm360, kube_dv360] >> kube_dash >> kube_dash_union
 
 
 # ---------------------------------------------------------------------------
-# DAG 2: Google Ads / dash search / GA4
+# DAG 2: TikTok / Google Ads / dash search / GA4
+# Has Google Ads → includes dash_table_search (+ search union) as well as
+# dash_table + dash_union (required on every DAG).
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="beststart-meltano-google-ads",
     schedule_interval="00 14 * * *",
     default_args=default_args,
 ) as google_dag:
+    kube_tiktok = KubernetesPodOperator(
+        name="beststart-tiktok-to-bigquery",
+        task_id="beststart-tiktok_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-tiktok",
+            "target-bigquery",
+            "--full-refresh",
+            "dbt-bigquery:tiktok_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_tiktok(),
+        get_logs=True,
+    )
     kube_dash = KubernetesPodOperator(
         name="beststart-dash-to-bigquery",
         task_id="beststart-dash_to_bigquery",
@@ -446,6 +450,16 @@ with models.DAG(
         get_logs=True,
     )
 
+    task_tiktok_comparison = PythonOperator(
+        task_id="task_tiktok_comparison",
+        python_callable=make_comparison_check(
+            "tiktok_transformed", "tiktok", "tiktok", "TikTok"
+        ),
+        retries=0,
+        trigger_rule="all_done",
+    )
+    trigger_repair_tiktok = make_repair_trigger("trigger_repair_tiktok", "tiktok")
+
     google_ads_tasks = []
     dash_search_tasks = []
     for label in BRANDS:
@@ -510,8 +524,160 @@ with models.DAG(
         )
         ga4_tasks.append(kube_ga4)
 
-    google_ads_tasks >> kube_dash
+    kube_tiktok >> task_tiktok_comparison >> trigger_repair_tiktok
+    [*google_ads_tasks, kube_tiktok] >> kube_dash
     dash_search_tasks >> kube_dash_search_union
     [kube_dash, kube_dash_search_union] >> kube_dash_union
     for task in ga4_tasks:
         kube_dash_union >> task >> kube_ga4_final
+
+
+# ---------------------------------------------------------------------------
+# DAG 3: comparison repair (triggered only)
+# Re-extracts one platform over the full comparison window, then re-checks once.
+# A failure here is not transient — it needs a human, so nothing re-triggers.
+# ---------------------------------------------------------------------------
+REPAIR_ENTRYPOINTS = {
+    "facebook": "repair_facebook_extract",
+    "tiktok": "repair_tiktok_extract",
+    "dv360": "repair_cm360_transform",
+}
+
+
+def choose_repair_platform(**context):
+    dag_run = context.get("dag_run")
+    conf = (dag_run.conf if dag_run and dag_run.conf else {}) or {}
+    platform = conf.get("platform")
+    if platform not in REPAIR_ENTRYPOINTS:
+        raise ValueError(
+            f"Repair DAG needs conf {{'platform': one of "
+            f"{sorted(REPAIR_ENTRYPOINTS)}}}, got {platform!r}"
+        )
+    log.info("Repairing platform %s", platform)
+    return REPAIR_ENTRYPOINTS[platform]
+
+
+with models.DAG(
+    dag_id=REPAIR_DAG_ID,
+    schedule_interval=None,
+    default_args={**default_args, "retries": 1},
+    max_active_runs=1,
+) as repair_dag:
+    choose_platform = BranchPythonOperator(
+        task_id="choose_repair_platform",
+        python_callable=choose_repair_platform,
+        retries=0,
+    )
+
+    repair_facebook = KubernetesPodOperator(
+        name="beststart-repair-facebook-to-bigquery",
+        task_id="repair_facebook_extract",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-facebook",
+            "target-bigquery",
+            "--full-refresh",
+            "dbt-bigquery:facebook_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=widen_to_repair_window(set_env_vars_facebook()),
+        get_logs=True,
+    )
+    recheck_facebook = PythonOperator(
+        task_id="recheck_facebook",
+        python_callable=make_comparison_check(
+            "facebook_transformed", "facebook", "meta", "Facebook (after repair)"
+        ),
+        retries=0,
+    )
+
+    repair_tiktok = KubernetesPodOperator(
+        name="beststart-repair-tiktok-to-bigquery",
+        task_id="repair_tiktok_extract",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-tiktok",
+            "target-bigquery",
+            "--full-refresh",
+            "dbt-bigquery:tiktok_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=widen_to_repair_window(set_env_vars_tiktok()),
+        get_logs=True,
+    )
+    recheck_tiktok = PythonOperator(
+        task_id="recheck_tiktok",
+        python_callable=make_comparison_check(
+            "tiktok_transformed", "tiktok", "tiktok", "TikTok (after repair)"
+        ),
+        retries=0,
+    )
+
+    # DV360 classification reads cm360_direct_buy, so rebuild it first — same
+    # ordering as DAG 1.
+    repair_cm360 = KubernetesPodOperator(
+        name="beststart-repair-cm360-to-bigquery",
+        task_id="repair_cm360_transform",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:cm360_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_cm360(),
+        get_logs=True,
+    )
+    repair_dv360 = KubernetesPodOperator(
+        name="beststart-repair-dv360-to-bigquery",
+        task_id="repair_dv360_extract",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-dv360",
+            "target-bigquery",
+            "--full-refresh",
+            "dbt-bigquery:dv360_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=widen_to_repair_window(set_env_vars_dv360()),
+        get_logs=True,
+    )
+    recheck_dv360_standard = PythonOperator(
+        task_id="recheck_dv360_standard",
+        python_callable=make_comparison_check(
+            "dv360_transformed",
+            "dv360_standard",
+            "dv360_standard",
+            "DV360 standard (after repair)",
+        ),
+        retries=0,
+    )
+    recheck_dv360_youtube = PythonOperator(
+        task_id="recheck_dv360_youtube",
+        python_callable=make_comparison_check(
+            "dv360_transformed",
+            "dv360_youtube",
+            "dv360_youtube",
+            "DV360 YouTube (after repair)",
+        ),
+        retries=0,
+    )
+
+    choose_platform >> repair_facebook >> recheck_facebook
+    choose_platform >> repair_tiktok >> recheck_tiktok
+    choose_platform >> repair_cm360 >> repair_dv360
+    repair_dv360 >> [recheck_dv360_standard, recheck_dv360_youtube]

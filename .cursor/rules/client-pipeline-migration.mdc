@@ -39,11 +39,13 @@ When the user asks to migrate a client, "do the same thing" for a client, or fil
    - Multi-brand: put expecteds on one brand model only (usually the first / primary brand); sibling brands share the same staging reference data and do not need duplicate tests.
    - Before finishing a migration, cross-check every `expected_value` against Kiwibank (and Contact for TTD).
 
-4. **DAG: comparisons + env helpers**
+4. **DAG: comparisons + env helpers + dash shape**
    - Add `ComparisonTrigger` tasks for platforms the comparison package supports (typically Meta, LinkedIn, DV360, TikTok, etc. — only if the client has them).
    - For **multi-brand** clients, pass `brand=` into `ComparisonTrigger` (and use a factory that closes over brand) so source API lookups use the brand-specific secret keys — same as Warehouse / RealNZ / WCET.
    - Update DAG env setters, especially **GA4** (`set_env_vars_ga4(goal)` reading different report JSON types).
-   - Reorder dependencies like Kiwibank/Barfoot (e.g. CM360 before DV360/TTD; platforms → dash → dash_search → dash_union → GA4 → ga4_final).
+   - **Every client DAG** (morning social, afternoon Google Ads/GA4, etc.) must end with **`dash_table` → `dash_union`**. Do not leave a DAG with only platform extracts and no dash close-out.
+   - **`dash_table_search`** (and brand search / search-union tasks) only when **that DAG runs Google Ads**. Social-only DAGs skip search; Google Ads / afternoon DAGs include `google_ads → dash_search → dash_search_union`, then `[dash_table, dash_search_union] → dash_union` (then GA4 when present).
+   - Reorder dependencies like Kiwibank/Barfoot/BestStart (e.g. CM360 before DV360/TTD; platforms → dash → [dash_search if Google Ads] → dash_union → GA4 → ga4_final).
    - Prefer direct `KubernetesPodOperator` / `PythonOperator` style (Kiwibank), not ad-hoc wrappers unless the client already uses one consistently.
 
 5. **Meltano / Docker alignment**

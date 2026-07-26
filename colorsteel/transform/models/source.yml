@@ -1,54 +1,8 @@
-sources:
-
-  - name: ga4_raw
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
-    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
-    tables:
-      - name: goal
-
-  - name: facebook_raw
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
-    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
-    tables:
-      - name: ads_insights
-      - name: ad_sets
-      - name: ads
-      - name: campaigns
-      - name: custom_conversions
-
-  - name: dv360_raw
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
-    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
-    tables:
-      - name: dv360_standard
-      - name: dv360_youtube
-
-  - name: ttd_raw
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw') }}"
-    tables:
-      - name: standard_streams
-
-  - name: pinterest_raw
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
-    schema: "{{ env_var('REFERENCE_PINTEREST_BIGQUERY_DATASET', 'pinterest_raw') }}"
-    tables:
-      - name: reports
-      - name: ads
-      - name: ad_groups
-      - name: campaigns
-
-  - name: dash_union
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
-    tables:
-      - name: dash_table
-      - name: dash_union
+version: 2
 
 models:
-
   - name: ttd_transformed
-    config: 
+    config:
       schema: "{{ env_var('TTD_SUFFIX', '') }}"
     columns:
       - name: media_cost
@@ -67,7 +21,6 @@ models:
   - name: facebook
     config:
       schema: "{{ env_var('META_SUFFIX', '') }}"
-
     columns:
       - name: media_cost
         tests:
@@ -81,7 +34,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 22450
-      
 
   - name: dv360_standard
     config:
@@ -99,6 +51,7 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 7786
+
   - name: dv360_youtube
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
@@ -115,3 +68,108 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 4432
+
+  - name: pinterest
+    config:
+      schema: "{{ env_var('PINTEREST_SUFFIX', '') }}"
+
+  - name: cm360_direct_buy
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_seralized
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+sources:
+  - name: ga4_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+
+  - name: facebook_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed') }}"
+    tables:
+      - name: facebook
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: ttd_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
+    tables:
+      - name: ttd_transformed
+
+  - name: pinterest_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_PINTEREST_BIGQUERY_DATASET', 'pinterest_raw') }}"
+    tables:
+      - name: reports
+      - name: ads
+      - name: ad_groups
+      - name: campaigns
+
+  - name: pinterest_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_PINTEREST_TRANSFORMED_BIGQUERY_DATASET', 'pinterest_transformed') }}"
+    tables:
+      - name: pinterest
+
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: cm360_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
+    tables:
+      - name: cm360_direct_buy
+      - name: cm360_seralized
+
+  - name: dash_union
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
+    tables:
+      - name: dash_table
+      - name: dash_union

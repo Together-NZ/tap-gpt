@@ -1,63 +1,10 @@
 {{ config(
     materialized='table',
 ) }}
-WITH 
-data AS (
-  select json_value(data,'$.AD_ID') as ad_id,
-  json_value(data,'$.CAMPAIGN_ID') as campaign_id,
-  json_value(data,'$.DATE') as date,
-  SAFE_CAST(json_value(data,'$.IMPRESSION_1') AS INT64) as impressions,
-  SAFE_CAST(json_value(data,'$.OUTBOUND_CLICK_1') AS INT64) as clicks,
-  SAFE_CAST(json_value(data,'$.SPEND_IN_DOLLAR') AS FLOAT64) as media_cost,
-  SAFE_CAST(json_value(data,'$.TOTAL_VIDEO_P100_COMPLETE') AS INT64) as video_completion,
-  SAFE_CAST(JSON_VALUE(data,'$.TOTAL_VIDEO_P25_COMBINED') AS INT64) as video_25_completion,
-  SAFE_CAST(json_value(data,'$.TOTAL_VIDEO_P50_COMBINED') AS INT64) as video_50_completion,
-  SAFE_CAST(json_value(data,'$.TOTAL_VIDEO_P75_COMBINED') AS INT64) as video_75_completion,
-  SAFE_CAST(json_value(data,'$.TOTAL_VIDEO_MRC_VIEWS') AS INT64) as video_views,
-  ROW_NUMBER() OVER (PARTITION BY json_value(data,'$.AD_ID') ,
-  json_value(data,'$.AD_ID'),json_value(data,'$.DATE') ORDER BY _sdc_extracted_at DESC ) as row_num,
 
-  from `colorsteel-main.pinterest_raw.reports`
-),
-ad_group as (
-  SELECT DISTINCT JSON_VALUE(data,'$.id') as ad_group_id,
-  JSON_VALUE(data,'$.name') as ad_group_name
-  FROM `colorsteel-main.pinterest_raw.ad_groups`
-),
-campaign as (
-  select DISTINCT JSON_VALUE(data,'$.id') as campaign_id,
-   JSON_VALUE(data,'$.name') as campaign_name
-  FROM `colorsteel-main.pinterest_raw.campaigns`
-  WHERE LOWER(JSON_VALUE(data,'$.name')) LIKE '%colorsteel%'
-),
-deduplicate_data as (
-  select * from data where row_num = 1
-),
-ad as (
-    select DISTINCT JSON_VALUE(data,'$.id') as ad_id,
-   JSON_VALUE(data,'$.name') as creative_name,
-   JSON_VALUE(data,'$.ad_group_id') as ad_group_id
-  FROM `colorsteel-main.pinterest_raw.ads`
-),
-
-sub_result as (
-select deduplicate_data.*,
-ad.* except(ad_id),
-campaign.* except(campaign_id)
-FROM  deduplicate_data left join ad on deduplicate_data.ad_id = ad.ad_id LEFT JOIN campaign on 
-deduplicate_data.campaign_id = campaign.campaign_id),
-raw_final as (
-SELECT sub_result.* ,
-ad_group.* except(ad_group_id)FROM sub_result as sub_result
- LEFT JOIN ad_group on sub_result.ad_group_id = ad_group.ad_group_id)
-SELECT *,
-CASE WHEN ARRAY_LENGTH(SPLIT(ad_group_name, '_'))>=8 THEN
-SPLIT(ad_group_name, '_')[OFFSET(7)] 
-ELSE NULL
-END AS audience_name,
-CASE WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) <8 THEN 'Other' ELSE SPLIT(creative_name, '_')[OFFSET(5)] END AS ad_format_detail,
-CASE WHEN ARRAY_LENGTH(SPLIT(creative_name, '_')) <8 THEN 'Other' ELSE SPLIT(creative_name, '_')[OFFSET(6)] END AS ad_format,
-SPLIT(creative_name, '_')[OFFSET(ARRAY_LENGTH(SPLIT(creative_name, '_'))-1)] AS creative_descr,
-CASE WHEN ARRAY_LENGTH(SPLIT(campaign_name,'_')) <=1 THEN 'Other' ELSE SPLIT(campaign_name,'_')[OFFSET(1)] END AS campaign_descr,
-'Pinterest' AS publisher
-FROM raw_final
+WITH
+{{ pinterest.reports(source_name='pinterest_raw', table_name='reports') }},
+{{ pinterest.ad_groups(source_name='pinterest_raw', table_name='ad_groups') }},
+{{ pinterest.campaigns(source_name='pinterest_raw', table_name='campaigns', campaign_name_filter='colorsteel') }},
+{{ pinterest.ads(source_name='pinterest_raw', table_name='ads') }},
+{{ pinterest.final_calculation() }}
