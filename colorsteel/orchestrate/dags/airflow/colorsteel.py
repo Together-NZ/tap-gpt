@@ -158,9 +158,15 @@ def set_env_vars_dash():
     return env
 
 
+# ---------------------------------------------------------------------------
+# DAG 1: Social / display / programmatic
+# Flow: CM360 -> TTD/DV360; platforms -> dash_table -> dash_union.
+# Every client DAG ends with dash_table + dash_union; dash_table_search only
+# when the DAG also runs Google Ads (Colorsteel has none here).
+# ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="colorsteel-meltano-extraction-transformation-dbt",
-    schedule_interval="0 14 * * *",
+    schedule_interval="0 4 * * *",
     default_args=default_args,
 ) as dag:
     kube_facebook = KubernetesPodOperator(
@@ -359,6 +365,43 @@ with models.DAG(
     [kube_facebook, kube_ttd, kube_dv360, kube_pinterest] >> kube_dash
     kube_dash >> kube_dash_union
 
+
+# ---------------------------------------------------------------------------
+# DAG 2: GA4
+# Rebuilds dash_table + dash_union (required on every DAG), then GA4 extracts
+# and the final union. No dash_table_search — Colorsteel has no Google Ads.
+# ---------------------------------------------------------------------------
+with models.DAG(
+    dag_id="colorsteel-meltano-ga4",
+    schedule_interval="0 14 * * *",
+    default_args=default_args,
+) as ga4_dag:
+    kube_dash = KubernetesPodOperator(
+        name="colorsteel-dash-to-bigquery",
+        task_id="colorsteel-dash_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        get_logs=True,
+    )
+
+    kube_dash_union = KubernetesPodOperator(
+        name="colorsteel-dash-union-to-bigquery",
+        task_id="colorsteel-dash_union_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_union_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash(),
+        get_logs=True,
+    )
+
     kube_ga4_final = KubernetesPodOperator(
         name="colorsteel-ga4-final-to-bigquery",
         task_id="colorsteel-ga4_final_to_bigquery",
@@ -372,6 +415,7 @@ with models.DAG(
         get_logs=True,
     )
 
+    kube_dash >> kube_dash_union
     for goal in ["goal", "session", "keyword"]:
         kube_ga4 = KubernetesPodOperator(
             name=f"colorsteel-ga4-{goal}-to-bigquery",
