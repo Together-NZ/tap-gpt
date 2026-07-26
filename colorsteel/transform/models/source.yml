@@ -90,6 +90,13 @@ sources:
       - name: session_goal
       - name: keyword_goal
 
+  - name: ga4_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+      - name: ga4_goal_channel_session
+
   - name: facebook_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'colorsteel-main') }}"
     schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"

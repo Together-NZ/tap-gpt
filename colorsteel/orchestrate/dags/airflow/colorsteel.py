@@ -142,6 +142,14 @@ def set_env_vars_ga4(goal):
     return env
 
 
+def set_env_vars_ga4_final():
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "ga4_transformed"
+    return env
+
+
 def set_env_vars_dash():
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
@@ -351,6 +359,19 @@ with models.DAG(
     [kube_facebook, kube_ttd, kube_dv360, kube_pinterest] >> kube_dash
     kube_dash >> kube_dash_union
 
+    kube_ga4_final = KubernetesPodOperator(
+        name="colorsteel-ga4-final-to-bigquery",
+        task_id="colorsteel-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+        get_logs=True,
+    )
+
     for goal in ["goal", "session", "keyword"]:
         kube_ga4 = KubernetesPodOperator(
             name=f"colorsteel-ga4-{goal}-to-bigquery",
@@ -370,4 +391,4 @@ with models.DAG(
             env_vars=set_env_vars_ga4(goal),
             get_logs=True,
         )
-        kube_dash_union >> kube_ga4
+        kube_dash_union >> kube_ga4 >> kube_ga4_final
