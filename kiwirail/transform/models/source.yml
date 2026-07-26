@@ -1,10 +1,8 @@
 version: 2
 models:
-
   - name: facebook__interislander
     config:
       schema: "{{ env_var('META_SUFFIX', '') }}"
-
     columns:
       - name: media_cost
         tests:
@@ -18,7 +16,7 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 22450
-      
+
   - name: facebook__great_journey
     config:
       schema: "{{ env_var('META_SUFFIX', '') }}"
@@ -35,22 +33,6 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 22450
-  - name: dv360_standard__great_journey
-    config:
-      schema: "{{ env_var('DV360_SUFFIX', '') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 68223.08
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 5840202
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 7786
 
   - name: dv360_standard__interislander
     config:
@@ -69,6 +51,27 @@ models:
           - testing_sum.expected_sum:
               expected_value: 7786
 
+  - name: dv360_standard__great_journey
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+
+  - name: dv360_standard__freight
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
   - name: dv360_youtube__interislander
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
@@ -85,6 +88,7 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 4432
+
   - name: dv360_youtube__great_journey
     config:
       schema: "{{ env_var('DV360_SUFFIX', '') }}"
@@ -102,27 +106,25 @@ models:
           - testing_sum.expected_sum:
               expected_value: 4432
 
+  - name: dv360_youtube__freight
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
+  - name: linkedin__freight
+    config:
+      schema: "{{ env_var('LINKEDIN_SUFFIX', '') }}"
+
+  - name: ttd_transformed__freight
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
 
 sources:
-# This part seperates the project and table between staging environment and 
-#production environment. How it works is this: A source has its name you decleared,
-# and it takes in three variabels: database(gcp project), shcema(bigquerydatasets) and tables(bigquery tables), database points to the project
-# shcema points to the datasets, and tables is the tables. 
-# Eg:
-# - name: source_name
-#   database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'amp-main') }}"
-#   schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw') }}"
-#   tables:
-#     - name: ads_insights
-#     - name: ad_sets
-#     - name: ads
-#     - name: campaigns
-#     - name: custom_conversions
-# Then in the relevant dbt model, you will see {{ source('source_name', 'table_name_you_picked') }}
-# where project name and dataset name are decleared in source.yml per project
-# 
+  - name: cm360_raw
+    database: "together-internal"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
 
-      
   - name: facebook_raw__great_journey
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
     schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__great_journey') }}"
@@ -143,6 +145,18 @@ sources:
       - name: campaigns
       - name: custom_conversions
 
+  - name: facebook_transformed__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__interislander') }}"
+    tables:
+      - name: facebook__interislander
+
+  - name: facebook_transformed__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__great_journey') }}"
+    tables:
+      - name: facebook__great_journey
+
   - name: dv360_raw__great_journey
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
     schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__great_journey') }}"
@@ -157,22 +171,178 @@ sources:
       - name: dv360_standard
       - name: dv360_youtube
 
+  - name: dv360_raw__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__freight') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__interislander') }}"
+    tables:
+      - name: dv360_standard__interislander
+      - name: dv360_youtube__interislander
+
+  - name: dv360_transformed__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__great_journey') }}"
+    tables:
+      - name: dv360_standard__great_journey
+      - name: dv360_youtube__great_journey
+
+  - name: dv360_transformed__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__freight') }}"
+    tables:
+      - name: dv360_standard__freight
+      - name: dv360_youtube__freight
+
+  - name: linkedin_raw__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw__freight') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: campaigns
+      - name: campaign_groups
+      - name: creatives
+
+  - name: linkedin_transformed__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed__freight') }}"
+    tables:
+      - name: linkedin__freight
+
+  - name: ttd_raw__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__freight') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__freight') }}"
+    tables:
+      - name: ttd_transformed__freight
+
+  - name: cm360_transformed__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__interislander') }}"
+    tables:
+      - name: cm360_direct_buy__interislander
+      - name: cm360_direct_buy
+
+  - name: cm360_transformed__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__great_journey') }}"
+    tables:
+      - name: cm360_direct_buy__great_journey
+      - name: cm360_seralized__great_journey
+      - name: cm360_direct_buy
+
+  - name: cm360_transformed__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__freight') }}"
+    tables:
+      - name: cm360_direct_buy__freight
+      - name: cm360_seralized__freight
+      - name: cm360_direct_buy
+
+  - name: google_ads__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__interislander') }}"
+    tables:
+      - name: google_ads_search__interislander
+      - name: google_ads_demand__interislander
+      - name: google_ads_keyword__interislander
+      - name: google_ads_location__interislander
+
+  - name: google_ads__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__great_journey') }}"
+    tables:
+      - name: google_ads_search__great_journey
+      - name: google_ads_demand__great_journey
+      - name: google_ads_keyword__great_journey
+      - name: google_ads_location__great_journey
+
+  - name: google_ads__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__freight') }}"
+    tables:
+      - name: google_ads_search__freight
+      - name: google_ads_demand__freight
+      - name: google_ads_keyword__freight
+      - name: google_ads_location__freight
+
   - name: ga4_raw__great_journey
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__great_journey') }}"
     tables:
       - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
   - name: ga4_raw__interislander
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__interislander') }}"
     tables:
       - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_raw__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__freight') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: dash_table__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__interislander') }}"
+    tables:
+      - name: dash_table__interislander
+
+  - name: dash_table__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__great_journey') }}"
+    tables:
+      - name: dash_table__great_journey
+
+  - name: dash_table__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__freight') }}"
+    tables:
+      - name: dash_table__freight
+
+  - name: dash_table_search__interislander
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__interislander') }}"
+    tables:
+      - name: dash_table_search__interislander
+
+  - name: dash_table_search__great_journey
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__great_journey') }}"
+    tables:
+      - name: dash_table_search__great_journey
+
+  - name: dash_table_search__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__freight') }}"
+    tables:
+      - name: dash_table_search__freight
+
   - name: dash_union__great_journey
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__great_journey') }}"
     tables:
       - name: dash_table__great_journey
       - name: dash_union__great_journey
+
   - name: dash_union__interislander
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__interislander') }}"
@@ -180,8 +350,9 @@ sources:
       - name: dash_table__interislander
       - name: dash_union__interislander
 
-
-
-  
-
-  
+  - name: dash_union__freight
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwirail-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__freight') }}"
+    tables:
+      - name: dash_table__freight
+      - name: dash_union__freight
