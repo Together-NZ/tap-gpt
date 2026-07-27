@@ -3,4 +3,4 @@
 SELECT *
 FROM {{ source('dash_table', 'dash_union') }}
 WHERE LOWER(campaign_name) LIKE '%broadband%' 
-AND campaign_name LIKE '%CON%'
+
