@@ -42,7 +42,7 @@ def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_contact_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_secret", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
     meltano_env["START_DATE"] = yesterday.strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
     return deepcopy(meltano_env)
