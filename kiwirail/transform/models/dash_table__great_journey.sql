@@ -7,18 +7,6 @@ WITH dash_table AS (
         table_name='facebook__great_journey'
     ) }}
     UNION ALL
-    {{ dash_table_general_process.dv360_standard(
-        source_name='dv360_transformed__great_journey',
-        table_name='dv360_standard__great_journey',
-        yt_source_name='dv360_transformed__great_journey',
-        yt_table_name='dv360_youtube__great_journey'
-    ) }}
-    UNION ALL
-    {{ dash_table_general_process.dv360_youtube(
-        source_name='dv360_transformed__great_journey',
-        table_name='dv360_youtube__great_journey'
-    ) }}
-    UNION ALL
     {{ dash_table_general_process.cm360(
         source_name='cm360_transformed__great_journey',
         table_name='cm360_direct_buy__great_journey'
