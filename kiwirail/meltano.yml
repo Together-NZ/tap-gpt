@@ -11,14 +11,26 @@ environments:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
-          #GOOGLE_ADS_SEARCH_SUFFIX: google_ads_search_test
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          TTD_SUFFIX: dbt_test_ttd
           GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          CM360_SUFFIX: dbt_test_cm360
+          CM360_DIRECT_BUY_TABLE: cm360_direct_buy
           PLAN_CODE_INTERISLANDER: uow
           PLAN_CODE_GREAT_JOURNEY: uow
-  
+          PLAN_CODE_FREIGHT: uow
 
 - name: prod
 plugins:
@@ -35,7 +47,7 @@ plugins:
     - stream-maps
     config:
       start_date: ${START_DATE}
-      advertiser_id: '8048813517'
+      advertiser_id: ${TAP_DV360_ADVERTISER_ID}
       query_standard: dv360_standard.json
       query_youtube: dv360_youtube.json
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
@@ -43,11 +55,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -61,6 +73,41 @@ plugins:
     - ads.*
     - campaigns.*
     - custom_conversions.*
+  - name: tap-linkedin-ads
+    namespace: tap-linkedin-ads
+    pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
+    executable: tap-linkedin-ads
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      access_token: ${TAP_LINKEDIN_ADS_ACCESS_TOKEN}
+      refresh_token: ${TAP_LINKEDIN_ADS_REFRESH_TOKEN}
+      client_id: ${TAP_LINKEDIN_ADS_CLIENT_ID}
+      client_secret: ${TAP_LINKEDIN_ADS_CLIENT_SECRET}
+      accounts: ${TAP_LINKEDIN_ADS_ACCOUNTS}
+      user_agent: agent
+      start_date: ${START_DATE}
+      _catalog_path: ./catalog.json
+    select:
+    - ad_analytics_by_creative.*
+    - ad_analytics_by_campaign.*
+    - campaigns.*
+    - campaign_groups.*
+    - creatives.*
+  - name: tap-ttd
+    namespace: tap-ttd
+    pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
+    executable: tap-ttd
+    config:
+      api_key: ${TAP_TTD_API_KEY}
+      start_date: ${START_DATE}
+      end_date:
+      manual: false
+      advertiser_id: ${TAP_TTD_ADVERTISER_ID}
   loaders:
   - name: target-bigquery
     variant: z3z1ma
@@ -92,15 +139,39 @@ plugins:
         args: run --select dv360_standard__interislander dv360_youtube__interislander
       dv360_great_journey_models:
         args: run --select dv360_standard__great_journey dv360_youtube__great_journey
+      dv360_freight_models:
+        args: run --select dv360_standard__freight dv360_youtube__freight
+      linkedin_freight_models:
+        args: run --select linkedin__freight
+      cm360_interislander_models:
+        args: run --select cm360_direct_buy__interislander
+      cm360_great_journey_models:
+        args: run --select cm360_seralized__great_journey cm360_direct_buy__great_journey
+      cm360_freight_models:
+        args: run --select cm360_seralized__freight cm360_direct_buy__freight
+      ttd_freight_models:
+        args: run --select ttd_transformed__freight
       google_ads_interislander_models:
-        args: run --select google_ads_search__interislander google_ads_demand__interislander
+        args: run --select google_ads_search__interislander google_ads_demand__interislander google_ads_keyword__interislander google_ads_location__interislander
       google_ads_great_journey_models:
-        args: run --select google_ads_search__great_journey google_ads_demand__great_journey
-      ga4_goal_a_interislander_models:
+        args: run --select google_ads_search__great_journey google_ads_demand__great_journey google_ads_keyword__great_journey google_ads_location__great_journey
+      google_ads_freight_models:
+        args: run --select google_ads_search__freight google_ads_demand__freight google_ads_keyword__freight google_ads_location__freight
+      ga4_goal_interislander_models:
         args: run --select ga4_goal_a__interislander +ga4_goal_channel__interislander
-      ga4_goal_a_great_journey_models:
+      ga4_goal_great_journey_models:
         args: run --select ga4_goal_a__great_journey +ga4_goal_channel__great_journey
-
- 
-
-  
+      ga4_goal_freight_models:
+        args: run --select ga4_goal_a__freight +ga4_goal_channel__freight
+      ga4_session_interislander_models:
+        args: run --select +ga4_goal_a_session__interislander +ga4_goal_channel_session__interislander
+      ga4_session_great_journey_models:
+        args: run --select +ga4_goal_a_session__great_journey +ga4_goal_channel_session__great_journey
+      ga4_session_freight_models:
+        args: run --select +ga4_goal_a_session__freight +ga4_goal_channel_session__freight
+      ga4_keyword_interislander_models:
+        args: run --select ga4_goal_channel_keyword__interislander
+      ga4_keyword_great_journey_models:
+        args: run --select ga4_goal_channel_keyword__great_journey
+      ga4_keyword_freight_models:
+        args: run --select ga4_goal_channel_keyword__freight

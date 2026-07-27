@@ -4,14 +4,14 @@
 
 WITH final_result AS (
     {{ dash_table_general_process.dash_union_non_search(
-        source_name='dash_table__interislander',
-        table_name='dash_table__interislander',
+        source_name='dash_table__freight',
+        table_name='dash_table__freight',
         sub_brands='null'
     ) }}
     UNION ALL
     {{ dash_table_general_process.dash_union_search(
-        source_name='dash_table_search__interislander',
-        table_name='dash_table_search__interislander',
+        source_name='dash_table_search__freight',
+        table_name='dash_table_search__freight',
         sub_brands='null'
     ) }}
 )
