@@ -100,7 +100,7 @@ def set_env_vars_ga4(brand, goal):
     )
     developer_creds.refresh(Request())
     env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-    env["TAP_GA4_PROPERTY_ID"] = env[f"TAP_GA4_PROPERTY_ID_{brand.upper()}"]
+    env["TAP_GA4_PROPERTY_ID"] = env[f"TAP_GA4_PROPERTY_{brand.lower()}_ID"]
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
     return env
 
@@ -131,7 +131,7 @@ def set_env_vars_facebook(brand):
     env["TAP_FACEBOOK_AIRBYTE_CONFIG_START_DATE"] = get_facebook_start_date()
     # Prefer comparison_package key shape; fall back to legacy brand key.
     account_key = f"TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{brand}_ID"
-    legacy_key = f"TAP_FACEBOOK_{brand.upper()}_AIRBYTE_CONFIG_ACCOUNT_ID"
+    legacy_key = f"TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{brand.lower()}_ID"
     env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = env.get(
         account_key, env[legacy_key]
     )
@@ -162,7 +162,7 @@ def set_env_vars_dv360(brand):
     env["TAP_DV360_ADVERTISER_ID"] = env.get(
         advertiser_key,
         env.get(
-            f"TAP_DV360_ADVERTISER_ID_{brand.upper()}",
+            f"TAP_DV360_ADVERTISER_ID_{brand.lower()}_ID",
             env.get("TAP_DV360_ADVERTISER_ID", DEFAULT_DV360_ADVERTISER_ID),
         ),
     )
@@ -177,12 +177,12 @@ def set_env_vars_linkedin_freight():
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = "linkedin_transformed__freight"
     env["TAP_LINKEDIN_ADS_ACCOUNTS"] = env.get(
-        "TAP_LINKEDIN_ADS_ACCOUNTS_FREIGHT",
+        "TAP_LINKEDIN_ADS_freight_ACCOUNTS∂",
         env.get(
-            "TAP_LINKEDIN_ADS_ACCOUNT_freight_ID",
+            "TAP_LINKEDIN_ADS_freight_ACCOUNTS",
             env.get("TAP_LINKEDIN_ADS_ACCOUNTS", ""),
         ),
-    )
+    ) 
     return env
 
 
