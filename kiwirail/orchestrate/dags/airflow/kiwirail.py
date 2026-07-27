@@ -162,7 +162,7 @@ def set_env_vars_dv360(brand):
     env["TAP_DV360_ADVERTISER_ID"] = env.get(
         advertiser_key,
         env.get(
-            f"TAP_DV360_ADVERTISER_ID_{brand.lower()}_ID",
+            f"TAP_DV360_ADVERTISER_{brand.lower()}_ID",
             env.get("TAP_DV360_ADVERTISER_ID", DEFAULT_DV360_ADVERTISER_ID),
         ),
     )
@@ -177,7 +177,7 @@ def set_env_vars_linkedin_freight():
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = "linkedin_transformed__freight"
     env["TAP_LINKEDIN_ADS_ACCOUNTS"] = env.get(
-        "TAP_LINKEDIN_ADS_freight_ACCOUNTS∂",
+        "TAP_LINKEDIN_ADS_freight_ACCOUNTS",
         env.get(
             "TAP_LINKEDIN_ADS_freight_ACCOUNTS",
             env.get("TAP_LINKEDIN_ADS_ACCOUNTS", ""),
