@@ -12,6 +12,8 @@ WITH dash_table AS (
     {{ dash_table_general_process.meta(source_name='facebook_transformed__beervana', table_name='facebook__beervana') }}
     UNION ALL
     {{ dash_table_general_process.tiktok(source_name='tiktok_transformed__beervana', table_name='tiktok__beervana') }}
+    UNION ALL
+    {{ dash_table_general_process.google_ads(source_name='google_ads__beervana', table_name='google_ads_demand__beervana') }}
 ),
 
 with_channel as (
