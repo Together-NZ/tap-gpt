@@ -10,6 +10,8 @@ WITH dash_table AS (
     {{ dash_table_general_process.dv360_youtube(source_name='dv360_transformed__wop', table_name='dv360_youtube__wop') }}
     UNION ALL
     {{ dash_table_general_process.meta(source_name='facebook_transformed__wop', table_name='facebook__wop') }}
+    UNION ALL
+    {{ dash_table_general_process.google_ads(source_name='google_ads__wop', table_name='google_ads_demand__wop') }}
 
 ),
 

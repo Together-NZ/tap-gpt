@@ -108,6 +108,22 @@ sources:
       - name: session_goal
       - name: keyword_goal
 
+  - name: google_ads__beervana
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__beervana') }}"
+    tables:
+      - name: google_ads_search__beervana
+      - name: google_ads_demand__beervana
+      - name: google_ads_keyword__beervana
+
+  - name: google_ads__wop
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__wop') }}"
+    tables:
+      - name: google_ads_search__wop
+      - name: google_ads_demand__wop
+      - name: google_ads_keyword__wop
+
   - name: ga4_transformed__wop
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'wcet-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__wop') }}"
