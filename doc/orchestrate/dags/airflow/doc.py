@@ -61,6 +61,16 @@ with models.DAG(
     schedule_interval="30 13 * * *",
     default_args=default_args
 ) as google_dag:
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = "oauth"
+        env["DBT_BIGQUERY_PROJECT"] = "doconservation-main"
+        env["DBT_BIGQUERY_DATASET"] = "ga4_transformed"
+        return env
+    set_env_task_ga4_final = PythonOperator(
+        task_id="set_env_task_ga4_final",
+        python_callable=set_env_vars_ga4_final,
+    )
     def set_env_vars_google_ads_search():
         env = get_meltano_env()
         env["BQ_DATASET"] = "google_ads_search"
@@ -74,6 +84,9 @@ with models.DAG(
         if goal == 'session':
             env["GA4_REPORTS"] = "./report_sessions.json"
             env["GA4_GOAL"] = 'session_goal'
+        elif goal== 'keyword':
+            env["GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = 'keyword_goal'
         else:
             env["GA4_REPORTS"] = "./report.json"
             env["GA4_GOAL"] = 'goal'
@@ -221,7 +234,7 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
-    goal_list = ['goal','session']
+    goal_list = ['goal','session','keyword']
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
             name=f"doc-ga4-to-bigquery-{goal}",

@@ -3,6 +3,8 @@
 ) }}
 
 WITH dash_table AS (
+    {{ dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy') }}
+    UNION ALL
     {{ dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook') }}
     UNION ALL
     {{ dash_table_general_process.google_ads(source_name='google_ads', table_name='google_ads_demand') }}

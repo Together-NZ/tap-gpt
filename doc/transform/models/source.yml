@@ -6,6 +6,7 @@ sources:
     tables:
       - name: goal
       - name: session_goal
+      - name: keyword_goal
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'doconservation-main') }}"
