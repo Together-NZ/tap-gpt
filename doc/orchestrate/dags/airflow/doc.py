@@ -46,7 +46,8 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main",deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+    # Match Contact: ~30d so GA4 tap covers the same window as transforms
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -90,6 +91,8 @@ with models.DAG(
         )
         developer_creds.refresh(Request())
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        # tap-ga4 reads START_DATE; keep explicit 30d aligned with get_ga4_start_date()
+        env["START_DATE"] = get_ga4_start_date()
         env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         env["TAP_GA4_PROPERTY_ID"] = env.get('TAP_GA4_PROPERTY_ID', '')
         return env
@@ -132,19 +135,19 @@ with models.DAG(
         task_id="set_env_task_tiktok",
         python_callable=set_env_vars_tiktok,
     )
-    env = get_meltano_env()
-    comparison_trigger_tiktok = ComparisonTrigger(
-        project_name="doconservation-main",
-        destination_table="tiktok_transformed",
-        table_name="tiktok",
-        source_name="tiktok",
-        start_date=comparison_start_date,
-        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_doconservation_main",
-        project_id=env["PROJECT_ID"]
-    )
     def tiktok_comparison_check(**context):
-        result = comparison_trigger_tiktok.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="tiktok_transformed",
+            table_name="tiktok",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
         return result
@@ -395,19 +398,19 @@ with models.DAG(
         
         )
     
-    env = get_meltano_env()
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="doconservation-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_doconservation_main",
-        project_id=env["PROJECT_ID"]
-    )
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
         return result

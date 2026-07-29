@@ -31,7 +31,7 @@ log: logging.log = logging.getLogger("airflow.task")
 log.setLevel(logging.INFO)
 
 local_tz = pendulum.timezone("Pacific/Auckland")
-yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
+yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
 default_args = {
     "retries": 3,
     "max_active_runs": 1,
@@ -48,7 +48,8 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main",deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
+    # Match Contact: ~30d so GA4 tap covers the same window as transforms
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -281,7 +282,9 @@ with models.DAG(
             client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
         )
         developer_creds.refresh(Request())
-        env["TAP_GA4_START_DATE"]  = get_ga4_start_date()
+        # tap-ga4 reads START_DATE; keep explicit 30d aligned with get_ga4_start_date()
+        env["START_DATE"] = get_ga4_start_date()
+        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
         return env
  
