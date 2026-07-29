@@ -140,9 +140,9 @@ plugins:
       project: real-nz-main
     commands:
       ga4_mountain_goal_models:
-        args: run --select ga4_goal_a__mountain ga4_goal_channel__mountain
+        args: run --select ga4_goal_a__mountain ga4_goal_channel_goal__mountain
       ga4_tourism_goal_models:
-        args: run --select ga4_goal_a__tourism ga4_goal_channel__tourism
+        args: run --select ga4_goal_a__tourism ga4_goal_channel_goal__tourism
       ga4_mountain_session_models:
         args: run --select ga4_goal_a_session__mountain ga4_goal_channel_session__mountain
       ga4_tourism_session_models:
@@ -155,6 +155,10 @@ plugins:
         args: run --select ga4_goal_ecommerce__tourism
       ga4_mountain_ecommerce_models:
         args: run --select ga4_goal_ecommerce__mountain
+      ga4_mountain_final_models:
+        args: run --select ga4_goal_channel__mountain
+      ga4_tourism_final_models:
+        args: run --select ga4_goal_channel__tourism
       tiktok_mountain_models:
         args: run --select +tiktok__mountain
         description: Run the TikTok ads model

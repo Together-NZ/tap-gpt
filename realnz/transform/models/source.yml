@@ -96,6 +96,30 @@ sources:
       - name: session_goal
       - name: keyword_goal
 
+  - name: ga4_goal_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__mountain') }}"
+    tables:
+      - name: ga4_goal_channel_goal__mountain
+
+  - name: ga4_session_transformed__mountain
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__mountain') }}"
+    tables:
+      - name: ga4_goal_channel_session__mountain
+
+  - name: ga4_goal_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__tourism') }}"
+    tables:
+      - name: ga4_goal_channel_goal__tourism
+
+  - name: ga4_session_transformed__tourism
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__tourism') }}"
+    tables:
+      - name: ga4_goal_channel_session__tourism
+
   - name: dash_union__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__mountain') }}"

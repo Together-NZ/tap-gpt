@@ -105,6 +105,14 @@ def set_env_vars_ga4(property_id, brand, goal_type):
     return env
 
 
+def set_env_vars_ga4_final(brand):
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"ga4_transformed__{brand}"
+    return env
+
+
 def set_env_vars_facebook(account_id, brand):
     env = get_meltano_env()
     env["BQ_DATASET"] = f"facebook_raw__{brand}"
@@ -522,10 +530,23 @@ with models.DAG(
             )
             ga4_tasks.append(kube_ga4)
 
+        kube_ga4_final = KubernetesPodOperator(
+            name=f"realnz-ga4-{brand}-final-to-bigquery",
+            task_id=f"realnz_ga4_final_to_bigquery_{brand}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                f"dbt-bigquery:ga4_{brand}_final_models",
+            ],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_ga4_final(brand),
+            get_logs=True,
+        )
+
         dash_upstreams = [kube_google_ads, kube_tiktok]
         if brand == "tourism":
             dash_upstreams.append(kube_google_ads_dv)
         dash_upstreams >> kube_dash
-        kube_dash >> kube_dash_search >> kube_dash_union
-        for ga4_task in ga4_tasks:
-            kube_dash_union >> ga4_task
+        kube_dash >> kube_dash_search >> kube_dash_union >> ga4_tasks >> kube_ga4_final
