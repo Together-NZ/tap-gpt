@@ -55,8 +55,9 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
+    # Match Contact: ~30d window so GA4 remove_outdated_data does not drop days 14–30
     meltano_env["START_DATE"] = (
-        datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+        datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
     ).strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
     return deepcopy(meltano_env)
@@ -101,7 +102,17 @@ def set_env_vars_ga4(property_id, brand, goal_type):
     developer_creds.refresh(Request())
     env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
     env["TAP_GA4_PROPERTY_ID"] = property_id
+    # tap-ga4 reads START_DATE; keep explicit 30d aligned with get_ga4_start_date()
+    env["START_DATE"] = get_ga4_start_date()
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
+    return env
+
+
+def set_env_vars_ga4_final(brand):
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"ga4_transformed__{brand}"
     return env
 
 
@@ -522,10 +533,23 @@ with models.DAG(
             )
             ga4_tasks.append(kube_ga4)
 
+        kube_ga4_final = KubernetesPodOperator(
+            name=f"realnz-ga4-{brand}-final-to-bigquery",
+            task_id=f"realnz_ga4_final_to_bigquery_{brand}",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                f"dbt-bigquery:ga4_{brand}_final_models",
+            ],
+            container_resources=KUBE_RESOURCES,
+            env_vars=set_env_vars_ga4_final(brand),
+            get_logs=True,
+        )
+
         dash_upstreams = [kube_google_ads, kube_tiktok]
         if brand == "tourism":
             dash_upstreams.append(kube_google_ads_dv)
         dash_upstreams >> kube_dash
-        kube_dash >> kube_dash_search >> kube_dash_union
-        for ga4_task in ga4_tasks:
-            kube_dash_union >> ga4_task
+        kube_dash >> kube_dash_search >> kube_dash_union >> ga4_tasks >> kube_ga4_final

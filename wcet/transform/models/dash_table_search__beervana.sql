@@ -1,8 +1,12 @@
 {{ config(
     materialized='table',
 ) }}
-with dash_table AS (
-SELECT SUM(conversions) AS conversions, date,SUM(media_cost) AS media_cost,SUM(clicks) AS clicks, segments_device as device, SUM(impressions) AS impressions,campaign_name,campaign_id,publisher FROM `wcet-main.google_ads_search_transformed__beervana.google_ads_search__beervana` GROUP BY campaign_name,campaign_id,device,publisher,date
-)
-{{ dash_table_general_process.dash_table_search_general_process('INTENT') }}
 
+WITH dash_table AS (
+    {{ dash_table_general_process.google_ads_search(
+        source_name='google_ads__beervana',
+        table_name='google_ads_search__beervana'
+    ) }}
+)
+
+{{ dash_table_general_process.dash_table_search_general_process('INTENT') }}
