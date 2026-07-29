@@ -55,8 +55,9 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
+    # Match Contact: ~30d window so GA4 remove_outdated_data does not drop days 14–30
     meltano_env["START_DATE"] = (
-        datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+        datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
     ).strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
     return deepcopy(meltano_env)
@@ -101,6 +102,8 @@ def set_env_vars_ga4(property_id, brand, goal_type):
     developer_creds.refresh(Request())
     env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
     env["TAP_GA4_PROPERTY_ID"] = property_id
+    # tap-ga4 reads START_DATE; keep explicit 30d aligned with get_ga4_start_date()
+    env["START_DATE"] = get_ga4_start_date()
     env["TAP_GA4_START_DATE"] = get_ga4_start_date()
     return env
 
