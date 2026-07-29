@@ -235,6 +235,7 @@ with models.DAG(
         
         )
     goal_list = ['goal','session','keyword']
+    ga4_list = []
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
             name=f"doc-ga4-to-bigquery-{goal}",
@@ -248,9 +249,23 @@ with models.DAG(
             env_vars=set_env_vars_ga4(goal),
             get_logs=True
         )
-        kube_dash_union >> kube_ga4
+        ga4_list.append(kube_ga4)
+    kube_ga4_final = KubernetesPodOperator(
+        name="doc-ga4-final-to-bigquery",
+        task_id="doc-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+        get_logs=True,
+        )
+    for task in ga4_list:
+        task >> kube_ga4_final
     kube_tiktok >> task_tiktok_comparison
-    kube_tiktok >> kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
+    kube_tiktok >> kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final
 with models.DAG(
     dag_id="doconservation-meltano-extraction-transformation-dbt",
     schedule_interval="0 3 * * *",
@@ -410,6 +425,28 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
+    def linkedin_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="linkedin_transformed",
+            table_name="linkedin",
+            source_name="linkedin",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
     
     def facebook_comparison_check(**context):
         env = get_meltano_env()
@@ -434,6 +471,7 @@ with models.DAG(
         trigger_rule="all_done",
     )
     kube_facebook >> task_facebook_comparison
+    kube_linkedin >> task_linkedin_comparison
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
     kube_cm360 >> kube_dv360
