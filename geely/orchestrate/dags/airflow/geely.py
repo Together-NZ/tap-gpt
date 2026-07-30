@@ -83,7 +83,9 @@ with models.DAG(
         if advertiser_key in env:
             env["TAP_TTD_ADVERTISER_ID"] = env[advertiser_key]
         env["TAP_TTD_START_DATE"] = get_ttd_start_date()
-        env["CM360_DIRECT_BUY_TABLE"] = f"cm360_direct_buy__{brand}"
+        # Do not set CM360_DIRECT_BUY_TABLE here — dbt parses all brand models,
+        # so a shared override makes ttd__lotus resolve cm360_direct_buy__geely (and vice versa).
+        # Prod defaults live in each model's SQL; staging sets CM360_DIRECT_BUY_TABLE=cm360_direct_buy in meltano.yml.
         return env
 
     def set_env_vars_hivestack(brand):
