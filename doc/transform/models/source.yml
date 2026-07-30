@@ -8,6 +8,18 @@ sources:
       - name: session_goal
       - name: keyword_goal
 
+  - name: ga4_session_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'doconservation-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_session
+
+  - name: ga4_goal_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'doconservation-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'doconservation-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"

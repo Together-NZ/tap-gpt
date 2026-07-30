@@ -263,9 +263,11 @@ with models.DAG(
         get_logs=True,
         )
     for task in ga4_list:
-        task >> kube_ga4_final
+        kube_dash_union >> task >> kube_ga4_final
     kube_tiktok >> task_tiktok_comparison
-    kube_tiktok >> kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final
+    kube_tiktok >> kube_google_ads
+    kube_google_ads >> [kube_dash, kube_dash_search]
+    [kube_dash, kube_dash_search] >> kube_dash_union
 with models.DAG(
     dag_id="doconservation-meltano-extraction-transformation-dbt",
     schedule_interval="0 3 * * *",
@@ -399,6 +401,7 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         base_container_name=f"meltano-doc-dash",
         )
+    kube_cm360 
     kube_dash_search = KubernetesPodOperator(
         name="doc-dash-search-to-bigquery",
         task_id="doc-dash_search_to_bigquery",

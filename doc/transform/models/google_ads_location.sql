@@ -2,4 +2,4 @@
     materialized='table',
 ) }}
 
-{{ google_ads.google_ads_location(client_id=9089059941) }}
+{{ google_ads.google_ads_search_location(client_id=9089059941) }}
