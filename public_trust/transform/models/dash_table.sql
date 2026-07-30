@@ -2,19 +2,21 @@
     materialized='table',
 ) }}
 WITH dash_table AS (
-{{dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd')}}
+{{ dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd') }}
 UNION ALL
 {{ dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard', yt_source_name='dv360_transformed', yt_table_name='dv360_youtube') }}
 UNION ALL
-{{dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube')}}
+{{ dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube') }}
 UNION ALL
-{{dash_table_general_process.google_ads(source_name='google_ads', table_name='google_ads_demand_2')}}
+{{ dash_table_general_process.google_ads(source_name='google_ads', table_name='google_ads_demand') }}
 UNION ALL
-{{dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook')}}
+{{ dash_table_general_process.google_ads(source_name='google_ads', table_name='google_ads_demand_2') }}
 UNION ALL
-{{dash_table_general_process.meta(source_name='facebook_transformed_old', table_name='facebook_old')}}
+{{ dash_table_general_process.meta(source_name='facebook_transformed', table_name='facebook') }}
 UNION ALL
-{{dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy')}}
+{{ dash_table_general_process.meta(source_name='facebook_transformed_old', table_name='facebook_old') }}
+UNION ALL
+{{ dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy') }}
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher, channel),
@@ -26,4 +28,4 @@ JOIN `together-internal.channel.publisher_channel` AS dc
   ON lower(trim(dt.publisher)) = lower(trim(dc.publisher))
 
 ),
-{{dash_table_general_process.dash_table_general_process()}}
+{{ dash_table_general_process.dash_table_general_process() }}
