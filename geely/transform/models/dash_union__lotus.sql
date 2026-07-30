@@ -12,3 +12,4 @@ EXCEPT(publisher)
 FROM final_result AS t1
 LEFT JOIN `together-internal.publisher_naming.publisher_naming` AS t2
   ON LOWER(t1.publisher) = LOWER(t2.publisher)
+--
