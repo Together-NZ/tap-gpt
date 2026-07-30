@@ -15,12 +15,20 @@ environments:
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
           REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
-          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok       
+          REFERENCE_TIKTOK_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           CM360_SUFFIX: dbt_test_cm360
           LINKEDIN_SUFFIX: dbt_test_linkedin
           TIKTOK_SUFFIX: dbt_test_tiktok
+          PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
 - name: prod
 #state_backend:
 #  uri: gs://doconservation-meltano-state-staging
@@ -133,9 +141,18 @@ plugins:
       cm360_models: run --select +cm360_direct_buy
       dv360_models: run --select +dv360_standard +dv360_youtube
       tiktok_models: run --select +tiktok
-      ga4_keyword_models: run --select +ga4_goal_channel_keyword
-      ga4_goal_models: run --select +ga4_goal_a ga4_goal_channel
-      ga4_session_models: run --select +ga4_goal_a_session ga4_goal_channel_session
+      ga4_keyword_models:
+        args: run --select +ga4_goal_channel_keyword
+        description: Run GA4 keyword-level models
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+        description: Run GA4 goal-level models
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+        description: Run GA4 session-level models
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+        description: Union GA4 goal + session channel models
       google_ads_models: run --select +google_ads_search +google_ads_demand +google_ads_location
       linkedin_models:
         args: run --select +linkedin
