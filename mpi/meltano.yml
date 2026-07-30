@@ -19,13 +19,23 @@ environments:
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
           REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           LINKEDIN_SUFFIX: dbt_test_linkedin
           TTD_SUFFIX: dbt_test_ttd
           HIVESTACK_SUFFIX: dbt_test_hivestack
           TIKTOK_SUFFIX: dbt_test_tiktok
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
           REPORT_NAME: amp_report
+          PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
+          CM360_DIRECT_BUY_TABLE: cm360_direct_buy
 - name: prod
 #state_backend:
 #  uri: gs://mpi-meltano-state-staging
@@ -137,6 +147,9 @@ plugins:
       ga4_final_models:
         args: run --select ga4_goal_channel
         description: Union GA4 goal + session channel models via ga4 package macro
+      ga4_keyword_models:
+        args: run --select +ga4_goal_channel_keyword
+        description: Run GA4 keyword-level models (tap streams keyword_goal → ga4_raw.keyword_goal)
       ga4_session_models:
         args: run --select +ga4_goal_a_session +ga4_goal_channel_session
         description: Run GA4 session-level models (tap streams session_goal → ga4_raw.session_goal)

@@ -133,9 +133,10 @@ plugins:
       cm360_models: run --select +cm360_direct_buy
       dv360_models: run --select +dv360_standard +dv360_youtube
       tiktok_models: run --select +tiktok
+      ga4_keyword_models: run --select +ga4_goal_channel_keyword
       ga4_goal_models: run --select +ga4_goal_a ga4_goal_channel
       ga4_session_models: run --select +ga4_goal_a_session ga4_goal_channel_session
-      google_ads_models: run --select +google_ads_search +google_ads_demand
+      google_ads_models: run --select +google_ads_search +google_ads_demand +google_ads_location
       linkedin_models:
         args: run --select +linkedin
     config:

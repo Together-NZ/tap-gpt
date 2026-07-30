@@ -46,7 +46,8 @@ def get_meltano_env():
     meltano_env_common = Variable.get("meltano_common_developer_main",deserialize_json=True)
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main",deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
-    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=13)
+    # Match Contact: ~30d so GA4 tap covers the same window as transforms
+    yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
     start_date_str = yesterday.strftime("%Y-%m-%d")
 
     meltano_env["START_DATE"] = start_date_str
@@ -60,6 +61,16 @@ with models.DAG(
     schedule_interval="30 13 * * *",
     default_args=default_args
 ) as google_dag:
+    def set_env_vars_ga4_final():
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = "oauth"
+        env["DBT_BIGQUERY_PROJECT"] = "doconservation-main"
+        env["DBT_BIGQUERY_DATASET"] = "ga4_transformed"
+        return env
+    set_env_task_ga4_final = PythonOperator(
+        task_id="set_env_task_ga4_final",
+        python_callable=set_env_vars_ga4_final,
+    )
     def set_env_vars_google_ads_search():
         env = get_meltano_env()
         env["BQ_DATASET"] = "google_ads_search"
@@ -73,6 +84,9 @@ with models.DAG(
         if goal == 'session':
             env["GA4_REPORTS"] = "./report_sessions.json"
             env["GA4_GOAL"] = 'session_goal'
+        elif goal== 'keyword':
+            env["GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = 'keyword_goal'
         else:
             env["GA4_REPORTS"] = "./report.json"
             env["GA4_GOAL"] = 'goal'
@@ -90,6 +104,8 @@ with models.DAG(
         )
         developer_creds.refresh(Request())
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
+        # tap-ga4 reads START_DATE; keep explicit 30d aligned with get_ga4_start_date()
+        env["START_DATE"] = get_ga4_start_date()
         env["TAP_GA4_START_DATE"] = get_ga4_start_date()
         env["TAP_GA4_PROPERTY_ID"] = env.get('TAP_GA4_PROPERTY_ID', '')
         return env
@@ -132,19 +148,19 @@ with models.DAG(
         task_id="set_env_task_tiktok",
         python_callable=set_env_vars_tiktok,
     )
-    env = get_meltano_env()
-    comparison_trigger_tiktok = ComparisonTrigger(
-        project_name="doconservation-main",
-        destination_table="tiktok_transformed",
-        table_name="tiktok",
-        source_name="tiktok",
-        start_date=comparison_start_date,
-        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_doconservation_main",
-        project_id=env["PROJECT_ID"]
-    )
     def tiktok_comparison_check(**context):
-        result = comparison_trigger_tiktok.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="tiktok_transformed",
+            table_name="tiktok",
+            source_name="tiktok",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Tiktok data accuracy check failed — BQ data does not match source API.")
         return result
@@ -218,7 +234,8 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
-    goal_list = ['goal','session']
+    goal_list = ['goal','session','keyword']
+    ga4_list = []
     for goal in goal_list:
         kube_ga4 = KubernetesPodOperator(
             name=f"doc-ga4-to-bigquery-{goal}",
@@ -232,9 +249,23 @@ with models.DAG(
             env_vars=set_env_vars_ga4(goal),
             get_logs=True
         )
-        kube_dash_union >> kube_ga4
+        ga4_list.append(kube_ga4)
+    kube_ga4_final = KubernetesPodOperator(
+        name="doc-ga4-final-to-bigquery",
+        task_id="doc-ga4_final_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_final_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+        get_logs=True,
+        )
+    for task in ga4_list:
+        task >> kube_ga4_final
     kube_tiktok >> task_tiktok_comparison
-    kube_tiktok >> kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4
+    kube_tiktok >> kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final
 with models.DAG(
     dag_id="doconservation-meltano-extraction-transformation-dbt",
     schedule_interval="0 3 * * *",
@@ -394,20 +425,42 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         
         )
-    
-    env = get_meltano_env()
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="doconservation-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_doconservation_main",
-        project_id=env["PROJECT_ID"]
+    def linkedin_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="linkedin_transformed",
+            table_name="linkedin",
+            source_name="linkedin",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
     )
+    
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
         return result
@@ -418,6 +471,7 @@ with models.DAG(
         trigger_rule="all_done",
     )
     kube_facebook >> task_facebook_comparison
+    kube_linkedin >> task_linkedin_comparison
     set_env_task_facebook >> kube_facebook
     set_env_task_dv360 >> kube_dv360
     kube_cm360 >> kube_dv360
