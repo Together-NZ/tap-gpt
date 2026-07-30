@@ -177,10 +177,10 @@ def set_env_vars_linkedin_freight():
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = "linkedin_transformed__freight"
     env["TAP_LINKEDIN_ADS_ACCOUNTS"] = env.get(
-        "TAP_LINKEDIN_ADS_ACCOUNTS_freight_ID",
+        "TAP_LINKEDIN_ADS_ACCOUNT_freight_ID",
         env.get(
-            "TAP_LINKEDIN_ADS_ACCOUNTS_freight_ID",
-            env.get("TAP_LINKEDIN_ADS_ACCOUNTS_ID", ""),
+            "TAP_LINKEDIN_ADS_ACCOUNT_freight_ID",
+            env.get("TAP_LINKEDIN_ADS_ACCOUNT_ID", ""),
         ),
     ) 
     return env
