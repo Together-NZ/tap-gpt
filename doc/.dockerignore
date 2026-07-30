@@ -9,3 +9,8 @@ report.csv
 secret.json
 state1.json
 **/.DS_Store
+.meltano
+.meltano/
+
+transform/package-lock.yml
+transform/dbt_packages
