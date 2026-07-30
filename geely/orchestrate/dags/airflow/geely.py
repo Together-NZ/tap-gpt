@@ -83,9 +83,7 @@ with models.DAG(
         if advertiser_key in env:
             env["TAP_TTD_ADVERTISER_ID"] = env[advertiser_key]
         env["TAP_TTD_START_DATE"] = get_ttd_start_date()
-        # Do not set CM360_DIRECT_BUY_TABLE here — dbt parses all brand models,
-        # so a shared override makes ttd__lotus resolve cm360_direct_buy__geely (and vice versa).
-        # Prod defaults live in each model's SQL; staging sets CM360_DIRECT_BUY_TABLE=cm360_direct_buy in meltano.yml.
+        env["CM360_DIRECT_BUY_TABLE"] = f"cm360_direct_buy__{brand}"
         return env
 
     def set_env_vars_hivestack(brand):
@@ -122,7 +120,7 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
         env["DBT_BIGQUERY_DATASET"] = f"linkedin_transformed__{brand}"
         # Peer pattern: TAP_LINKEDIN_ADS_ACCOUNTS_{brand}_ID → TAP_LINKEDIN_ADS_ACCOUNTS
-        accounts_key = f"TAP_LINKEDIN_ADS_ACCOUNTS_{brand}_ID"
+        accounts_key = f"TAP_LINKEDIN_ADS_ACCOUNT_{brand}_ID"
         if accounts_key in env:
             env["TAP_LINKEDIN_ADS_ACCOUNTS"] = env[accounts_key]
         return env
