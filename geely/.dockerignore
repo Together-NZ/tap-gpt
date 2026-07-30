@@ -1,5 +1,15 @@
 .meltano
 .meltano/
+.venv
+**/logs
+**/target
+**/dbt_packages
 transform/dbt_packages
 transform/package-lock.yml
-/.meltano
+ttd.py
+tiktok.py
+report.csv
+secret.json
+state1.json
+**/.DS_Store
+.peter/

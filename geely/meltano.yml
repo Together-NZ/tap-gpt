@@ -11,16 +11,31 @@ environments:
         env:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
+          DBT_BIGQUERY_AUTH_METHOD: oauth
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_linkedin
           REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
-          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd  
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
           META_SUFFIX: dbt_test_facebook
           LINKEDIN_SUFFIX: dbt_test_linkedin
           HIVESTACK_SUFFIX: dbt_test_hivestack
           TTD_SUFFIX: dbt_test_ttd
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
           REPORT_NAME: amp_report
           PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
+          CM360_DIRECT_BUY_TABLE: cm360_direct_buy
 - name: prod
 #state_backend:
 #  uri: gs://geely-meltano-state-staging
@@ -52,13 +67,13 @@ plugins:
       - ad_analytics_by_creative.*
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
@@ -71,7 +86,6 @@ plugins:
       advertiser_id: ${TAP_TTD_ADVERTISER_ID}
   - name: tap-hivestack
     namespace: tap-hivestack
-   
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
     executable: tap-hivestack
     config:
@@ -90,8 +104,6 @@ plugins:
     - ads.*
     - campaigns.*
     - custom_conversions.*
-
-
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -110,12 +122,12 @@ plugins:
         lower: true
         snake_case: true
       fail_fast: false
-      method: gcs_stage
+      method: ${BQ_METHOD}
       bucket: australia-southeast1-meltan-00c049c-bigquery-staging
   orchestrators:
   - name: airflow
     variant: apache
-    pip_url: apache-airflow==2.10.5 --constraint 
+    pip_url: apache-airflow==2.10.5 --constraint
       https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
   transformers:
   - name: dbt-bigquery
@@ -128,26 +140,32 @@ plugins:
         args: run --select +ttd__lotus
       facebook_geely_models:
         args: run --select +facebook__geely
-      facebook_lotus_models:
-        args: run --select +facebook__lotus
-      ga4_geely_models:
-        args: run --select +ga4_goal_a__geely +ga4_goal_channel__geely
-      ga4_lotus_models:
-        args: run --select +ga4_goal_a__lotus +ga4_goal_channel__lotus
+      ga4_geely_goal_models:
+        args: run --select +ga4_goal_a__geely +ga4_goal_channel_goal__geely
+      ga4_lotus_goal_models:
+        args: run --select +ga4_goal_a__lotus +ga4_goal_channel_goal__lotus
+      ga4_geely_session_models:
+        args: run --select +ga4_goal_a_session__geely +ga4_goal_channel_session__geely
+      ga4_lotus_session_models:
+        args: run --select +ga4_goal_a_session__lotus +ga4_goal_channel_session__lotus
+      ga4_geely_keyword_models:
+        args: run --select +ga4_goal_channel_keyword__geely
+      ga4_lotus_keyword_models:
+        args: run --select +ga4_goal_channel_keyword__lotus
+      ga4_geely_final_models:
+        args: run --select ga4_goal_channel__geely
+      ga4_lotus_final_models:
+        args: run --select ga4_goal_channel__lotus
       cm360_geely_models:
         args: run --select +cm360_seralized__geely +cm360_direct_buy__geely
       cm360_lotus_models:
         args: run --select +cm360_seralized__lotus +cm360_direct_buy__lotus
-      google_ads_geely_models: 
-        args: run --select +google_ads_search__geely +google_ads_demand__geely
-      google_ads_lotus_models: 
-        args: run --select +google_ads_search__lotus +google_ads_demand__lotus
+      google_ads_geely_models:
+        args: run --select +google_ads_search__geely +google_ads_demand__geely +google_ads_keyword__geely +google_ads_location__geely
       linkedin_geely_models:
-        args: run --select +linkedin_no_creative__geely +linkedin__geely
+        args: run --select +linkedin__geely
       linkedin_lotus_models:
-        args: run --select +linkedin_no_creative__lotus +linkedin__lotus
-      hivestack_geely_models:
-        args: run --select +hivestack__geely
+        args: run --select +linkedin__lotus
       hivestack_lotus_models:
         args: run --select +hivestack__lotus
     config:

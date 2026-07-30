@@ -1,17 +1,61 @@
+version: 2
+
 sources:
+  - name: cm360_raw
+    database: "together-internal"
+    schema: "{{ env_var('REFERENCE_CM360_RAW_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
 
   - name: ga4_raw__geely
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__geely') }}"
     tables:
       - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
   - name: ga4_raw__lotus
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__lotus') }}"
     tables:
       - name: goal
-  
+      - name: session_goal
+      - name: keyword_goal
 
+  - name: ga4_session_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__geely') }}"
+    tables:
+      - name: ga4_goal_channel_session__geely
+
+  - name: ga4_goal_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__geely') }}"
+    tables:
+      - name: ga4_goal_channel_goal__geely
+
+  - name: ga4_session_transformed__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__lotus') }}"
+    tables:
+      - name: ga4_goal_channel_session__lotus
+
+  - name: ga4_goal_transformed__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__lotus') }}"
+    tables:
+      - name: ga4_goal_channel_goal__lotus
+
+  - name: facebook_raw__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__geely') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
 
   - name: facebook_raw__lotus
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
@@ -23,21 +67,13 @@ sources:
       - name: campaigns
       - name: custom_conversions
 
-  - name: facebook_raw__geely
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
-    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__geely') }}"
-    tables:
-      - name: ads_insights
-      - name: ad_sets
-      - name: ads
-      - name: campaigns
-      - name: custom_conversions
   - name: hivestack_raw__lotus
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__lotus') }}"
     tables:
       - name: lotus_report
       - name: amp_report
+
   - name: hivestack_raw__geely
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__geely') }}"
@@ -65,15 +101,76 @@ sources:
 
   - name: ttd_raw__lotus
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw__lotus') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__lotus') }}"
     tables:
       - name: standard_streams
 
   - name: ttd_raw__geely
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw__geely') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__geely') }}"
     tables:
       - name: standard_streams
+
+  - name: facebook_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__geely') }}"
+    tables:
+      - name: facebook__geely
+
+  - name: linkedin_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed__geely') }}"
+    tables:
+      - name: linkedin__geely
+
+  - name: linkedin_transformed__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed__lotus') }}"
+    tables:
+      - name: linkedin__lotus
+
+  - name: hivestack_transformed__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__lotus') }}"
+    tables:
+      - name: hivestack__lotus
+
+  - name: ttd_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__geely') }}"
+    tables:
+      - name: ttd__geely
+
+  - name: ttd_transformed__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__lotus') }}"
+    tables:
+      - name: ttd__lotus
+
+  - name: cm360_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__geely') }}"
+    tables:
+      - name: cm360_direct_buy__geely
+      - name: cm360_seralized__geely
+      - name: cm360_direct_buy
+
+  - name: cm360_transformed__lotus
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__lotus') }}"
+    tables:
+      - name: cm360_direct_buy__lotus
+      - name: cm360_seralized__lotus
+      - name: cm360_direct_buy
+
+  - name: google_ads_search_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__geely') }}"
+    tables:
+      - name: google_ads_demand__geely
+      - name: google_ads_search__geely
+      - name: google_ads_keyword__geely
+      - name: google_ads_location__geely
 
   - name: dash_union__lotus
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
@@ -81,12 +178,6 @@ sources:
     tables:
       - name: dash_table__lotus
       - name: dash_union__lotus
-  
-  - name: dash_union_search__lotus
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__lotus') }}"
-    tables:
-      - name: dash_table_search__lotus
 
   - name: dash_union__geely
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
@@ -94,18 +185,16 @@ sources:
     tables:
       - name: dash_table__geely
       - name: dash_union__geely
-  
+
   - name: dash_union_search__geely
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__geely') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search__geely') }}"
     tables:
       - name: dash_table_search__geely
 
 models:
-
-
   - name: ttd__geely
-    config: 
+    config:
       schema: "{{ env_var('TTD_SUFFIX', '') }}"
     columns:
       - name: media_cost
@@ -124,7 +213,6 @@ models:
   - name: facebook__geely
     config:
       schema: "{{ env_var('META_SUFFIX', '') }}"
-
     columns:
       - name: media_cost
         tests:
@@ -138,7 +226,23 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 22450
-      
+
+  - name: linkedin__geely
+    config:
+      schema: "{{ env_var('LINKEDIN_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 8327.91
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 771281
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5785
 
   - name: hivestack__lotus
     config:
@@ -156,21 +260,3 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 0
-
-      
-  - name: linkedin__geely
-    config:
-      schema: "{{ env_var('LINKEDIN_SUFFIX','') }}"
-    columns:
-      - name: media_cost
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 8327.91
-      - name: impressions
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 771281
-      - name: clicks
-        tests:
-          - testing_sum.expected_sum:
-              expected_value: 5785

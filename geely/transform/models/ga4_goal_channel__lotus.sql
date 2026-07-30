@@ -1,4 +1,9 @@
 {{ config(
     materialized='table',
 ) }}
-{{ ga4.ga4_goal_channel(source_name='dash_union__lotus', table_name='dash_union__lotus', plan_code=env_var('PLAN_CODE_GA4', 'lotus'), ga4_goal_a_model='ga4_goal_a__lotus') }}
+{{ ga4.ga4_goal_channel_final(
+    ga4_session_source_name='ga4_session_transformed__lotus',
+    ga4_session_table_name='ga4_goal_channel_session__lotus',
+    ga4_goal_source_name='ga4_goal_transformed__lotus',
+    ga4_goal_table_name='ga4_goal_channel_goal__lotus'
+) }}
