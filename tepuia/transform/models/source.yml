@@ -12,6 +12,7 @@ sources:
       - name: goal
       - name: ecommerce_goal
       - name: session_goal
+      - name: keyword_goal
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
@@ -58,7 +59,7 @@ sources:
 
   - name: ttd_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_RAW_BIGQUERY_DATASET', 'ttd_raw') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
     tables:
       - name: standard_streams
 
@@ -75,6 +76,8 @@ sources:
       - name: google_ads_demand
       - name: google_ads_search
       - name: google_ads_demand_2
+      - name: google_ads_keyword
+      - name: google_ads_location
 
   - name: google_ads_dv_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'tepuia-main') }}"
