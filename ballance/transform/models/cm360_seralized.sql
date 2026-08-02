@@ -10,19 +10,19 @@ WITH cm360reference AS (
         JSON_VALUE(JSON_EXTRACT(data, "$.creativeId")) AS creative_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.creative")) AS creative_name,
         JSON_VALUE(JSON_EXTRACT(data, "$.advertiserId")) AS advertiser_id,
-        PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignEndDate"))) AS campaign_end_date,
+        SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignEndDate"))) AS campaign_end_date,
         JSON_VALUE(JSON_EXTRACT(data, "$.campaignId")) AS campaign_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.campaign")) AS campaign_name,
-        PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignStartDate"))) AS campaign_start_date,
+        SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignStartDate"))) AS campaign_start_date,
         JSON_VALUE(JSON_EXTRACT(data, "$.clickThroughUrl")) AS click_through_url,
-        PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))) AS date,
+        SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))) AS date,
         JSON_VALUE(JSON_EXTRACT(data, "$.placementCostStructure")) AS placement_cost_structure,
-        PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementEndDate"))) AS placement_end_date,
+        SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementEndDate"))) AS placement_end_date,
         JSON_VALUE(JSON_EXTRACT(data, "$.placement")) AS placement,
         JSON_VALUE(JSON_EXTRACT(data, "$.packageRoadblockId")) AS package_roadblock_id,
         JSON_VALUE(JSON_EXTRACT(data, "$.packageRoadblock")) AS package_roadblock,
         JSON_VALUE(JSON_EXTRACT(data, "$.placementSize")) AS placement_size,
-        PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementStartDate"))) AS placement_start_date,
+        SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementStartDate"))) AS placement_start_date,
         JSON_VALUE(JSON_EXTRACT(data, "$.placementStrategy")) AS placement_strategy,
         JSON_VALUE(JSON_EXTRACT(data, "$.siteKeyname")) AS site_keyname,
         CAST(JSON_VALUE(JSON_EXTRACT(data, "$.clicks")) AS INT64) AS clicks,
@@ -35,23 +35,23 @@ WITH cm360reference AS (
                 JSON_VALUE(JSON_EXTRACT(data, "$.creativeId")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.creative")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.advertiserId")),
-                PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignEndDate"))),
+                SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignEndDate"))),
                 JSON_VALUE(JSON_EXTRACT(data, "$.campaignId")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.campaign")),
-                PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignStartDate"))),
+                SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.campaignStartDate"))),
                 JSON_VALUE(JSON_EXTRACT(data, "$.clickThroughUrl")),
-                PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))),
+                SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))),
                 JSON_VALUE(JSON_EXTRACT(data, "$.placementCostStructure")),
-                PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementEndDate"))),
+                SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementEndDate"))),
                 JSON_VALUE(JSON_EXTRACT(data, "$.placement")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.packageRoadblockId")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.packageRoadblock")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.placementSize")),
-                PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementStartDate"))),
+                SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.placementStartDate"))),
                 JSON_VALUE(JSON_EXTRACT(data, "$.placementStrategy")),
                 JSON_VALUE(JSON_EXTRACT(data, "$.siteKeyname"))
             ORDER BY 
-                PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))) DESC
+                SAFE.PARSE_DATE('%Y-%m-%d', JSON_VALUE(JSON_EXTRACT(data, "$.date"))) DESC
         ) AS row_num
     FROM 
         `together-internal.cm360_raw.cm360_report_stream`
@@ -63,4 +63,3 @@ select * from cm360reference where  row_num = 1
   -- Only include new or updated rows
   AND date >= (SELECT MAX(date) FROM {{ this }})
 {% endif %}
-    
