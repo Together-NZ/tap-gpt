@@ -4,6 +4,44 @@ project_id: 2de0b6f6-586c-4cae-828a-f4b265302e9e
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          DBT_BIGQUERY_AUTH_METHOD: oauth
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
+          REFERENCE_SNAPCHAT_TRANSFORMED_BIGQUERY_DATASET: dbt_test_snapchat
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          META_SUFFIX: dbt_test_facebook
+          LINKEDIN_SUFFIX: dbt_test_linkedin
+          SNAPCHAT_SUFFIX: dbt_test_snapchat
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          DV360_SUFFIX: dbt_test_dv360
+          TTD_SUFFIX: dbt_test_ttd
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          REPORT_NAME: amp_report
+          PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
+          CM360_DIRECT_BUY_TABLE: cm360_direct_buy
 - name: prod
 #state_backend:
 #  uri: gs://cffc-main-meltano-state-staging
@@ -33,37 +71,37 @@ plugins:
     - creatives.*
     - campaign_groups.*
     - ad_analytics_by_creative.*
-
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
-        airbyte_config:
-          start_date: ${START_DATE}T00:00:00Z
+      airbyte_config:
+        start_date: ${START_DATE}T00:00:00Z
     select:
-        - ads_insights.*
-        - ad_account.*
-        - ad_sets.*
-        - ads.*
-        - campaigns.*
+    - ads_insights.*
+    - ad_account.*
+    - ad_sets.*
+    - ads.*
+    - campaigns.*
+    - custom_conversions.*
   - name: tap-ga4
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
-      start_date: '2024-01-01'
+      reports: ${TAP_GA4_REPORTS}
+      start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
     executable: tap-ttd
     config:
       api_key: ${TAP_TTD_API_KEY}
-      start_date: '2025-01-01T00:00:00Z'
-      end_date: 
-      manual: False
+      start_date: ${START_DATE}
+      end_date:
+      manual: false
       advertiser_id: 4dpgyc6
   - name: tap-tiktok
     variant: airbyte
@@ -102,16 +140,16 @@ plugins:
     config:
       start_date: ${START_DATE}
       advertiser_id: '6062432'
-      query_standard: query_standard.json
-      query_youtube: query_youtube.json
-      service_account: together-meltano@together-internal.iam.gserviceaccount.com  
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
     executable: tap-hivestack
     config:
-        api_key: ${TAP_HIVESTACK_API_KEY}
-        report_id: '67655' 
+      api_key: ${TAP_HIVESTACK_API_KEY}
+      report_id: '67655'
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -132,44 +170,64 @@ plugins:
       fail_fast: false
       method: ${BQ_METHOD}
       bucket: australia-southeast1-meltan-00c049c-bigquery-staging
+  orchestrators:
+  - name: airflow
+    variant: apache
+    pip_url: apache-airflow==2.10.5 --constraint https://raw.githubusercontent.com/apache/airflow/constraints-2.10.5/constraints-${MELTANO__PYTHON_VERSION}.txt
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
+    config:
+      project: cffc-main
+      location: australia-southeast1
+      method: oauth
     commands:
-      snapchat_cffc_models: 
+      snapchat_cffc_models:
         args: run --select +snapchat__cffc
-      linkedin_cffc_models: 
-        args: run --select linkedin__cffc
-      google_ads_sorted_models:
-        args: run --select +google_ads_search__sorted
-        description: Run the Google Ads model
-      google_ads_sorted_in_school_models:
-        args: run --select +google_ads_search__sorted_in_school +google
+      linkedin_cffc_models:
+        args: run --select +linkedin__cffc
       facebook_cffc_models:
         args: run --select +facebook__cffc
-        description: Run the Facebook ads model
       dv360_cffc_models:
         args: run --select +dv360_standard__cffc +dv360_youtube__cffc
-        description: Run the DV360 ads model
       ttd_cffc_models:
-        args: run --select  +ttd_transformed__cffc
-        description: Run the TTD ads model
+        args: run --select +ttd_transformed__cffc
       cm360_cffc_models:
         args: run --select +cm360_seralized__cffc +cm360_direct_buy__cffc
-        description: Run the CM360 ads model
-      ga4_retirement_commission_models:
-        args: run --select +ga4_goal_a__retirement_commission +ga4_goal_channel__retirement_commission
-        description: Run the GA4 ads model
-      ga4_sorted_models:
-        args: run --select +ga4_goal_a__sorted +ga4_goal_channel__sorted
-      ga4_smart_sorted_models:
-        args: run --select +ga4_goal_a__smart_sorted +ga4_goal_channel__smart_sorted
-      ga4_sorted_in_school_models:
-        args: run --select +ga4_goal_a__sorted_in_school +ga4_goal_channel__sorted_in_school
       hivestack_cffc_models:
         args: run --select +hivestack__cffc
-        description: Run the Hivestack ads model
+      google_ads_sorted_models:
+        args: run --select +google_ads_search__sorted +google_ads_demand__sorted +google_ads_keyword__sorted +google_ads_location__sorted
+      google_ads_sorted_in_school_models:
+        args: run --select +google_ads_search__sorted_in_school +google_ads_demand__sorted_in_school +google_ads_keyword__sorted_in_school +google_ads_location__sorted_in_school
+      ga4_retirement_commission_goal_models:
+        args: run --select +ga4_goal_a__retirement_commission +ga4_goal_channel_goal__retirement_commission
+      ga4_retirement_commission_session_models:
+        args: run --select +ga4_goal_a_session__retirement_commission +ga4_goal_channel_session__retirement_commission
+      ga4_retirement_commission_keyword_models:
+        args: run --select +ga4_goal_channel_keyword__retirement_commission
+      ga4_retirement_commission_final_models:
+        args: run --select ga4_goal_channel__retirement_commission
+      ga4_sorted_goal_models:
+        args: run --select +ga4_goal_a__sorted +ga4_goal_channel_goal__sorted
+      ga4_sorted_session_models:
+        args: run --select +ga4_goal_a_session__sorted +ga4_goal_channel_session__sorted
+      ga4_sorted_keyword_models:
+        args: run --select +ga4_goal_channel_keyword__sorted
+      ga4_sorted_final_models:
+        args: run --select ga4_goal_channel__sorted
+      ga4_sorted_in_school_goal_models:
+        args: run --select +ga4_goal_a__sorted_in_school +ga4_goal_channel_goal__sorted_in_school
+      ga4_sorted_in_school_session_models:
+        args: run --select +ga4_goal_a_session__sorted_in_school +ga4_goal_channel_session__sorted_in_school
+      ga4_sorted_in_school_keyword_models:
+        args: run --select +ga4_goal_channel_keyword__sorted_in_school
+      ga4_sorted_in_school_final_models:
+        args: run --select ga4_goal_channel__sorted_in_school
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git
 elt:
   buffer_size: 52428800
-
