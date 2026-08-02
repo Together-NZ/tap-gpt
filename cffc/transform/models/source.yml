@@ -1,0 +1,312 @@
+version: 2
+
+# CFFC (cffc-main). Platforms shared under __cffc; dash/GA4 brands: retirement_commission, sorted, sorted_in_school.
+
+sources:
+  - name: cm360_raw
+    database: "together-internal"
+    schema: "{{ env_var('REFERENCE_CM360_RAW_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  - name: facebook_raw__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__cffc') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: linkedin_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_BIGQUERY_DATASET', 'linkedin_raw') }}"
+    tables:
+      - name: ad_analytics_by_creative
+      - name: creatives
+      - name: campaigns
+      - name: campaign_groups
+
+  - name: snapchat_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_SNAPCHAT_BIGQUERY_DATASET', 'snapchat_raw') }}"
+    tables:
+      - name: ad_squads
+      - name: campaigns
+      - name: ads
+      - name: ad_stats_daily
+
+  - name: hivestack_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
+    tables:
+      - name: cffc_report
+      - name: amp_report
+
+  - name: dv360_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: ttd_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw') }}"
+    tables:
+      - name: standard_streams
+
+  - name: facebook_transformed__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__cffc') }}"
+    tables:
+      - name: facebook__cffc
+
+  - name: linkedin_transformed__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET', 'linkedin_transformed__cffc') }}"
+    tables:
+      - name: linkedin__cffc
+
+  - name: snapchat_transformed__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_SNAPCHAT_TRANSFORMED_BIGQUERY_DATASET', 'snapchat_transformed__cffc') }}"
+    tables:
+      - name: snapchat__cffc
+
+  - name: hivestack_transformed__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__cffc') }}"
+    tables:
+      - name: hivestack__cffc
+
+  - name: ttd_transformed__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__cffc') }}"
+    tables:
+      - name: ttd_transformed__cffc
+
+  - name: cm360_transformed__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__cffc') }}"
+    tables:
+      - name: cm360_direct_buy__cffc
+      - name: cm360_seralized__cffc
+      - name: cm360_direct_buy
+
+  - name: dv360_transformed__cffc
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__cffc') }}"
+    tables:
+      - name: dv360_standard__cffc
+      - name: dv360_youtube__cffc
+
+  - name: ga4_raw__retirement_commission
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__retirement_commission') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_session_transformed__retirement_commission
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__retirement_commission') }}"
+    tables:
+      - name: ga4_goal_channel_session__retirement_commission
+
+  - name: ga4_goal_transformed__retirement_commission
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__retirement_commission') }}"
+    tables:
+      - name: ga4_goal_channel_goal__retirement_commission
+
+  - name: dash_union__retirement_commission
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__retirement_commission') }}"
+    tables:
+      - name: dash_table__retirement_commission
+      - name: dash_union__retirement_commission
+
+  - name: ga4_raw__sorted
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__sorted') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_session_transformed__sorted
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__sorted') }}"
+    tables:
+      - name: ga4_goal_channel_session__sorted
+
+  - name: ga4_goal_transformed__sorted
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__sorted') }}"
+    tables:
+      - name: ga4_goal_channel_goal__sorted
+
+  - name: dash_union__sorted
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__sorted') }}"
+    tables:
+      - name: dash_table__sorted
+      - name: dash_union__sorted
+
+  - name: ga4_raw__sorted_in_school
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__sorted_in_school') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_session_transformed__sorted_in_school
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__sorted_in_school') }}"
+    tables:
+      - name: ga4_goal_channel_session__sorted_in_school
+
+  - name: ga4_goal_transformed__sorted_in_school
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__sorted_in_school') }}"
+    tables:
+      - name: ga4_goal_channel_goal__sorted_in_school
+
+  - name: dash_union__sorted_in_school
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__sorted_in_school') }}"
+    tables:
+      - name: dash_table__sorted_in_school
+      - name: dash_union__sorted_in_school
+
+  - name: google_ads_search_transformed__sorted
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__sorted') }}"
+    tables:
+      - name: google_ads_demand__sorted
+      - name: google_ads_search__sorted
+      - name: google_ads_keyword__sorted
+      - name: google_ads_location__sorted
+
+  - name: dash_union_search__sorted
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search__sorted') }}"
+    tables:
+      - name: dash_table_search__sorted
+
+  - name: google_ads_search_transformed__sorted_in_school
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__sorted_in_school') }}"
+    tables:
+      - name: google_ads_demand__sorted_in_school
+      - name: google_ads_search__sorted_in_school
+      - name: google_ads_keyword__sorted_in_school
+      - name: google_ads_location__sorted_in_school
+
+  - name: dash_union_search__sorted_in_school
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cffc-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search__sorted_in_school') }}"
+    tables:
+      - name: dash_table_search__sorted_in_school
+
+models:
+  - name: facebook__cffc
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+  - name: linkedin__cffc
+    config:
+      schema: "{{ env_var('LINKEDIN_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 8327.91
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 771281
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5785
+  - name: dv360_standard__cffc
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+  - name: dv360_youtube__cffc
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+  - name: hivestack__cffc
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 15000.03
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 815604.65
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
+  - name: ttd_transformed__cffc
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
