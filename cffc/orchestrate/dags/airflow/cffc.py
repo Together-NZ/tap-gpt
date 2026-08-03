@@ -359,9 +359,16 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    task_snapchat_comparison = PythonOperator(
+        task_id="task_snapchat_comparison",
+        python_callable=snapchat_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
 
     kube_facebook >> task_facebook_comparison
     kube_linkedin >> task_linkedin_comparison
+    kube_snapchat >> task_snapchat_comparison
     kube_cm360 >> [kube_dv360, kube_ttd]
     kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
     [
