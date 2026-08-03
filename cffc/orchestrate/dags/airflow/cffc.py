@@ -217,6 +217,23 @@ with models.DAG(
             raise ValueError("DV360 YouTube data accuracy check failed — BQ data does not match source API.")
         return result
 
+    def snapchat_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table=f"snapchat_transformed__{PLATFORM_LABEL}",
+            table_name=f"snapchat__{PLATFORM_LABEL}",
+            source_name="snapchat",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Snapchat data accuracy check failed — BQ data does not match source API.")
+        return result
+
     kube_cm360 = KubernetesPodOperator(
         name="cffc-cm360-transformation",
         task_id="cffc-cm360_transformation",
