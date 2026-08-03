@@ -33,7 +33,7 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "retry_delay": datetime.timedelta(minutes=30),
-    "start_date": datetime.datetime(2026, 3, 8, tzinfo=local_tz),
+    "start_date": datetime.datetime(2026, 7, 30, tzinfo=local_tz),
 }
 
 KUBE_RESOURCES = k8s_models.V1ResourceRequirements(
@@ -217,6 +217,23 @@ with models.DAG(
             raise ValueError("DV360 YouTube data accuracy check failed — BQ data does not match source API.")
         return result
 
+    def snapchat_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table=f"snapchat_transformed__{PLATFORM_LABEL}",
+            table_name=f"snapchat__{PLATFORM_LABEL}",
+            source_name="snapchat",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Snapchat data accuracy check failed — BQ data does not match source API.")
+        return result
+
     kube_cm360 = KubernetesPodOperator(
         name="cffc-cm360-transformation",
         task_id="cffc-cm360_transformation",
@@ -342,9 +359,16 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    task_snapchat_comparison = PythonOperator(
+        task_id="task_snapchat_comparison",
+        python_callable=snapchat_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
 
     kube_facebook >> task_facebook_comparison
     kube_linkedin >> task_linkedin_comparison
+    kube_snapchat >> task_snapchat_comparison
     kube_cm360 >> [kube_dv360, kube_ttd]
     kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
     [
