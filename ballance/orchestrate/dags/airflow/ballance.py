@@ -84,9 +84,11 @@ with models.DAG(
         env["DBT_BIGQUERY_AUTH_METHOD"] = "oauth"
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
         env["DBT_BIGQUERY_DATASET"] = f"facebook_transformed__{brand}"
-        env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = env[
-            f"TAP_FACEBOOK_{brand}_AIRBYTE_CONFIG_ACCOUNT_ID"
-        ]
+        # Peer pattern: TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{brand}_ID → ACCOUNT_ID
+        account_key = f"TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{brand}_ID"
+        if account_key in env:
+            env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = env[account_key]
+            env["TAP_FACEBOOK_ACCOUNT_ID"] = env[account_key]
         return env
 
     def set_env_vars_dash():
