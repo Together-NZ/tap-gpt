@@ -25,21 +25,3 @@ clean-targets:
 models:
   curative:
     +materialized: table
-
-    cm360_creativenz:
-     
-
-    ttd_creativenz:
- 
-
-    cm360_fasd:
-      +schema: cm360_fasd_transformed
-
-    ttd_fasd:
-      +schema: ttd_fasd_transformed
-
-    cm360_protectyourbreath:
-      +schema: cm360_protectyourbreath_transformed
-
-    ttd_protectyourbreath:
-      +schema: ttd_protectyourbreath_transformed

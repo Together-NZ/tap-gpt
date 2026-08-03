@@ -1,0 +1,746 @@
+version: 2
+
+sources:
+  # ---------------------------------------------------------------------
+  # shared
+  # ---------------------------------------------------------------------
+  - name: cm360_raw
+    database: "{{ env_var('CM360_RAW_BIGQUERY_PROJECT', 'together-internal') }}"
+    schema: "{{ env_var('REFERENCE_CM360_BIGQUERY_DATASET', 'cm360_raw') }}"
+    tables:
+      - name: cm360_report_stream
+
+  # ---------------------------------------------------------------------
+  # creativenz
+  # ---------------------------------------------------------------------
+  - name: facebook_raw__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__creativenz') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__creativenz') }}"
+    tables:
+      - name: facebook__creativenz
+
+  - name: dv360_raw__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__creativenz') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__creativenz') }}"
+    tables:
+      - name: dv360_standard__creativenz
+      - name: dv360_youtube__creativenz
+
+  - name: ttd_raw__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__creativenz') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__creativenz') }}"
+    tables:
+      - name: ttd_transformed__creativenz
+
+  - name: cm360_transformed__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__creativenz') }}"
+    tables:
+      - name: cm360_direct_buy__creativenz
+      - name: cm360_direct_buy
+      - name: cm360_seralized__creativenz
+
+  - name: tiktok_raw__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_RAW_BIGQUERY_DATASET', 'tiktok_raw__creativenz') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__creativenz') }}"
+    tables:
+      - name: tiktok__creativenz
+
+  - name: google_ads__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__creativenz') }}"
+    tables:
+      - name: google_ads_search__creativenz
+      - name: google_ads_demand__creativenz
+      - name: google_ads_keyword__creativenz
+      - name: google_ads_location__creativenz
+
+  - name: dash_table__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__creativenz') }}"
+    tables:
+      - name: dash_table__creativenz
+
+  - name: dash_union__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__creativenz') }}"
+    tables:
+      - name: dash_table__creativenz
+      - name: dash_union__creativenz
+
+  - name: dash_table_search__creativenz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__creativenz') }}"
+    tables:
+      - name: dash_table_search__creativenz
+
+  # ---------------------------------------------------------------------
+  # fasd
+  # ---------------------------------------------------------------------
+  - name: facebook_raw__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__fasd') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__fasd') }}"
+    tables:
+      - name: facebook__fasd
+
+  - name: dv360_raw__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__fasd') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__fasd') }}"
+    tables:
+      - name: dv360_standard__fasd
+      - name: dv360_youtube__fasd
+
+  - name: ttd_raw__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__fasd') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__fasd') }}"
+    tables:
+      - name: ttd_transformed__fasd
+
+  - name: hivestack_raw__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__fasd') }}"
+    tables:
+      - name: report
+      - name: amp_report
+
+  - name: hivestack_transformed__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__fasd') }}"
+    tables:
+      - name: hivestack__fasd
+
+  - name: cm360_transformed__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__fasd') }}"
+    tables:
+      - name: cm360_direct_buy__fasd
+      - name: cm360_direct_buy
+      - name: cm360_seralized__fasd
+
+  - name: ga4_raw__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__fasd') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_goal_transformed__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__fasd') }}"
+    tables:
+      - name: ga4_goal_channel_goal__fasd
+
+  - name: ga4_session_transformed__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__fasd') }}"
+    tables:
+      - name: ga4_goal_channel_session__fasd
+
+  - name: google_ads__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__fasd') }}"
+    tables:
+      - name: google_ads_search__fasd
+      - name: google_ads_demand__fasd
+      - name: google_ads_keyword__fasd
+      - name: google_ads_location__fasd
+
+  - name: dash_table__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__fasd') }}"
+    tables:
+      - name: dash_table__fasd
+
+  - name: dash_union__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__fasd') }}"
+    tables:
+      - name: dash_table__fasd
+      - name: dash_union__fasd
+
+  - name: dash_table_search__fasd
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__fasd') }}"
+    tables:
+      - name: dash_table_search__fasd
+
+  # ---------------------------------------------------------------------
+  # mahi
+  # ---------------------------------------------------------------------
+  - name: dv360_raw__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__mahi') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__mahi') }}"
+    tables:
+      - name: dv360_standard__mahi
+      - name: dv360_youtube__mahi
+
+  - name: ttd_raw__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__mahi') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__mahi') }}"
+    tables:
+      - name: ttd_transformed__mahi
+
+  - name: cm360_transformed__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__mahi') }}"
+    tables:
+      - name: cm360_direct_buy__mahi
+      - name: cm360_direct_buy
+
+  - name: tiktok_raw__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_RAW_BIGQUERY_DATASET', 'tiktok_raw__mahi') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__mahi') }}"
+    tables:
+      - name: tiktok__mahi
+
+  - name: ga4_raw__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__mahi') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_goal_transformed__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__mahi') }}"
+    tables:
+      - name: ga4_goal_channel_goal__mahi
+
+  - name: ga4_session_transformed__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__mahi') }}"
+    tables:
+      - name: ga4_goal_channel_session__mahi
+
+  - name: google_ads__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__mahi') }}"
+    tables:
+      - name: google_ads_search__mahi
+      - name: google_ads_demand__mahi
+      - name: google_ads_keyword__mahi
+      - name: google_ads_location__mahi
+
+  - name: dash_table__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__mahi') }}"
+    tables:
+      - name: dash_table__mahi
+
+  - name: dash_union__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__mahi') }}"
+    tables:
+      - name: dash_table__mahi
+      - name: dash_union__mahi
+
+  - name: dash_table_search__mahi
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__mahi') }}"
+    tables:
+      - name: dash_table_search__mahi
+
+  # ---------------------------------------------------------------------
+  # protectyourbreath
+  # ---------------------------------------------------------------------
+  - name: facebook_raw__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__protectyourbreath') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__protectyourbreath') }}"
+    tables:
+      - name: facebook__protectyourbreath
+
+  - name: dv360_raw__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__protectyourbreath') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__protectyourbreath') }}"
+    tables:
+      - name: dv360_standard__protectyourbreath
+      - name: dv360_youtube__protectyourbreath
+
+  - name: ttd_raw__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__protectyourbreath') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__protectyourbreath') }}"
+    tables:
+      - name: ttd_transformed__protectyourbreath
+
+  - name: cm360_transformed__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__protectyourbreath') }}"
+    tables:
+      - name: cm360_direct_buy__protectyourbreath
+      - name: cm360_direct_buy
+      - name: cm360_seralized__protectyourbreath
+
+  - name: hivestack_raw__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw__protectyourbreath') }}"
+    tables:
+      - name: protectyourbreath_report
+      - name: amp_report
+
+  - name: hivestack_transformed__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET', 'hivestack_transformed__protectyourbreath') }}"
+    tables:
+      - name: hivestack__protectyourbreath
+
+  - name: snapchat_raw__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_SNAPCHAT_BIGQUERY_DATASET', 'snapchat_raw__protectyourbreath') }}"
+    tables:
+      - name: ads
+      - name: ad_squads
+      - name: campaigns
+      - name: ad_stats_daily
+
+  - name: snapchat_transformed__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_SNAPCHAT_TRANSFORMED_BIGQUERY_DATASET', 'snapchat_transformed__protectyourbreath') }}"
+    tables:
+      - name: snapchat__protectyourbreath
+
+  - name: tiktok_raw__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_RAW_BIGQUERY_DATASET', 'tiktok_raw__protectyourbreath') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__protectyourbreath') }}"
+    tables:
+      - name: tiktok__protectyourbreath
+
+  - name: google_ads__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__protectyourbreath') }}"
+    tables:
+      - name: google_ads_search__protectyourbreath
+      - name: google_ads_demand__protectyourbreath
+      - name: google_ads_keyword__protectyourbreath
+      - name: google_ads_location__protectyourbreath
+
+  - name: dash_table__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__protectyourbreath') }}"
+    tables:
+      - name: dash_table__protectyourbreath
+
+  - name: dash_union__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__protectyourbreath') }}"
+    tables:
+      - name: dash_table__protectyourbreath
+      - name: dash_union__protectyourbreath
+
+  - name: dash_table_search__protectyourbreath
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__protectyourbreath') }}"
+    tables:
+      - name: dash_table_search__protectyourbreath
+
+  # ---------------------------------------------------------------------
+  # realnurses
+  # ---------------------------------------------------------------------
+  - name: ttd_raw__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__realnurses') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__realnurses') }}"
+    tables:
+      - name: ttd_transformed__realnurses
+
+  - name: cm360_transformed__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__realnurses') }}"
+    tables:
+      - name: cm360_direct_buy__realnurses
+      - name: cm360_direct_buy
+
+  - name: ga4_raw__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__realnurses') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_goal_transformed__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__realnurses') }}"
+    tables:
+      - name: ga4_goal_channel_goal__realnurses
+
+  - name: ga4_session_transformed__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__realnurses') }}"
+    tables:
+      - name: ga4_goal_channel_session__realnurses
+
+  - name: google_ads__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__realnurses') }}"
+    tables:
+      - name: google_ads_search__realnurses
+      - name: google_ads_demand__realnurses
+      - name: google_ads_keyword__realnurses
+      - name: google_ads_location__realnurses
+
+  - name: dash_table__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__realnurses') }}"
+    tables:
+      - name: dash_table__realnurses
+
+  - name: dash_union__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__realnurses') }}"
+    tables:
+      - name: dash_table__realnurses
+      - name: dash_union__realnurses
+
+  - name: dash_table_search__realnurses
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search__realnurses') }}"
+    tables:
+      - name: dash_table_search__realnurses
+
+  # ---------------------------------------------------------------------
+  # hnz
+  # ---------------------------------------------------------------------
+  - name: tiktok_raw__hnz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_RAW_BIGQUERY_DATASET', 'tiktok_raw__hnz') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed__hnz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__hnz') }}"
+    tables:
+      - name: tiktok__hnz
+
+  - name: dash_table__hnz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__hnz') }}"
+    tables:
+      - name: dash_table__hnz
+
+  - name: dash_union__hnz
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__hnz') }}"
+    tables:
+      - name: dash_table__hnz
+      - name: dash_union__hnz
+
+models:
+  # Expected sums only on primary brand models (fasd / hnz tiktok) —
+  # sibling brands share the same staging fixtures.
+  - name: facebook__fasd
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 14549.95
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 2857616
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 22450
+
+  - name: facebook__creativenz
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+
+  - name: facebook__protectyourbreath
+    config:
+      schema: "{{ env_var('META_SUFFIX', '') }}"
+
+  - name: dv360_standard__fasd
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 68223.08
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5840202
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 7786
+
+  - name: dv360_youtube__fasd
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 67127.98
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 5248537
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4432
+
+  - name: dv360_standard__creativenz
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
+  - name: dv360_youtube__creativenz
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
+  - name: dv360_standard__mahi
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
+  - name: dv360_youtube__mahi
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
+  - name: dv360_standard__protectyourbreath
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
+  - name: dv360_youtube__protectyourbreath
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', '') }}"
+
+  - name: ttd_transformed__fasd
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 52112.58
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 798906
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 363
+
+  - name: ttd_transformed__creativenz
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+
+  - name: ttd_transformed__mahi
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+
+  - name: ttd_transformed__protectyourbreath
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+
+  - name: ttd_transformed__realnurses
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', '') }}"
+
+  - name: hivestack__fasd
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 15000.03
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 815604.65
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 0
+
+  - name: hivestack__protectyourbreath
+    config:
+      schema: "{{ env_var('HIVESTACK_SUFFIX', '') }}"
+
+  - name: snapchat__protectyourbreath
+    config:
+      schema: "{{ env_var('SNAPCHAT_SUFFIX', '') }}"
+
+  - name: tiktok__hnz
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+    columns:
+      - name: media_cost
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 18983.49
+      - name: impressions
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 4422216
+      - name: clicks
+        tests:
+          - testing_sum.expected_sum:
+              expected_value: 12747
+
+  - name: tiktok__creativenz
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+
+  - name: tiktok__mahi
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+
+  - name: tiktok__protectyourbreath
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', '') }}"
+
+  - name: cm360_direct_buy__creativenz
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_seralized__creativenz
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_direct_buy__fasd
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_seralized__fasd
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_direct_buy__protectyourbreath
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_seralized__protectyourbreath
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_direct_buy__mahi
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
+
+  - name: cm360_direct_buy__realnurses
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', '') }}"
