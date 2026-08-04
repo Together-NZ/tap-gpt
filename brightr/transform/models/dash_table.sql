@@ -14,6 +14,11 @@ WITH dash_table AS (
     {{ dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy') }}
     UNION ALL
     {{ dash_table_general_process.linkedin(source_name='linkedin_transformed', table_name='linkedin') }}
+    UNION ALL
+    {{ dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard', yt_source_name='dv360_transformed', yt_table_name='dv360_youtube') }}
+    UNION ALL
+    {{ dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube') }}
+
 ),
 with_channel AS (
     SELECT
