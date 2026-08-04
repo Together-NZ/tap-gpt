@@ -81,9 +81,8 @@ def set_env_vars_pinterest():
     env = get_meltano_env()
     env["BQ_DATASET"] = "pinterest_raw"
     env["BQ_METHOD"] = "batch_job"
-    env["TAP_PINTEREST_ADS_END_DATE"] = datetime.datetime.now(local_tz).strftime(
-        "%Y-%m-%d"
-    )
+    env["END_DATE"] = datetime.datetime.now(local_tz).strftime("%Y-%m-%d")
+    env["TAP_PINTEREST_ADS_END_DATE"] = env["END_DATE"]
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = "pinterest_transformed"
@@ -264,6 +263,30 @@ with models.DAG(
         env_vars=set_env_vars_dv360(),
         get_logs=True,
     )
+    def pinterest_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="pinterest_transformed",
+            table_name="pinterest",
+            source_name="pinterest",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Pinterest data accuracy check failed.")
+        return result
+
+    task_pinterest_comparison = PythonOperator(
+        task_id="task_pinterest_comparison",
+        python_callable=pinterest_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    
 
     def dv360_comparison_standard_check(**context):
         env = get_meltano_env()
@@ -361,7 +384,7 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         get_logs=True,
     )
-
+    kube_pinterest >> task_pinterest_comparison 
     [kube_facebook, kube_ttd, kube_dv360, kube_pinterest] >> kube_dash
     kube_dash >> kube_dash_union
 

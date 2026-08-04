@@ -4,6 +4,48 @@ project_id: 9c579100-c10a-4ecf-a23c-ffeace1cf097
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          CM360_RAW_BIGQUERY_PROJECT: together-internal
+          REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_TIKTOK_RAW_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_tiktok
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_SNAPCHAT_BIGQUERY_DATASET: dbt_test_snapchat
+          REFERENCE_SNAPCHAT_TRANSFORMED_BIGQUERY_DATASET: dbt_test_snapchat
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          CM360_DIRECT_BUY_TABLE: cm360_direct_buy
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_TABLE_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          META_SUFFIX: dbt_test_facebook
+          DV360_SUFFIX: dbt_test_dv360
+          TIKTOK_SUFFIX: dbt_test_tiktok
+          TTD_SUFFIX: dbt_test_ttd
+          HIVESTACK_SUFFIX: dbt_test_hivestack
+          SNAPCHAT_SUFFIX: dbt_test_snapchat
+          CM360_SUFFIX: dbt_test_cm360
+          PLAN_CODE_FASD: uow
+          PLAN_CODE_MAHI: uow
+          PLAN_CODE_REALNURSES: uow
+          REPORT_NAME: amp_report
 - name: prod
 #state_backend:
 #  uri: gs://curative-main-meltano-state-staging
@@ -49,11 +91,11 @@ plugins:
     variant: meltanolabs
     pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   - name: tap-ttd
     namespace: tap-ttd
     pip_url: git+https://github.com/Together-NZ/tap-ttd.git setuptools<82.0
@@ -76,6 +118,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
@@ -108,71 +151,94 @@ plugins:
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.3.0 dbt-bigquery~=1.3.0 setuptools<82.0
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     config:
       project: curative-main
+      location: australia-southeast1
       method: oauth
     commands:
       cm360_creativenz_models:
-        args: run --select cm360_creativenz_seralized cm360_creativenz_direct_buy
+        args: run --select cm360_seralized__creativenz cm360_direct_buy__creativenz
       cm360_fasd_models:
-        args: run --select cm360_fasd_seralized cm360_fasd_direct_buy
+        args: run --select cm360_seralized__fasd cm360_direct_buy__fasd
       cm360_protectyourbreath_models:
-        args: run --select cm360_protectyourbreath_seralized cm360_protectyourbreath_direct_buy
+        args: run --select cm360_seralized__protectyourbreath cm360_direct_buy__protectyourbreath
+      cm360_mahi_models:
+        args: run --select cm360_direct_buy__mahi
+      cm360_realnurses_models:
+        args: run --select cm360_direct_buy__realnurses
       dv360_fasd_models:
-        args: run --select dv360_fasd_standard dv360_fasd_youtube
+        args: run --select dv360_standard__fasd dv360_youtube__fasd
       dv360_protectyourbreath_models:
-        args: run --select dv360_protectyourbreath_standard dv360_protectyourbreath_youtube
+        args: run --select dv360_standard__protectyourbreath dv360_youtube__protectyourbreath
       dv360_mahi_models:
-        args: run --select dv360_mahi_standard dv360_mahi_youtube
+        args: run --select dv360_standard__mahi dv360_youtube__mahi
       dv360_creativenz_models:
-        args: run --select dv360_creativenz_standard dv360_creativenz_youtube
+        args: run --select dv360_standard__creativenz dv360_youtube__creativenz
       facebook_creativenz_models:
-        args: run --select facebook_creativenz
+        args: run --select facebook__creativenz
       facebook_protectyourbreath_models:
-        args: run --select facebook_protectyourbreath
+        args: run --select facebook__protectyourbreath
       facebook_fasd_models:
-        args: run --select facebook_fasd
-      ga4_mahi_models:
-        args: run --select ga4_goal_a__mahi ga4_goal_channel__mahi
-      ga4_fasd_models:
-        args: run --select ga4_goal_a__fasd ga4_goal_channel__fasd
-      ga4_realnurses_models:
-        args: run --select ga4_goal_a__realnurses ga4_goal_channel__realnurses
-      
+        args: run --select facebook__fasd
+      ga4_mahi_goal_models:
+        args: run --select ga4_goal_a__mahi ga4_goal_channel_goal__mahi
+      ga4_mahi_session_models:
+        args: run --select ga4_goal_a_session__mahi ga4_goal_channel_session__mahi
+      ga4_mahi_keyword_models:
+        args: run --select ga4_goal_channel_keyword__mahi
+      ga4_mahi_final_models:
+        args: run --select ga4_goal_channel__mahi
+      ga4_fasd_goal_models:
+        args: run --select ga4_goal_a__fasd ga4_goal_channel_goal__fasd
+      ga4_fasd_session_models:
+        args: run --select ga4_goal_a_session__fasd ga4_goal_channel_session__fasd
+      ga4_fasd_keyword_models:
+        args: run --select ga4_goal_channel_keyword__fasd
+      ga4_fasd_final_models:
+        args: run --select ga4_goal_channel__fasd
+      ga4_realnurses_goal_models:
+        args: run --select ga4_goal_a__realnurses ga4_goal_channel_goal__realnurses
+      ga4_realnurses_session_models:
+        args: run --select ga4_goal_a_session__realnurses ga4_goal_channel_session__realnurses
+      ga4_realnurses_keyword_models:
+        args: run --select ga4_goal_channel_keyword__realnurses
+      ga4_realnurses_final_models:
+        args: run --select ga4_goal_channel__realnurses
       hivestack_protectyourbreath_models:
-        args: run --select hivestack_protectyourbreath
+        args: run --select hivestack__protectyourbreath
       hivestack_fasd_models:
-        args: run --select hivestack_fasd
+        args: run --select hivestack__fasd
       snapchat_protectyourbreath_models:
-        args: run --select snapchat_protectyourbreath
+        args: run --select snapchat__protectyourbreath
       tiktok_creativenz_models:
         args: run --select tiktok__creativenz
       tiktok_protectyourbreath_models:
-
         args: run --select tiktok__protectyourbreath
       tiktok_mahi_models:
         args: run --select tiktok__mahi
+      tiktok_hnz_models:
+        args: run --select tiktok__hnz
       ttd_creativenz_models:
-        args: run --select  ttd_creativenz_transformed
+        args: run --select ttd_transformed__creativenz
       ttd_protectyourbreath_models:
-        args: run --select  ttd_protectyourbreath_transformed
+        args: run --select ttd_transformed__protectyourbreath
       ttd_fasd_models:
-        args: run --select  ttd_fasd_transformed
+        args: run --select ttd_transformed__fasd
       ttd_mahi_models:
-        args: run --select ttd_mahi_transformed
+        args: run --select ttd_transformed__mahi
       ttd_realnurses_models:
-        args: run --select ttd_realnurses_transformed
+        args: run --select ttd_transformed__realnurses
       google_ads_creativenz_models:
-        args: run --select google_ads_search__creativenz google_ads_demand__creativenz
+        args: run --select +google_ads_search__creativenz +google_ads_demand__creativenz +google_ads_keyword__creativenz +google_ads_location__creativenz
       google_ads_protectyourbreath_models:
-        args: run --select google_ads_search__protectyourbreath google_ads_demand__protectyourbreath
+        args: run --select +google_ads_search__protectyourbreath +google_ads_demand__protectyourbreath +google_ads_keyword__protectyourbreath +google_ads_location__protectyourbreath
       google_ads_fasd_models:
-        args: run --select google_ads_search__fasd google_ads_demand__fasd
+        args: run --select +google_ads_search__fasd +google_ads_demand__fasd +google_ads_keyword__fasd +google_ads_location__fasd
       google_ads_mahi_models:
-        args: run --select google_ads_search__mahi google_ads_demand__mahi
+        args: run --select +google_ads_search__mahi +google_ads_demand__mahi +google_ads_keyword__mahi +google_ads_location__mahi
       google_ads_realnurses_models:
-        args: run --select google_ads_search__realnurses google_ads_demand__realnurses
+        args: run --select +google_ads_search__realnurses +google_ads_demand__realnurses +google_ads_keyword__realnurses +google_ads_location__realnurses
   files:
   - name: files-airflow
     variant: meltano
