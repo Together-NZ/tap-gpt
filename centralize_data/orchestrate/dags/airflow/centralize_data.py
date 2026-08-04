@@ -167,7 +167,7 @@ with models.DAG(
         task_id="spotifyads_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=["--environment=prod", "run","tap-spotifyads","target-bigquery", "dbt-bigquery","invoke","run","--select","spotify_ads"],
+        arguments=["--environment=prod", "run","tap-spotifyads","target-bigquery", "dbt-bigquery","run","--select","spotify_ads"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
