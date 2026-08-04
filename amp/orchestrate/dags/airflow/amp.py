@@ -150,6 +150,7 @@ with models.DAG(
     set_env_task_dash_search >> kube_dash_search
     set_env_task_google_ads_search >> kube_google_ads_search
     kube_google_ads_search >> kube_dash
+    kube_google_ads_search >> kube_dash_search
     brands = ['centralized','wealth','general_insurance']
     #task_list = [kube_cm360,kube_ttd,kube_linkedin,kube_hivestack,kube_facebook,kube_reddit] 
     for brand in brands:
