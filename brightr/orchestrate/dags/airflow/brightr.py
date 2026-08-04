@@ -78,6 +78,15 @@ def set_env_vars_linkedin():
     env["DBT_BIGQUERY_DATASET"] = "linkedin_transformed"
     return env
 
+def set_env_vars_dv360():
+    env = get_meltano_env()
+    env["BQ_DATASET"] = "dv360_raw"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "dv360_transformed"
+    return env
+
 
 def set_env_vars_hivestack():
     env = get_meltano_env()
@@ -179,6 +188,19 @@ with models.DAG(
     schedule_interval="0 4 * * *",
     default_args=default_args,
 ) as dag:
+    kube_dv360 = KubernetesPodOperator(
+        name="brightr-dv360-to-bigquery",
+        task_id="brightr-dv360_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery", "dbt-bigquery:dv360_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dv360(),
+            get_logs=True,
+        )
+    
     kube_facebook = KubernetesPodOperator(
         name="brightr-facebook-to-bigquery",
         task_id="brightr-facebook_to_bigquery",
@@ -284,6 +306,55 @@ with models.DAG(
         env_vars=set_env_vars_dash(),
         get_logs=True,
     )
+    def dv360_standard_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                "DV360 data accuracy check failed — BigQuery does not match the source API."
+            )
+        return result
+    task_dv360_standard_comparison = PythonOperator(
+            task_id="task_dv360_standard_comparison",
+            python_callable=dv360_standard_comparison_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+    def dv360_youtube_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                "DV360 data accuracy check failed — BigQuery does not match the source API."
+            )
+        return result
+    task_dv360_youtube_comparison = PythonOperator(
+        task_id="task_dv360_youtube_comparison",
+        python_callable=dv360_youtube_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
 
     def facebook_comparison_check(**context):
         env = get_meltano_env()
@@ -339,7 +410,7 @@ with models.DAG(
     kube_facebook >> task_facebook_comparison
     kube_linkedin >> task_linkedin_comparison
     kube_cm360 >> kube_ttd
-    [kube_facebook, kube_linkedin, kube_hivestack, kube_cm360, kube_ttd] >> kube_dash
+    [kube_facebook, kube_linkedin, kube_hivestack, kube_cm360, kube_ttd,kube_dv360] >> kube_dash
 
 
 # ---------------------------------------------------------------------------

@@ -21,12 +21,15 @@ environments:
           REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
           REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_DV360_RAW_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
           REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
           REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
           META_SUFFIX: dbt_test_facebook
           LINKEDIN_SUFFIX: dbt_test_linkedin
           TTD_SUFFIX: dbt_test_ttd
           HIVESTACK_SUFFIX: dbt_test_hivestack
+          DV360_SUFFIX: dbt_test_dv360
           PLAN_CODE: uow
           REPORT_NAME: amp_report
 - name: prod
@@ -68,6 +71,22 @@ plugins:
       keep_empty_rows: true
       select:
       - ${GA4_GOAL}
+  - name: tap-dv360
+    namespace: tap-dv360
+    pip_url: git+https://github.com/Together-NZ/tap-dv360.git setuptools<82.0
+    executable: tap-dv360
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      start_date: ${START_DATE}
+      advertiser_id: '8289854395'
+      query_standard: dv360_standard.json
+      query_youtube: dv360_youtube.json
+      service_account: together-meltano@together-internal.iam.gserviceaccount.com
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -127,6 +146,8 @@ plugins:
         args: run --select google_ads_search google_ads_demand google_ads_keyword google_ads_location
       cm360_models:
         args: run --select +cm360_seralized +cm360_direct_buy
+      dv360_models:
+        args: run --select +dv360_standard +dv360_youtube
       facebook_models:
         args: run --select +facebook
       ga4_goal_models:
