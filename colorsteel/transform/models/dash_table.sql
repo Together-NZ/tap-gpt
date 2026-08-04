@@ -43,4 +43,6 @@ with_channel AS (
     JOIN `together-internal.channel.publisher_channel` AS dc
         ON LOWER(TRIM(dt.publisher)) = LOWER(TRIM(dc.publisher))
 ),
-{{ dash_table_general_process.dash_table_general_process() }}
+{{ dash_table_general_process.dash_table_general_process_funnel(
+    funnels=['explore', 'consideration', 'awareness', 'intent','inspire','connect']
+) }}
