@@ -1,15 +1,34 @@
 version: 2
 
-# Aligned with moe/transform/models/source.yml; defaults use farizon-main.
-# Override with DBT_BIGQUERY_PROJECT and REFERENCE_* env vars per environment.
-
 sources:
-
   - name: ga4_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
     schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw') }}"
     tables:
       - name: goal
+      - name: session_goal
+      - name: keyword_goal
+
+  - name: ga4_session_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_session
+
+  - name: ga4_goal_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed') }}"
+    tables:
+      - name: ga4_goal_channel_goal
+
+  - name: google_ads
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
+    tables:
+      - name: google_ads_demand
+      - name: google_ads_search
+      - name: google_ads_keyword
+      - name: google_ads_location
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
@@ -20,32 +39,6 @@ sources:
 
   - name: dash_union_search
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
     tables:
       - name: dash_table_search
-      
-
-  - name: dash_table
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table') }}"
-    tables:
-      - name: dash_union
-      - name: dash_table
-
-  - name: dash_table_search
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_TABLE_SEARCH_DATASET', 'dash_table_search') }}"
-    tables:
-      - name: dash_table_search
-
-  - name: google_ads_search_transformed
-    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'farizon-main') }}"
-    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_DATASET', 'google_ads_search_transformed') }}"
-    tables:
-      - name: google_ads_search
-      - name: google_ads_demand
-
-
-
-
-
