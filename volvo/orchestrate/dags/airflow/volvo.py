@@ -75,6 +75,7 @@ def set_env_vars_facebook(label):
     env["DBT_BIGQUERY_METHOD"] = 'oauth'
     env["DBT_BIGQUERY_PROJECT"] = 'volvo-main'
     env["DBT_BIGQUERY_DATASET"] = f'facebook_transformed__{label}'
+    env["TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_ID"] = env[f"TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{label}_ID"]
     return env
 def set_env_vars_linkedin(label):
     env = get_meltano_env()
@@ -407,6 +408,56 @@ with models.DAG(
             get_logs=True,
         )
 
+        def dv360_standard_comparison_check(**context):
+            env = get_meltano_env()
+            trigger = ComparisonTrigger(
+                project_name="volvo-main",
+                destination_table=f"dv360_transformed__{brand}",
+                table_name=f"dv360_standard__{brand}",
+                source_name="dv360_standard",
+                start_date=comparison_start_date,
+                end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                secret_name="airflow-variables-meltano_volvo_main",
+                project_id=env["PROJECT_ID"],
+                brand=brand,
+            )
+            result = trigger.compare_data()
+            if not result:
+                raise ValueError("DV360 standard data accuracy check failed — BQ data does not match source API.")
+            return result
+
+        task_dv360_standard_comparison = PythonOperator(
+            task_id="task_dv360_standard_comparison",
+            python_callable=dv360_standard_comparison_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+
+        def dv360_youtube_comparison_check(**context):
+            env = get_meltano_env()
+            trigger = ComparisonTrigger(
+                project_name="volvo-main",
+                destination_table=f"dv360_transformed__{brand}",
+                table_name=f"dv360_youtube__{brand}",
+                source_name="dv360_youtube",
+                start_date=comparison_start_date,
+                end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                secret_name="airflow-variables-meltano_volvo_main",
+                project_id=env["PROJECT_ID"],
+                brand=brand,
+            )
+            result = trigger.compare_data()
+            if not result:
+                raise ValueError("DV360 YouTube data accuracy check failed — BQ data does not match source API.")
+            return result
+
+        task_dv360_youtube_comparison = PythonOperator(
+            task_id="task_dv360_youtube_comparison",
+            python_callable=dv360_youtube_comparison_check,
+            retries=0,
+            trigger_rule="all_done",
+        )
+
         def linkedin_comparison_check(**context):
             env = get_meltano_env()
             trigger = ComparisonTrigger(
@@ -454,4 +505,5 @@ with models.DAG(
         )
         kube_facebook >> task_facebook_comparison
         kube_linkedin >> task_linkedin_comparison
+        kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
         [kube_facebook, kube_dv360, kube_cm360, kube_linkedin, kube_ttd, kube_hivestack] >> kube_dash >> kube_dash_search >> kube_dash_union
