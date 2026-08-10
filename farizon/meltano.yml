@@ -4,20 +4,37 @@ project_id: 123b8fab-a351-4b3e-a547-d5446bd5cc7c
 environments:
 - name: dev
 - name: staging
+  config:
+    plugins:
+      transformers:
+      - name: dbt-bigquery
+        env:
+          DBT_BIGQUERY_PROJECT: together-internal
+          DBT_BIGQUERY_LOCATION: australia-southeast1
+          DBT_BIGQUERY_AUTH_METHOD: oauth
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_SEARCH_TRANSFORMED_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
 - name: prod
-state_backend:
-  uri: gs://farizon-main-meltano-state-staging
+#state_backend:
+#  uri: gs://farizon-main-meltano-state-staging
 plugins:
   extractors:
   - name: tap-ga4
     variant: meltanolabs
-    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0  
+    pip_url: git+https://github.com/MeltanoLabs/tap-google-analytics.git setuptools<82.0
     config:
-      reports: ./report.json
+      reports: ${TAP_GA4_REPORTS}
       start_date: ${START_DATE}
       keep_empty_rows: true
       select:
-      - goal
+      - ${GA4_GOAL}
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -36,14 +53,28 @@ plugins:
         lower: true
         snake_case: true
       fail_fast: false
-      method: gcs_stage
+      method: ${BQ_METHOD}
       bucket: australia-southeast1-meltan-00c049c-bigquery-staging
   transformers:
   - name: dbt-bigquery
     variant: dbt-labs
-    pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
+    pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
+    config:
+      project: farizon-main
+      location: australia-southeast1
+      method: oauth
     commands:
-      ga4_models:
-        args: run --select ga4_goal_a ga4_goal_channel
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand
+        args: run --select +google_ads_search +google_ads_demand +google_ads_keyword +google_ads_location
+      ga4_goal_models:
+        args: run --select +ga4_goal_a +ga4_goal_channel_goal
+      ga4_session_models:
+        args: run --select +ga4_goal_a_session +ga4_goal_channel_session
+      ga4_keyword_models:
+        args: run --select +ga4_goal_channel_keyword
+      ga4_final_models:
+        args: run --select ga4_goal_channel
+  files:
+  - name: files-airflow
+    variant: meltano
+    pip_url: git+https://github.com/meltano/files-airflow.git
