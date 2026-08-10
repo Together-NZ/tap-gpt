@@ -5,6 +5,7 @@ sources:
     tables:
       - name: goal
       - name: session_goal
+      - name: keyword_goal
 
   - name: ga4_session_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"
@@ -80,6 +81,8 @@ sources:
     tables:
       - name: google_ads_demand
       - name: google_ads_search
+      - name: google_ads_keyword
+      - name: google_ads_location
 
   - name: dash_union
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"

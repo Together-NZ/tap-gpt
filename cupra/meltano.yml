@@ -121,12 +121,15 @@ plugins:
       ga4_session_models:
         args: run --select ga4_goal_a_session ga4_goal_channel_session
         description: Run GA4 session-level models
+      ga4_keyword_models:
+        args: run --select ga4_goal_channel_keyword
+        description: Run GA4 keyword channel model
       ga4_final_models:
         args: run --select ga4_goal_channel
         description: Union GA4 goal and session channel models
       google_ads_models:
-        args: run --select +google_ads_search +google_ads_demand
-        description: Run Google Ads models
+        args: run --select +google_ads_search +google_ads_demand +google_ads_keyword +google_ads_location
+        description: Run Google Ads search models
       dash_models:
         args: run --select +dash_table
         description: Run dash_table union model

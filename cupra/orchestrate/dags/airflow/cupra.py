@@ -81,6 +81,14 @@ def set_env_vars_dash():
         return env
 
 
+def set_env_vars_dash_search():
+    env = get_meltano_env()
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "dash_table_search"
+    return env
+
+
 with models.DAG(
     dag_id="cupra-meltano-extraction-transformation-dbt",
     schedule_interval="0 14 * * *",
@@ -142,33 +150,38 @@ with models.DAG(
         namespace="composer-user-workloads",
         image=IMAGE,
         trigger_rule="all_done",
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_table",
-        ],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         env_vars=set_env_vars_dash(),
         get_logs=True,
     )
-    env = get_meltano_env()
-    comparison_trigger_facebook = ComparisonTrigger(
-        project_name="cupra-main",
-        destination_table="facebook_transformed",
-        table_name="facebook",
-        source_name="meta",
-        start_date=comparison_start_date,
-        end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_cupra_main",
-        project_id=env["PROJECT_ID"]
+    kube_dash_search = KubernetesPodOperator(
+        name="cupra-dash-search-to-bigquery",
+        task_id="cupra-dash_search_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_search_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_dash_search(),
+        get_logs=True,
     )
     def facebook_comparison_check(**context):
-        result = comparison_trigger_facebook.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="cupra-main",
+            destination_table="facebook_transformed",
+            table_name="facebook",
+            source_name="meta",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_cupra_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("Facebook data accuracy check failed — BQ data does not match source API.")
         return result
@@ -179,18 +192,19 @@ with models.DAG(
         trigger_rule="all_done",
     )
     kube_facebook >> task_facebook_comparison
-    comparison_trigger_dv360_standard = ComparisonTrigger(
-        project_name="cupra-main",
-        destination_table="dv360_transformed",
-        table_name="dv360_standard",
-        source_name="dv360_standard",
-        start_date=comparison_start_date,
-        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_cupra_main",
-        project_id=env["PROJECT_ID"]
-    )
     def dv360_standard_comparison_check(**context):
-        result = comparison_trigger_dv360_standard.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="cupra-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_cupra_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
         return result
@@ -200,18 +214,19 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    comparison_trigger_dv360_youtube = ComparisonTrigger(
-        project_name="cupra-main",
-        destination_table="dv360_transformed",
-        table_name="dv360_youtube",
-        source_name="dv360_youtube",
-        start_date=comparison_start_date,
-        end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
-        secret_name="airflow-variables-meltano_cupra_main",
-        project_id=env["PROJECT_ID"]
-    )
     def dv360_youtube_comparison_check(**context):
-        result = comparison_trigger_dv360_youtube.compare_data()
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="cupra-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_cupra_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
         if not result:
             raise ValueError("DV360 data accuracy check failed — BQ data does not match source API.")
         return result
@@ -221,20 +236,15 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+   
+            
     kube_dv360 >> [task_dv360_standard_comparison , task_dv360_youtube_comparison]
     kube_dash_union = KubernetesPodOperator(
         name="cupra-dash-union-to-bigquery",
         task_id="cupra-dash_union_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_union",
-        ],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_union_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -242,12 +252,9 @@ with models.DAG(
         get_logs=True,
     )
 
-
-
-
     kube_cm360 >> kube_dv360
-    [kube_dv360,kube_facebook] >> kube_dash
-    kube_dash >> kube_dash_union
+    [kube_dv360, kube_facebook] >> kube_dash
+    kube_dash >> kube_dash_search >> kube_dash_union
 
 
 with models.DAG(
@@ -256,18 +263,13 @@ with models.DAG(
     default_args=default_args,
 ) as ga4_dag:
 
-    def set_env_vars_dash():
+    def set_env_vars_google_ads_search():
         env = get_meltano_env()
+        env["BQ_DATASET"] = "google_ads_search"
+        env["BQ_METHOD"] = "batch_job"
         env["DBT_BIGQUERY_METHOD"] = "oauth"
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-        env["DBT_BIGQUERY_DATASET"] = "dash_table"
-        return env
-
-    def set_env_vars_dash_search():
-        env = get_meltano_env()
-        env["DBT_BIGQUERY_METHOD"] = "oauth"
-        env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-        env["DBT_BIGQUERY_DATASET"] = "dash_table_search"
+        env["DBT_BIGQUERY_DATASET"] = "google_ads_search_transformed"
         return env
 
     def set_env_vars_ga4(goal):
@@ -275,6 +277,9 @@ with models.DAG(
         if goal == "session":
             env["TAP_GA4_REPORTS"] = "./report_sessions.json"
             env["GA4_GOAL"] = "session_goal"
+        elif goal == "keyword":
+            env["TAP_GA4_REPORTS"] = "./report_keyword.json"
+            env["GA4_GOAL"] = "keyword_goal"
         else:
             env["TAP_GA4_REPORTS"] = "./report.json"
             env["GA4_GOAL"] = "goal"
@@ -303,7 +308,18 @@ with models.DAG(
         env["DBT_BIGQUERY_DATASET"] = "ga4_transformed"
         return env
 
-
+    kube_google_ads = KubernetesPodOperator(
+        name="cupra-google-ads-search-to-bigquery",
+        task_id="cupra-google-ads-search_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:google_ads_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_google_ads_search(),
+        get_logs=True,
+    )
 
     kube_dash = KubernetesPodOperator(
         name="cupra-dash-to-bigquery",
@@ -311,14 +327,7 @@ with models.DAG(
         namespace="composer-user-workloads",
         image=IMAGE,
         trigger_rule="all_done",
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_table",
-        ],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -331,14 +340,7 @@ with models.DAG(
         task_id="cupra-dash_search_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_table_search",
-        ],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_search_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -351,14 +353,7 @@ with models.DAG(
         task_id="cupra-dash_union_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_union",
-        ],
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_union_models"],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
@@ -380,7 +375,7 @@ with models.DAG(
     )
 
     kube_ga4_list = []
-    for goal in ("goal", "session"):
+    for goal in ("goal", "session", "keyword"):
         kube_ga4 = KubernetesPodOperator(
             name=f"cupra-ga4-{goal}-to-bigquery",
             task_id=f"cupra-ga4_{goal}_to_bigquery",
@@ -401,6 +396,7 @@ with models.DAG(
         )
         kube_ga4_list.append(kube_ga4)
 
-    kube_dash >> kube_dash_search >> kube_dash_union
+    kube_google_ads >> [kube_dash, kube_dash_search]
+    [kube_dash, kube_dash_search] >> kube_dash_union
     for kube_ga4 in kube_ga4_list:
         kube_dash_union >> kube_ga4 >> kube_ga4_final
