@@ -173,6 +173,28 @@ with models.DAG(
             ),
             env_vars=set_env_vars_dash(),
         )
+    def linkedin_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="polestar-main",
+            destination_table="linkedin_transformed",
+            table_name="linkedin",
+            source_name="linkedin",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_polestar_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Linkedin data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_linkedin_comparison = PythonOperator(
+        task_id="task_linkedin_comparison",
+        python_callable=linkedin_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
     def facebook_comparison_check(**context):
         env = get_meltano_env()
         trigger = ComparisonTrigger(
@@ -197,6 +219,7 @@ with models.DAG(
         trigger_rule="all_done",
     )
     kube_facebook >> task_facebook_comparison
+    kube_linkedin_ads >> task_linkedin_comparison
     [kube_facebook,kube_cm360,kube_linkedin_ads,kube_ttd] >> kube_dash >> kube_dash_union
     
 with models.DAG(
