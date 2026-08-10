@@ -50,6 +50,13 @@ def get_meta_start_date():
     ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
+def get_meta_end_date():
+    # Cap at yesterday NZT so the tap does not request incomplete same-day data.
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=1)).strftime(
+        "%Y-%m-%dT00:00:00Z"
+    )
+
+
 def get_meltano_env():
     meltano_env_unique = Variable.get("meltano_realnz_main", deserialize_json=True)
     meltano_env_common = Variable.get("meltano_common_developer_main", deserialize_json=True)
@@ -119,6 +126,7 @@ def set_env_vars_ga4_final(brand):
 def set_env_vars_facebook(account_id, brand):
     env = get_meltano_env()
     env["BQ_DATASET"] = f"facebook_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"facebook_transformed__{brand}"
