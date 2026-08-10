@@ -83,10 +83,11 @@ plugins:
       start_date: ${START_DATE}
 
   - name: tap-facebook
-
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
+      airbyte_spec:
+        tag: "5.2.13"
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
@@ -95,6 +96,7 @@ plugins:
     - ad_sets.*
     - ads.*
     - campaigns.*
+    - custom_conversions.*
   - name: tap-hivestack
     namespace: tap-hivestack
     pip_url: git+ssh://git@github.com/Together-NZ/tap-hivestack.git setuptools<82.0
