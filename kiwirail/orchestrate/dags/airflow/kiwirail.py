@@ -186,16 +186,18 @@ def set_env_vars_linkedin_freight():
     return env
 
 
-def set_env_vars_ttd_freight():
+def set_env_vars_ttd(brand):
     env = get_meltano_env()
-    env["BQ_DATASET"] = "ttd_raw__freight"
+    env["BQ_DATASET"] = f"ttd_raw__{brand}"
     env["BQ_METHOD"] = "batch_job"
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    env["DBT_BIGQUERY_DATASET"] = "ttd_transformed__freight"
-    env["CM360_SUFFIX"] = "cm360_transformed__freight"
-    env["REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET"] = "cm360_transformed__freight"
-    env["TAP_TTD_ADVERTISER_ID"] = env.get("TAP_TTD_ADVERTISER_ID", "zdnpghz")
+    env["DBT_BIGQUERY_DATASET"] = f"ttd_transformed__{brand}"
+    advertiser_key = f"TAP_TTD_ADVERTISER_{brand}_ID"
+    env["TAP_TTD_ADVERTISER_ID"] = env.get(
+        advertiser_key,
+        env.get("TAP_TTD_ADVERTISER_ID", ""),
+    )
     return env
 
 
@@ -603,8 +605,8 @@ with models.DAG(
     )
 
     kube_ttd = KubernetesPodOperator(
-        name="kiwirail-freight-ttd-to-bigquery",
-        task_id="kiwirail-freight-ttd_to_bigquery",
+        name=f"kiwirail-{brand}-ttd-to-bigquery",
+        task_id=f"kiwirail-{brand}-ttd_to_bigquery",
         namespace="composer-user-workloads",
         image=IMAGE,
         arguments=[
@@ -612,13 +614,13 @@ with models.DAG(
             "run",
             "tap-ttd",
             "target-bigquery",
-            "dbt-bigquery:ttd_freight_models",
+            f"dbt-bigquery:ttd_{brand}_models",
         ],
         container_resources=k8s_models.V1ResourceRequirements(
             limits={"memory": "1000M", "cpu": "500m"},
         ),
         execution_timeout=timedelta(minutes=60),
-        env_vars=set_env_vars_ttd_freight(),
+        env_vars=set_env_vars_ttd(brand),
         get_logs=True,
     )
 
