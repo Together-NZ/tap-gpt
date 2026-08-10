@@ -78,7 +78,7 @@ def set_env_vars_hivestack(report_id, brand):
     env["DBT_BIGQUERY_DATASET"] = f"hivestack_transformed__{brand}"
     env["TAP_HIVESTACK_REPORT_ID"] = report_id
     return env
-
+#
 
 def set_env_vars_ga4(property_id, brand, goal_type):
     env = get_meltano_env()
