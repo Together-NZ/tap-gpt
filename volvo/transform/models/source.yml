@@ -1,3 +1,5 @@
+version: 2
+
 sources:
 
   - name: ga4_raw__volvo
@@ -92,7 +94,7 @@ sources:
 
   - name: ttd_raw__volvo
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'volvo-main') }}"
-    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_raw__volvo') }}"
+    schema: "{{ env_var('REFERENCE_TTD_BIGQUERY_DATASET', 'ttd_raw__volvo') }}"
     tables:
       - name: standard_streams
 
