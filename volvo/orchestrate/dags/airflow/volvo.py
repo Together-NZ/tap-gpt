@@ -24,7 +24,7 @@ local_tz = pendulum.timezone("Pacific/Auckland")
 
 default_args = {
     "retries": 3,
-    "retry_delay": datetime.timedelta(hours=2),
+    "retry_delay": datetime.timedelta(minutes=20),
     "max_active_runs": 1,
     "concurrency": 1,
     "catchup": False,
@@ -134,7 +134,7 @@ def set_env_vars_dash_search(label):
 
 # ---------------------------------------------------------------------------
 # DAG 1: Google Ads + GA4 (schedule: 14:00 NZST daily)
-# Flow: google_ads >> dash >> dash_search >> dash_union >> ga4 (goal, session, keyword) >> ga4_final
+# Flow: google_ads >> [dash, dash_search] >> dash_union >> ga4 (goal, session, keyword) >> ga4_final
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="volvo-google-ads-ga4",
@@ -207,11 +207,12 @@ with models.DAG(
             namespace="composer-user-workloads",
             image=IMAGE,
             trigger_rule='all_done',
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_volvo_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_dash(brand),
+            get_logs=True,
         )
 
         kube_dash_search = KubernetesPodOperator(
@@ -219,11 +220,12 @@ with models.DAG(
             task_id=f"{brand}-dash_search_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_search_volvo_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_dash_search(brand),
+            get_logs=True,
         )
 
         kube_dash_union = KubernetesPodOperator(
@@ -231,11 +233,12 @@ with models.DAG(
             task_id=f"{brand}-dash_union_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_union_volvo_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_dash(brand),
+            get_logs=True,
         )
         kube_ga4_final = KubernetesPodOperator(
             name=f"{brand}-ga4-final-to-bigquery",
@@ -273,7 +276,8 @@ with models.DAG(
             kube_ga4_list.append(kube_ga4)
         for task in kube_ga4_list:
             kube_dash_union >> task >> kube_ga4_final
-        kube_google_ads >> kube_dash >> kube_dash_search >> kube_dash_union
+        kube_google_ads >> [kube_dash, kube_dash_search]
+        [kube_dash, kube_dash_search] >> kube_dash_union
 # ---------------------------------------------------------------------------
 # DAG 2: Social / Display / Programmatic (schedule: 05:00 NZST daily)
 # Flow: [facebook, dv360, cm360, linkedin, ttd, hivestack] >> dash >> dash_search >> dash_union
@@ -369,11 +373,12 @@ with models.DAG(
             namespace="composer-user-workloads",
             image=IMAGE,
             trigger_rule='all_done',
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_table__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_volvo_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_dash(brand),
+            get_logs=True,
         )
 
         kube_dash_search = KubernetesPodOperator(
@@ -381,11 +386,12 @@ with models.DAG(
             task_id=f"{brand}-dash_search_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_search_volvo_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_dash_search(brand),
+            get_logs=True,
         )
 
         kube_dash_union = KubernetesPodOperator(
@@ -393,11 +399,12 @@ with models.DAG(
             task_id=f"{brand}-dash_union_to_bigquery",
             namespace="composer-user-workloads",
             image=IMAGE,
-            arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{brand}"],
+            arguments=["--environment=prod", "invoke", "dbt-bigquery:dash_union_volvo_models"],
             container_resources=k8s_models.V1ResourceRequirements(
                 limits={"memory": "1000M", "cpu": "500m"},
             ),
             env_vars=set_env_vars_dash(brand),
+            get_logs=True,
         )
 
         def linkedin_comparison_check(**context):
@@ -447,6 +454,4 @@ with models.DAG(
         )
         kube_facebook >> task_facebook_comparison
         kube_linkedin >> task_linkedin_comparison
-        kube_cm360 >> kube_ttd
-        kube_cm360 >> kube_dv360
-        [kube_facebook, kube_dv360,  kube_linkedin, kube_ttd, kube_hivestack] >> kube_dash >> kube_dash_search >> kube_dash_union
+        [kube_facebook, kube_dv360, kube_cm360, kube_linkedin, kube_ttd, kube_hivestack] >> kube_dash >> kube_dash_search >> kube_dash_union

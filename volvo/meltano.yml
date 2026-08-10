@@ -12,30 +12,34 @@ environments:
           DBT_BIGQUERY_PROJECT: together-internal
           DBT_BIGQUERY_LOCATION: australia-southeast1
           REFERENCE_META_BIGQUERY_DATASET: dbt_test_facebook
+          REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET: dbt_test_facebook
           REFERENCE_DV360_BIGQUERY_DATASET: dbt_test_dv360_raw
-          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
           REFERENCE_DV360_RAW_BIGQUERY_DATASET: dbt_test_dv360_raw
-          REPORT_NAME: amp_report
+          REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_dv360
+          REFERENCE_HIVESTACK_BIGQUERY_DATASET: dbt_test_hivestack
+          REFERENCE_HIVESTACK_TRANSFORMED_BIGQUERY_DATASET: dbt_test_hivestack
           REFERENCE_LINKEDIN_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_LINKEDIN_TRANSFORMED_BIGQUERY_DATASET: dbt_test_linkedin
+          REFERENCE_TTD_BIGQUERY_DATASET: dbt_test_ttd
           REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ttd
+          REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
+          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
+          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
+          REFERENCE_GOOGLE_ADS_BIGQUERY_DATASET: dbt_test_google_ads_search
+          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
-          REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           LINKEDIN_SUFFIX: dbt_test_linkedin
           TTD_SUFFIX: dbt_test_ttd
-
           HIVESTACK_SUFFIX: dbt_test_hivestack
-          REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw__volvo
-          REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed__volvo
-          REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed__volvo
-          REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed__volvo
-          REFERENCE_GOOGLE_ADS_BIGQUERY_DATASET: dbt_test_google_ads_search_transformed__volvo
-          REFERENCE_DASH_UNION_BIGQUERY_DATASET: dbt_test_dash_table__volvo
-          REFERENCE_DASH_UNION_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search__volvo
-          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search_transformed__volvo
-          PLAN_CODE_GA4: volvo
-
+          GOOGLE_ADS_SEARCH_SUFFIX: dbt_test_google_ads_search
+          REPORT_NAME: amp_report
           PLAN_CODE: uow
+          PLAN_CODE_GA4: uow
 - name: prod
 #state_backend:
 #  uri: gs://volvo-meltano-state-staging
@@ -164,14 +168,33 @@ plugins:
       facebook_volvo_models:
         args: run --select +facebook__volvo
         description: Run the Facebook ads model
-      facebook_geely_models: run --select +facebook__geely
-      facebook_polestar_models: run --select +facebook__polestar
-      ga4_volvo_goal_models: run --select ga4_goal_a__volvo ga4_goal_channel__volvo_goal
-      ga4_volvo_session_models: run --select ga4_goal_a__volvo_session ga4_goal_channel__volvo_session
-      ga4_volvo_keyword_models: run --select +ga4_goal_channel_keyword__volvo
-      ga4_volvo_final_models: run --select ga4_goal_channel__volvo
-      linkedin_volvo_models: run --select +linkedin__volvo
-      google_ads_volvo_models: run --select +google_ads_search__volvo +google_ads_demand__volvo +google_ads_demand_2__volvo +google_ads_keyword__volvo +google_ads_location__volvo
+      linkedin_volvo_models:
+        args: run --select +linkedin__volvo
+        description: Run the LinkedIn ads model
+      google_ads_volvo_models:
+        args: run --select +google_ads_search__volvo +google_ads_demand__volvo +google_ads_demand_2__volvo +google_ads_keyword__volvo +google_ads_location__volvo
+        description: Run Google Ads search models
+      dash_volvo_models:
+        args: run --select +dash_table__volvo
+        description: Run dash_table model
+      dash_search_volvo_models:
+        args: run --select +dash_table_search__volvo
+        description: Run dash_table_search model
+      dash_union_volvo_models:
+        args: run --select +dash_union__volvo
+        description: Run dash_union model
+      ga4_volvo_goal_models:
+        args: run --select ga4_goal_a__volvo ga4_goal_channel__volvo_goal
+        description: Run GA4 goal-level models
+      ga4_volvo_session_models:
+        args: run --select ga4_goal_a__volvo_session ga4_goal_channel__volvo_session
+        description: Run GA4 session-level models
+      ga4_volvo_keyword_models:
+        args: run --select +ga4_goal_channel_keyword__volvo
+        description: Run GA4 keyword channel model
+      ga4_volvo_final_models:
+        args: run --select ga4_goal_channel__volvo
+        description: Union GA4 goal and session channel models
     config:
       project: volvo-main
       location: australia-southeast1
