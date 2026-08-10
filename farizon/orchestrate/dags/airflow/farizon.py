@@ -24,7 +24,7 @@ default_args = {
     "concurrency": 1,
     "catchup": False,
     "retry_delay": datetime.timedelta(minutes=30),
-    "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz),
+    "start_date": datetime.datetime(2026, 8, 9, tzinfo=local_tz),
 }
 
 KUBE_RESOURCES = k8s_models.V1ResourceRequirements(
