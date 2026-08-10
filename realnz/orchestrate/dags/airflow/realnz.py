@@ -297,6 +297,7 @@ with models.DAG(
             arguments=["--environment=prod", "run", "tap-dv360", "target-bigquery", f"dbt-bigquery:dv360_{brand}_models"],
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_dv360(env[f"TAP_DV360_ADVERTISER_{brand}_ID"], brand),
+            trigger_rule="all_done",
         )
         per_brand_upstreams[brand].append(kube_dv360)
 
@@ -371,6 +372,7 @@ with models.DAG(
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_ttd(env[f"TAP_TTD_ADVERTISER_{brand}_ID"], brand),
             execution_timeout=timedelta(minutes=60),
+            trigger_rule="all_done",
         )
         per_brand_upstreams[brand].append(kube_ttd)
 
@@ -394,6 +396,7 @@ with models.DAG(
             task_id=f"realnz_dash_search_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
+            trigger_rule="all_done",
             arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_dash_search(brand),
@@ -403,6 +406,7 @@ with models.DAG(
             task_id=f"realnz_dash_union_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
+            trigger_rule="all_done",
             arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{brand}"],
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_dash(brand),
@@ -505,6 +509,7 @@ with models.DAG(
             task_id=f"realnz_google_dash_search_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
+            trigger_rule="all_done",
             arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"+dash_table_search__{brand}"],
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_dash_search(brand),
@@ -515,6 +520,7 @@ with models.DAG(
             task_id=f"realnz_google_dash_union_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
+            trigger_rule="all_done",
             arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"dash_union__{brand}"],
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_dash(brand),
@@ -528,6 +534,7 @@ with models.DAG(
                 task_id=f"realnz_ga4_to_bigquery_{brand}_{goal_type}",
                 namespace="composer-user-workloads",
                 image=IMAGE,
+                trigger_rule="all_done",
                 arguments=[
                     "--environment=prod",
                     "run",
@@ -546,6 +553,7 @@ with models.DAG(
             task_id=f"realnz_ga4_final_to_bigquery_{brand}",
             namespace="composer-user-workloads",
             image=IMAGE,
+            trigger_rule="all_done",
             arguments=[
                 "--environment=prod",
                 "invoke",
