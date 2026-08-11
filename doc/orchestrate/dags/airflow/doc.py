@@ -450,7 +450,48 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
-    
+    def dv360_comparison_standard_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_standard",
+            source_name="dv360_standard",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )
+    task_dv360_standard_comparison = PythonOperator(
+        task_id="task_dv360_standard_comparison",
+        python_callable=dv360_comparison_standard_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    def dv360_comparison_youtube_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="doconservation-main",
+            destination_table="dv360_transformed",
+            table_name="dv360_youtube",
+            source_name="dv360_youtube",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_doconservation_main",
+            project_id=env["PROJECT_ID"]
+        )   
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("Dv360 Youtube data accuracy check failed — BQ data does not match source API.")
+        return result
+    task_dv360_youtube_comparison = PythonOperator(
+        task_id="task_dv360_youtube_comparison",
+        python_callable=dv360_comparison_youtube_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_dv360 >> task_dv360_standard_comparison
+    kube_dv360 >> task_dv360_youtube_comparison
     def facebook_comparison_check(**context):
         env = get_meltano_env()
         trigger = ComparisonTrigger(
