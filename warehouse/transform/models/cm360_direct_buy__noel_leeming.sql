@@ -1,6 +1,6 @@
 {{ config(
     materialized='table',
-    alias='cm360_direct_buy__twhs',
+    alias='cm360_direct_buy__noel_leeming',
 ) }}
 
 WITH cm360_data AS (
@@ -8,5 +8,4 @@ WITH cm360_data AS (
 )
 
 SELECT * FROM cm360_data
-WHERE LOWER(advertiser) LIKE '%warehouse%'
-  AND LOWER(advertiser) LIKE '%stationery%'
+WHERE LOWER(advertiser) LIKE '%noel leeming%'

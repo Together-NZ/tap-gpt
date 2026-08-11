@@ -91,7 +91,7 @@ plugins:
       start_date: ${START_DATE}
       end_date:
       manual: false
-      advertiser_id: 'z8k4ccy'
+      advertiser_id: ${TAP_TTD_ADVERTISER_ID}
   - name: tap-snapchat-ads
     namespace: tap-snapchat-ads
     pip_url: git+https://github.com/Together-NZ/tap_snapchat_ads.git setuptools<82.0
@@ -209,6 +209,32 @@ plugins:
         args: run --select ga4_goal_channel__twh
       ga4_twhs_final_models:
         args: run --select ga4_goal_channel__twhs
+      facebook_noel_leeming_models:
+        args: run --select facebook__noel_leeming
+      cm360_noel_leeming_models:
+        args: run --select cm360_direct_buy__noel_leeming
+      dv360_noel_leeming_models:
+        args: run --select dv360_standard__noel_leeming dv360_youtube__noel_leeming
+      ttd_noel_leeming_models:
+        args: run --select +ttd_transformed__noel_leeming
+      pinterest_noel_leeming_models:
+        args: run --select +pinterest__noel_leeming
+      tiktok_noel_leeming_models:
+        args: run --select +tiktok__noel_leeming
+      google_ads_noel_leeming_models:
+        args: run --select +google_ads_search__noel_leeming +google_ads_demand__noel_leeming +google_ads_keyword__noel_leeming +google_ads_location__noel_leeming +bing_ads_search__noel_leeming
+      bing_ads_noel_leeming_models:
+        args: run --select bing_ads_search__noel_leeming bing_ads_keyword__noel_leeming
+      ga4_noel_leeming_goal_models:
+        args: run --select ga4_goal_a__noel_leeming ga4_goal_channel_goal__noel_leeming
+      ga4_noel_leeming_session_models:
+        args: run --select ga4_goal_a_session__noel_leeming ga4_goal_channel_session__noel_leeming
+      ga4_noel_leeming_keyword_models:
+        args: run --select ga4_goal_channel_keyword__noel_leeming
+      ga4_noel_leeming_ecommerce_models:
+        args: run --select ga4_goal_ecommerce__noel_leeming
+      ga4_noel_leeming_final_models:
+        args: run --select ga4_goal_channel__noel_leeming
 
   files:
     - name: files-airflow
