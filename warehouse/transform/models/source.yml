@@ -290,6 +290,141 @@ sources:
     tables:
       - name: dash_table_search__twhs
 
+  - name: facebook_raw__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__noel_leeming') }}"
+    tables:
+      - name: ads_insights
+      - name: ad_account
+      - name: ad_sets
+      - name: ads
+      - name: campaigns
+      - name: custom_conversions
+
+  - name: facebook_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_META_TRANSFORMED_BIGQUERY_DATASET', 'facebook_transformed__noel_leeming') }}"
+    tables:
+      - name: facebook__noel_leeming
+
+  - name: dv360_raw__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw__noel_leeming') }}"
+    tables:
+      - name: dv360_standard
+      - name: dv360_youtube
+
+  - name: dv360_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DV360_TRANSFORMED_BIGQUERY_DATASET', 'dv360_transformed__noel_leeming') }}"
+    tables:
+      - name: dv360_standard__noel_leeming
+      - name: dv360_youtube__noel_leeming
+
+  - name: cm360_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed__noel_leeming') }}"
+    tables:
+      - name: cm360_direct_buy__noel_leeming
+
+  - name: ttd_raw__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_RAW_BIGQUERY_DATASET', 'ttd_raw__noel_leeming') }}"
+    tables:
+      - name: standard_streams
+
+  - name: ttd_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed__noel_leeming') }}"
+    tables:
+      - name: ttd_transformed__noel_leeming
+
+  - name: pinterest_raw__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_PINTEREST_BIGQUERY_DATASET', 'pinterest_raw__noel_leeming') }}"
+    tables:
+      - name: reports
+      - name: ads
+      - name: ad_groups
+      - name: campaigns
+
+  - name: pinterest_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_PINTEREST_TRANSFORMED_BIGQUERY_DATASET', 'pinterest_transformed__noel_leeming') }}"
+    tables:
+      - name: pinterest__noel_leeming
+
+  - name: tiktok_raw__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw__noel_leeming') }}"
+    tables:
+      - name: ads
+      - name: ads_basic_data_metrics_by_day
+      - name: ads_video_play_metrics_by_day
+
+  - name: tiktok_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__noel_leeming') }}"
+    tables:
+      - name: tiktok__noel_leeming
+
+  - name: ga4_raw__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_RAW_BIGQUERY_DATASET', 'ga4_raw__noel_leeming') }}"
+    tables:
+      - name: goal
+      - name: session_goal
+      - name: keyword_goal
+      - name: ecommerce_goal
+
+  - name: ga4_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__noel_leeming') }}"
+    tables:
+      - name: ga4_goal_a__noel_leeming
+      - name: ga4_goal_a_session__noel_leeming
+      - name: ga4_goal_channel__noel_leeming
+      - name: ga4_goal_channel_goal__noel_leeming
+      - name: ga4_goal_channel_session__noel_leeming
+      - name: ga4_goal_channel_keyword__noel_leeming
+      - name: ga4_goal_ecommerce__noel_leeming
+
+  - name: ga4_session_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_SESSION_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__noel_leeming') }}"
+    tables:
+      - name: ga4_goal_channel_session__noel_leeming
+
+  - name: ga4_goal_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GA4_GOAL_TRANSFORMED_BIGQUERY_DATASET', 'ga4_transformed__noel_leeming') }}"
+    tables:
+      - name: ga4_goal_channel_goal__noel_leeming
+
+  - name: google_ads__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_BIGQUERY_DATASET', 'google_ads_search_transformed__noel_leeming') }}"
+    tables:
+      - name: google_ads_demand__noel_leeming
+      - name: google_ads_search__noel_leeming
+      - name: google_ads_keyword__noel_leeming
+      - name: google_ads_location__noel_leeming
+      - name: bing_ads_search__noel_leeming
+      - name: bing_ads_keyword__noel_leeming
+
+  - name: dash_union__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table__noel_leeming') }}"
+    tables:
+      - name: dash_union__noel_leeming
+      - name: dash_table__noel_leeming
+
+  - name: dash_union_search__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_SEARCH_BIGQUERY_DATASET', 'dash_table_search__noel_leeming') }}"
+    tables:
+      - name: dash_table_search__noel_leeming
+
 models:
   - name: hivestack__twh
     config:
