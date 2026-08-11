@@ -327,6 +327,31 @@ def make_snapchat_comparison_check(brand):
     return snapchat_comparison_check
 
 
+def make_pinterest_comparison_check(brand):
+    def pinterest_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table=f"pinterest_transformed__{brand}",
+            table_name=f"pinterest__{brand}",
+            source_name="pinterest",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_warehouse_main",
+            project_id=env["PROJECT_ID"],
+            brand=brand,
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                f"Pinterest data accuracy check failed for {brand} — "
+                "BQ data does not match source API."
+            )
+        return result
+
+    return pinterest_comparison_check
+
+
 # ---------------------------------------------------------------------------
 # DAG 1: Google Ads + TikTok + GA4 (schedule: 14:00 NZST daily)
 # Flow: [google_ads, tiktok] >> dash >> dash_search >> dash_union
@@ -604,6 +629,15 @@ with models.DAG(
             env_vars=set_env_vars_pinterest(brand),
             get_logs=True,
         )
+
+        task_pinterest_comparison = PythonOperator(
+            task_id=f"warehouse-pinterest_comparison__{brand}",
+            python_callable=make_pinterest_comparison_check(brand),
+            retries=0,
+            trigger_rule="all_done",
+        )
+
+        kube_pinterest >> task_pinterest_comparison
 
         before_dash = [kube_facebook, kube_dv360, kube_cm360, kube_pinterest]
         if kube_snapchat is not None:
