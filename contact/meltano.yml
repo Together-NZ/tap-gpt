@@ -130,7 +130,7 @@ plugins:
     pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
       google_ads_models:
-        args: run --select google_ads_search google_ads_demand google_ads_keyword google_ads_location bing_ads_search
+        args: run --select google_ads_search google_ads_demand google_ads_keyword google_ads_location bing_ads_search bing_ads_search_keyword
       ga4_goal_models:
         args: run --select +ga4_goal_a +ga4_goal_channel_goal
       ga4_session_models:
