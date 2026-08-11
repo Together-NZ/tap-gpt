@@ -103,6 +103,7 @@ def set_env_vars_ttd(brand):
     env = get_meltano_env()
     env["BQ_DATASET"] = f"ttd_raw__{brand}"
     env["BQ_METHOD"] = "batch_job"
+    env["TAP_TTD_START_DATE"] = (datetime.datetime.now(local_tz) - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"ttd_transformed__{brand}"
