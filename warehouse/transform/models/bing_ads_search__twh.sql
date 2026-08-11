@@ -4,4 +4,4 @@
     alias='bing_ads_search__twh',
 ) }}
 
-{{ google_ads.bing_ads_search_warehouse(client_id=4824241958) }}
+{{ google_ads.bing_ads_search_sa360(client_id=4824241958) }}

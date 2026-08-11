@@ -1,15 +1,30 @@
 packages:
+  - git: https://github.com/Together-NZ/Impact-CI-hivestack_models.git
+    revision: 5d255147c00d76f229c68e935b719a1762b19052
+  - git: https://github.com/Together-NZ/Impact-CI-Linkedin_models.git
+    revision: 2c3c03caddcf07b33f190ebf0a205226b0860547
+  - git: git@github.com:Together-NZ/Impact-CI-reddit_models.git
+    revision: 894d0fe81d71cbad55a5e0d8dda3da317521bf5a
+  - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
+    revision: ab846697363e48ef7b9f3e4746d532b64fc94af9
+  - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
+    revision: 5f71c4887c6750a76b0ee1961b7a34e6e00003a5
   - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
-    revision: ae4a005e19100d01c4d986e8b06fa9792e751cbb
+    revision: 7fd343c1855dcb5fea9ababb56eed2a98dfcf927
   - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
-    revision: 3399b3855bcfee80c3090164478121369b78c3b1
-  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
-    revision: dc826c17a7294fe41129ff6fc27e40bc5bf728c1
-  - local: ../../google_ads
-  - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
-    revision: 0817a62f0ff5ed6fb4dab879f438ede3bad5a6c2
+    revision: 4611a42dbde102320f593a85407b79fb1bf2edbd
+  - git: https://github.com/Together-NZ/Impact-CI-snapchat_models.git
+    revision: a2bf16764466e8242e6f04ea04270c8766c7ac88
+  - git: https://github.com/Together-NZ/Impact-CI-Pinterest-models.git
+    revision: 9b471a47e4d1cf8534acacd793218ce38a02fc13
+  - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
+    revision: 893d551ae100c3cdb39917bb30462d1f322b22cf
   - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
-    revision: bf67bb91150d9547f66e10dfc2d5648b08853dec
+    revision: c19c49d457874433aecd7aa988581fe30d5373db
   - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
     revision: 085cc208375d7672aef4c342b818823a6d43e674
-sha1_hash: c2b22842abd5f9214cfa4daecb63bf6fbc3d1c6e
+  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
+    revision: d6981bd9b2a6dcba22d905706e17e07d788d94e5
+  - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
+    revision: 991ab73bbdbfde97db203b0286ee589bfaca9117
+sha1_hash: e70483d947ea19536b1500381189e13199deb9f9
