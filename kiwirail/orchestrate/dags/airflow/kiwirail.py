@@ -311,8 +311,11 @@ with models.DAG(
             env_vars=set_env_vars_dash(brand),
             get_logs=True,
         )
-        TTD_BRANDS = ["freight"]
-        for brand in TTD_BRANDS:
+        kube_google_ads >> kube_dash
+        ga4_tasks >> kube_dash
+        kube_dash >> kube_dash_search >> kube_dash_union
+    TTD_BRANDS = ["freight"]
+    for brand in TTD_BRANDS:
                 def make_ttd_comparison(b):
                     def ttd_comparison_check(**context):
                         env = get_meltano_env()
@@ -341,9 +344,7 @@ with models.DAG(
                     trigger_rule="all_done",
                 )
                 task_ttd_comparison
-        kube_google_ads >> kube_dash
-        ga4_tasks >> kube_dash
-        kube_dash >> kube_dash_search >> kube_dash_union
+
 
 
 # ==========================================================================
