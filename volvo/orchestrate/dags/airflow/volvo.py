@@ -169,13 +169,21 @@ with models.DAG(
             client_secret=env["TAP_GA4_OAUTH_CREDENTIALS_CLIENT_SECRET"],
         )
         developer_creds.refresh(Request())
-        env["TAP_GA4_START_DATE"] = get_ga4_start_date()
+        ga4_start_date = get_ga4_start_date()
+        env["START_DATE"] = ga4_start_date
+        env["TAP_GA4_START_DATE"] = ga4_start_date
         env["TAP_GA4_OAUTH_CREDENTIALS_ACCESS_TOKEN"] = developer_creds.token
-        property_key = f"{brand}_TAP_GA4_PROPERTY_ID"
-        if property_key in env:
-            env["TAP_GA4_PROPERTY_ID"] = env[property_key]
-        elif f"TAP_GA4_PROPERTY_{brand}_ID" in env:
-            env["TAP_GA4_PROPERTY_ID"] = env[f"TAP_GA4_PROPERTY_{brand}_ID"]
+        property_id = (
+            env.get(f"TAP_GA4_PROPERTY_{brand}_ID")
+            or env.get(f"{brand}_TAP_GA4_PROPERTY_ID")
+            or env.get("TAP_GA4_PROPERTY_ID")
+        )
+        if not property_id:
+            raise ValueError(
+                f"GA4 property ID missing for {brand}. "
+                f"Set TAP_GA4_PROPERTY_{brand}_ID in meltano_volvo_main."
+            )
+        env["TAP_GA4_PROPERTY_ID"] = property_id
         return env
 
     def set_env_vars_ga4_final(brand):
