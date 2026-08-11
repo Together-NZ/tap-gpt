@@ -290,33 +290,7 @@ with models.DAG(
             env_vars=set_env_vars_dash_search(brand),
             get_logs=True,
         )
-        def make_ttd_comparison(b):
-            def ttd_comparison_check(**context):
-                env = get_meltano_env()
-                trigger = ComparisonTrigger(
-                    project_name=PROJECT_NAME,
-                    destination_table=f"ttd_transformed__{b}",
-                    table_name=f"ttd_transformed__{b}",
-                    source_name="ttd",
-                    start_date=comparison_start_date,
-                    end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
-                    secret_name=COMPARISON_SECRET,
-                    project_id=env["PROJECT_ID"],
-                    brand=b,
-                )
-                result = trigger.compare_data()
-                if not result:
-                    raise ValueError(f"TTD data accuracy check failed for {b}.")
-                return result
 
-            return ttd_comparison_check
-
-        task_ttd_comparison = PythonOperator(
-            task_id=f"task_ttd_comparison_{brand}",
-            python_callable=make_ttd_comparison(brand),
-            retries=0,
-            trigger_rule="all_done",
-        )
 
         kube_dash_union = KubernetesPodOperator(
             name=f"kiwirail-dash-union-{brand}-to-bigquery",
@@ -337,7 +311,36 @@ with models.DAG(
             env_vars=set_env_vars_dash(brand),
             get_logs=True,
         )
-        task_ttd_comparison
+        TTD_BRANDS = ["freight"]
+        for brand in TTD_BRANDS:
+                def make_ttd_comparison(b):
+                    def ttd_comparison_check(**context):
+                        env = get_meltano_env()
+                        trigger = ComparisonTrigger(
+                            project_name=PROJECT_NAME,
+                            destination_table=f"ttd_transformed__{b}",
+                            table_name=f"ttd_transformed__{b}",
+                            source_name="ttd",
+                            start_date=comparison_start_date,
+                            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+                            secret_name=COMPARISON_SECRET,
+                            project_id=env["PROJECT_ID"],
+                            brand=b,
+                        )
+                        result = trigger.compare_data()
+                        if not result:
+                            raise ValueError(f"TTD data accuracy check failed for {b}.")
+                        return result
+
+                    return ttd_comparison_check
+
+                task_ttd_comparison = PythonOperator(
+                    task_id=f"task_ttd_comparison_{brand}",
+                    python_callable=make_ttd_comparison(brand),
+                    retries=0,
+                    trigger_rule="all_done",
+                )
+                task_ttd_comparison
         kube_google_ads >> kube_dash
         ga4_tasks >> kube_dash
         kube_dash >> kube_dash_search >> kube_dash_union
