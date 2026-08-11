@@ -109,7 +109,7 @@ plugins:
     catalog: snapchat_catalog.json
   - name: tap-pinterest-ads
     namespace: tap-pinterest-ads
-    pip_url: -e /Users/peter/work/tap-pinterest-ads setuptools<82.0
+    pip_url: git+https://github.com/Together-NZ/tap-pinterest-ads.git setuptools<82.0
     config:
       client_id: ${PINTEREST_CLIENT_ID}
       client_secret: ${PINTEREST_CLIENT_SECRET}
