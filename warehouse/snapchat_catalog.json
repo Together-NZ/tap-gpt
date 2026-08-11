@@ -507,8 +507,7 @@
         {
           "breadcrumb": [],
           "metadata": {
-            "selected":true,
-            
+            "selected": true,
             "table-key-properties": [
               "id"
             ],
@@ -800,7 +799,6 @@
         {
           "breadcrumb": [],
           "metadata": {
-
             "table-key-properties": [
               "id"
             ],
@@ -1122,7 +1120,7 @@
         {
           "breadcrumb": [],
           "metadata": {
-            "selected":true,
+            "selected": true,
             "table-key-properties": [
               "id"
             ],
@@ -1676,7 +1674,6 @@
           "breadcrumb": [],
           "metadata": {
             "table-key-properties": [
-              
               "id",
               "start_time"
             ],
@@ -2653,7 +2650,7 @@
         {
           "breadcrumb": [],
           "metadata": {
-            "selected":true,
+            "selected": true,
             "table-key-properties": [
               "id"
             ],
@@ -3568,7 +3565,7 @@
         {
           "breadcrumb": [],
           "metadata": {
-            "selected":true,
+            "selected": true,
             "table-key-properties": [
               "id"
             ],
@@ -8224,7 +8221,7 @@
         {
           "breadcrumb": [],
           "metadata": {
-            "selected":true,
+            "selected": true,
             "table-key-properties": [
               "id"
             ],
@@ -12847,7 +12844,7 @@
         {
           "breadcrumb": [],
           "metadata": {
-            "selected":true,
+            "selected": true,
             "table-key-properties": [
               "id"
             ],
@@ -13728,6 +13725,12 @@
               "integer"
             ]
           },
+          "landing_page_views": {
+            "type": [
+              "null",
+              "integer"
+            ]
+          },
           "quartile_1": {
             "type": [
               "null",
@@ -13833,7 +13836,7 @@
         {
           "breadcrumb": [],
           "metadata": {
-            "selected":true,
+            "selected": true,
             "table-key-properties": [
               "id",
               "start_time"
@@ -14920,6 +14923,15 @@
           "breadcrumb": [
             "properties",
             "ios_installs"
+          ],
+          "metadata": {
+            "inclusion": "available"
+          }
+        },
+        {
+          "breadcrumb": [
+            "properties",
+            "landing_page_views"
           ],
           "metadata": {
             "inclusion": "available"
