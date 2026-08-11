@@ -77,7 +77,7 @@ def get_ttd_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
 with models.DAG(
     dag_id="curative-meltano-google-ads",
-    schedule_interval="10 14 * * *",
+    schedule_interval="44 14 * * *",
     default_args=default_args,
 ) as google_dag:
     env = get_meltano_env()
