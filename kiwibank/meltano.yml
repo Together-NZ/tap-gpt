@@ -224,9 +224,9 @@ plugins:
       google_ads_generic_models:
         args: run --select +google_ads_search__generic +google_ads_demand__generic +google_ads_keyword__generic
       bing_ads_home_loans_models:
-        args: run --select +bing_ads_search__home_loans
+        args: run --select +bing_ads_search__home_loans +bing_ads_search_keyword__home_loans
       bing_ads_everyday_banking_retail_deposit_models:
-        args: run --select +bing_ads_search__everyday_banking_retail_deposit
+        args: run --select +bing_ads_search__everyday_banking_retail_deposit +bing_ads_search_keyword__everyday_banking_retail_deposit
       ttd_models:
         args: run --select +ttd
   files:
