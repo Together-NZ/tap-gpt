@@ -222,7 +222,7 @@ plugins:
       tiktok_noel_leeming_models:
         args: run --select +tiktok__noel_leeming
       google_ads_noel_leeming_models:
-        args: run --select +google_ads_search__noel_leeming +google_ads_demand__noel_leeming +google_ads_keyword__noel_leeming +google_ads_location__noel_leeming +bing_ads_search__noel_leeming
+        args: run --select +google_ads_search__noel_leeming +google_ads_demand__noel_leeming +google_ads_keyword__noel_leeming +google_ads_location__noel_leeming 
       bing_ads_noel_leeming_models:
         args: run --select bing_ads_search__noel_leeming bing_ads_keyword__noel_leeming
       ga4_noel_leeming_goal_models:

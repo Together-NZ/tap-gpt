@@ -1,12 +1,7 @@
 {{ config(
     materialized='table',
 ) }}
-
-SELECT * EXCEPT (ad_format),
-    ad_format_detail AS ad_format,
-    ad_format AS ad_format1
-FROM (
-    WITH dash_table AS (
+WITH dash_table AS (
         {{ dash_table_general_process.dv360_standard(source_name='dv360_transformed', table_name='dv360_standard', yt_source_name='dv360_transformed', yt_table_name='dv360_youtube') }}
         UNION ALL
         {{ dash_table_general_process.dv360_youtube(source_name='dv360_transformed', table_name='dv360_youtube') }}
@@ -28,4 +23,4 @@ FROM (
     {{ dash_table_general_process.dash_table_general_process_funnel(
         funnels=['cultural signal', 'high attention', 'public impact', 'consideration', 'traffic']
     ) }}
-)
+
