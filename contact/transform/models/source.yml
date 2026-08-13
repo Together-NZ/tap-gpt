@@ -113,7 +113,7 @@ sources:
       - name: cm360_direct_buy
       - name: cm360_seralized
 
-  - name: google_ads_central
+  - name: google_ads_search
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
     schema: "{{ env_var('REFERENCE_GOOGLE_ADS_CENTRAL_BIGQUERY_DATASET', 'google_ads_search_transformed') }}"
     tables:
@@ -122,6 +122,31 @@ sources:
       - name: google_ads_keyword
       - name: google_ads_location
       - name: bing_ads_search
+      - name: bing_ads_search_keyword
+
+  - name: google_ads_search__mobile
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX__MOBILE', 'google_ads_search_transformed__mobile') }}"
+    tables:
+      - name: google_ads_keyword__mobile
+      - name: google_ads_location__mobile
+      - name: bing_ads_search_keyword__mobile
+
+  - name: google_ads_search__broadband
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX__BROADBAND', 'google_ads_search_transformed__broadband') }}"
+    tables:
+      - name: google_ads_keyword__broadband
+      - name: google_ads_location__broadband
+      - name: bing_ads_search_keyword__broadband
+
+  - name: google_ads_search__energy
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('GOOGLE_ADS_SEARCH_SUFFIX__ENERGY', 'google_ads_search_transformed__energy') }}"
+    tables:
+      - name: google_ads_keyword__energy
+      - name: google_ads_location__energy
+      - name: bing_ads_search_keyword__energy
 
   - name: dash_table
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"

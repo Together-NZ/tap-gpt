@@ -443,6 +443,49 @@ with models.DAG(
         get_logs=True,
     )
 
+    kube_google_ads_mobile = KubernetesPodOperator(
+        name="contact-google-ads-mobile-to-bq",
+        task_id="contact-google_ads_mobile_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:google_ads_mobile_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_google_ads(),
+        get_logs=True,
+    )
+    kube_google_ads_broadband = KubernetesPodOperator(
+        name="contact-google-ads-broadband-to-bq",
+        task_id="contact-google_ads_broadband_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "invoke",
+            "dbt-bigquery:google_ads_broadband_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_google_ads(),
+        get_logs=True,
+    )
+    kube_google_ads_energy = KubernetesPodOperator(
+        name="contact-google-ads-energy-to-bq",
+        task_id="contact-google_ads_energy_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:google_ads_energy_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_google_ads(),
+        get_logs=True,
+    )
+    kube_google_ads >> [kube_google_ads_mobile, kube_google_ads_broadband]
+    [kube_google_ads_mobile, kube_google_ads_broadband] >> kube_google_ads_energy
+
     def tiktok_comparison_check(**context):
         env = get_meltano_env()
         trigger = ComparisonTrigger(

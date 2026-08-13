@@ -1,0 +1,7 @@
+{{ config(
+    materialized='table',
+    schema=env_var('GOOGLE_ADS_SEARCH_SUFFIX__BROADBAND', 'google_ads_search_transformed__broadband'),
+    alias='google_ads_keyword__broadband',
+) }}
+SELECT * FROM {{ source('google_ads_search', 'google_ads_keyword') }} 
+WHERE LOWER(campaign_name) LIKE '%broadband%'
