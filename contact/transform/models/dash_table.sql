@@ -35,7 +35,7 @@ WITH processed AS (
         ) }}
         UNION ALL
         {{ dash_table_general_process.google_ads(
-            source_name='google_ads_central',
+            source_name='google_ads_search',
             table_name='google_ads_demand'
         ) }}
         UNION ALL

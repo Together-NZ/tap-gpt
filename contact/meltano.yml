@@ -25,6 +25,9 @@ environments:
           REFERENCE_CM360_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET: dbt_test_cm360
           REFERENCE_GOOGLE_ADS_CENTRAL_BIGQUERY_DATASET: dbt_test_google_ads_search
+          GOOGLE_ADS_SEARCH_SUFFIX__MOBILE: dbt_test_google_ads_search__mobile
+          GOOGLE_ADS_SEARCH_SUFFIX__BROADBAND: dbt_test_google_ads_search__broadband
+          GOOGLE_ADS_SEARCH_SUFFIX__ENERGY: dbt_test_google_ads_search__energy
           REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
           REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
           REFERENCE_GA4_CENTRAL_BIGQUERY_DATASET: dbt_test_ga4_transformed
@@ -37,7 +40,7 @@ environments:
           HIVESTACK_SUFFIX: dbt_test_hivestack
           CM360_SUFFIX: dbt_test_cm360
           PLAN_CODE: con
-          REPORT_NAME: contact_report
+          REPORT_NAME: amp_report
 - name: prod
 #state_backend:
 #  uri: gs://contact-main-meltano-state-staging
@@ -131,6 +134,12 @@ plugins:
     commands:
       google_ads_models:
         args: run --select google_ads_search google_ads_demand google_ads_keyword google_ads_location bing_ads_search bing_ads_search_keyword
+      google_ads_mobile_models:
+        args: run --select google_ads_location__mobile google_ads_keyword__mobile bing_ads_search_keyword__mobile
+      google_ads_broadband_models:
+        args: run --select google_ads_location__broadband google_ads_keyword__broadband bing_ads_search_keyword__broadband
+      google_ads_energy_models:
+        args: run --select google_ads_location__energy google_ads_keyword__energy bing_ads_search_keyword__energy
       ga4_goal_models:
         args: run --select +ga4_goal_a +ga4_goal_channel_goal
       ga4_session_models:

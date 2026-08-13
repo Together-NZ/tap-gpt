@@ -3,12 +3,12 @@
 WITH processed AS (
     WITH dash_table AS (
         {{ dash_table_general_process.google_ads_search(
-            source_name='google_ads_central',
+            source_name='google_ads_search',
             table_name='google_ads_search'
         ) }}
         UNION ALL
         {{ dash_table_general_process.bing_ads_search(
-            source_name='google_ads_central',
+            source_name='google_ads_search',
             table_name='bing_ads_search'
         ) }}
     )
