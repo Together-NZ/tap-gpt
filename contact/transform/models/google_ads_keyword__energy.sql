@@ -4,6 +4,5 @@
     alias='google_ads_keyword__energy',
 ) }}
 SELECT * FROM {{ source('google_ads_search', 'google_ads_keyword') }} 
-WHERE LOWER(campaign_name) NOT IN (
-    SELECT DISTINCT campaign_name FROM {{ source('google_ads_search__broadband', 'google_ads_keyword__broadband') }}, {{ source('google_ads_search__mobile', 'google_ads_keyword__mobile') }}
-)
+WHERE LOWER(campaign_name) NOT LIKE '%mobile%'
+  AND LOWER(campaign_name) NOT LIKE '%broadband%'
