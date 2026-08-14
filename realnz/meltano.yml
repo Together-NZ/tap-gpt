@@ -86,13 +86,10 @@ plugins:
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
     config:
-      airbyte_spec:
-        tag: "5.2.13"
       airbyte_config:
         start_date: ${START_DATE}T00:00:00Z
     select:
     - ads_insights.*
-    - ad_account.*
     - ad_sets.*
     - ads.*
     - campaigns.*
@@ -182,7 +179,7 @@ plugins:
       google_ads_mountain_models:
         args: run --select +google_ads_search__mountain +google_ads_demand__mountain +google_ads_keyword__mountain +google_ads_location__mountain
       google_ads_tourism_models:
-        args: run --select +google_ads_search__tourism +google_ads_demand__tourism +google_ads_demand__tourism2 +google_ads_keyword__tourism +google_ads_location__tourism +bing_ads_search__tourism
+        args: run --select +google_ads_search__tourism +google_ads_demand__tourism +google_ads_demand__tourism2 +google_ads_keyword__tourism +google_ads_location__tourism +bing_ads_search__tourism +bing_ads_search_keyword__tourism
       facebook_mountain_models:
         args: run --select +facebook__mountain
         description: Run the Facebook ads model
