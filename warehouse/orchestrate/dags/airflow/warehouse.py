@@ -47,7 +47,7 @@ def get_meltano_env():
     meltano_env_ga4 = Variable.get("meltano_developer_ga4_main", deserialize_json=True)
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
     meltano_env["START_DATE"] = (
-        datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
+        datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
     ).strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
     return deepcopy(meltano_env)
