@@ -20,9 +20,6 @@ local_tz = pendulum.timezone("Pacific/Auckland")
 
 default_args = {
     "retries": 3,
-    "max_active_runs": 1,
-    "concurrency": 1,
-    "catchup": False,
     "retry_delay": timedelta(minutes=30),
     "start_date": datetime.datetime(2026, 7, 12, tzinfo=local_tz),
 }
@@ -34,6 +31,14 @@ comparison_start_date = (
 KUBE_RESOURCES = k8s_models.V1ResourceRequirements(
     limits={"memory": "1000M", "cpu": "500m"},
 )
+
+# Slow extractors need a bounded retry budget. With the default 3 retries at 30
+# minutes apart, a pod that takes ~30 min to fail consumes the whole
+# dagrun_timeout, so Airflow kills the run and strands every downstream task.
+SLOW_EXTRACTOR_RETRIES = {
+    "retries": 1,
+    "retry_delay": timedelta(minutes=5),
+}
 
 
 def get_ga4_start_date():
@@ -218,7 +223,9 @@ with models.DAG(
     dag_id="realnz-social-display-programmatic",
     schedule_interval="0 5 * * *",
     default_args=default_args,
-    dagrun_timeout=timedelta(minutes=120),
+    max_active_runs=1,
+    catchup=False,
+    dagrun_timeout=timedelta(minutes=240),
 ) as dag_social:
     env = get_meltano_env()
     per_brand_upstreams = {brand: [] for brand in BRANDS}
@@ -238,11 +245,14 @@ with models.DAG(
         kube_facebook = KubernetesPodOperator(
             name=f"realnz-facebook-to-bigquery-{brand}",
             task_id=f"realnz_facebook_to_bigquery_{brand}",
+            trigger_rule="all_done",
             namespace="composer-user-workloads",
             image=IMAGE,
             arguments=["--environment=prod", "run", "tap-facebook", "target-bigquery", f"dbt-bigquery:facebook_{brand}_models"],
             container_resources=KUBE_RESOURCES,
             env_vars=set_env_vars_facebook(env[f"TAP_FACEBOOK_AIRBYTE_CONFIG_ACCOUNT_{brand}_ID"], brand),
+            execution_timeout=timedelta(minutes=45),
+            **SLOW_EXTRACTOR_RETRIES,
         )
         per_brand_upstreams[brand].append(kube_facebook)
 
@@ -373,6 +383,7 @@ with models.DAG(
             env_vars=set_env_vars_ttd(env[f"TAP_TTD_ADVERTISER_{brand}_ID"], brand),
             execution_timeout=timedelta(minutes=60),
             trigger_rule="all_done",
+            **SLOW_EXTRACTOR_RETRIES,
         )
         per_brand_upstreams[brand].append(kube_ttd)
 
@@ -424,6 +435,8 @@ with models.DAG(
     dag_id="realnz-google-ads-ga4",
     schedule_interval="0 14 * * *",
     default_args=default_args,
+    max_active_runs=1,
+    catchup=False,
     dagrun_timeout=timedelta(minutes=120),
 ) as dag_google:
     env = get_meltano_env()
