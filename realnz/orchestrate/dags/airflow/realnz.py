@@ -46,12 +46,12 @@ def get_ga4_start_date():
 
 
 def get_ttd_start_date():
-    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=14)).strftime("%Y-%m-%d")
+    return (datetime.datetime.now(local_tz) - datetime.timedelta(days=2)).strftime("%Y-%m-%d")
 
 
 def get_meta_start_date():
     return (
-        datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=3)
+        datetime.datetime.now(datetime.timezone.utc) - datetime.timedelta(days=2)
     ).replace(hour=0, minute=0, second=0, microsecond=0).strftime("%Y-%m-%dT%H:%M:%SZ")
 
 
@@ -69,7 +69,7 @@ def get_meltano_env():
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
     # Match Contact: ~30d window so GA4 remove_outdated_data does not drop days 14–30
     meltano_env["START_DATE"] = (
-        datetime.datetime.now(local_tz) - datetime.timedelta(days=29)
+        datetime.datetime.now(local_tz) - datetime.timedelta(days=30)
     ).strftime("%Y-%m-%d")
     meltano_env["BQ_METHOD"] = "batch_job"
     return deepcopy(meltano_env)
