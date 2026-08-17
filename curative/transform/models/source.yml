@@ -70,6 +70,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: tiktok_transformed__creativenz
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
@@ -262,7 +264,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
-
+      - name: campaigns
+      - name: ad_groups
   - name: tiktok_transformed__mahi
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
     schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__mahi') }}"
@@ -405,6 +408,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: tiktok_transformed__protectyourbreath
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
@@ -520,6 +525,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: tiktok_transformed__hnz
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'curative-main') }}"
