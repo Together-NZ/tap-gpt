@@ -70,7 +70,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
-
+      - name: campaigns
+      - name: ad_groups
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
