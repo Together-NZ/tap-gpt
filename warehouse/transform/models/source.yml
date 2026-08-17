@@ -163,6 +163,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: tiktok_raw__twhs
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
@@ -171,6 +173,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: tiktok_transformed__twh
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
@@ -361,6 +365,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: tiktok_transformed__noel_leeming
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
@@ -554,5 +560,26 @@ models:
         tests:
           - testing_sum.expected_sum:
               expected_value: 363
+  - name: facebook__noel_leeming
+    config:
+      schema: "{{ env_var('META_SUFFIX', 'facebook_transformed__noel_leeming') }}"
+  - name: dv360_standard__noel_leeming
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', 'dv360_transformed__noel_leeming') }}"
+  - name: dv360_youtube__noel_leeming
+    config:
+      schema: "{{ env_var('DV360_SUFFIX', 'dv360_transformed__noel_leeming') }}"
+  - name: cm360_direct_buy__noel_leeming
+    config:
+      schema: "{{ env_var('CM360_SUFFIX', 'cm360_transformed__noel_leeming') }}"
+  - name: ttd_transformed__noel_leeming
+    config:
+      schema: "{{ env_var('TTD_SUFFIX', 'ttd_transformed__noel_leeming') }}"
+  - name: pinterest__noel_leeming
+    config:
+      schema: "{{ env_var('PINTEREST_SUFFIX', 'pinterest_transformed__noel_leeming') }}"
+  - name: tiktok__noel_leeming
+    config:
+      schema: "{{ env_var('TIKTOK_SUFFIX', 'tiktok_transformed__noel_leeming') }}"
 
   

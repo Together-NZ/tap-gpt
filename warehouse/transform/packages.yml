@@ -1,6 +1,6 @@
 packages:
   - git: https://github.com/Together-NZ/Impact-CI-hivestack_models.git
-    revision: v1.0.0
+    revision: v2.0.1
 
   - git: https://github.com/Together-NZ/Impact-CI-Linkedin_models.git
     revision: v1.0.0
@@ -9,7 +9,7 @@ packages:
     revision: v1.0.0
 
   - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
-    revision: v1.0.0
+    revision: v1.0.1
 
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
   #warehouse specific version
@@ -26,7 +26,7 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-Pinterest-models.git
     revision: v1.0.0
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
-    revision: v1.0.0
+    revision: v2.0.6
 
   - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
     revision: v1.0.0
@@ -36,4 +36,4 @@ packages:
     revision: v1.0.0
 
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
-    revision: v1.0.0
+    revision: v1.0.3
