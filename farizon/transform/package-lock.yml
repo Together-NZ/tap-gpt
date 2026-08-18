@@ -1,0 +1,10 @@
+packages:
+  - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
+    revision: f3a89d34590a5ee7324b1bc36c07abae6885db9e
+  - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
+    revision: 085cc208375d7672aef4c342b818823a6d43e674
+  - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
+    revision: 0afc28aaf49d198793f0a27595aee8960860b44c
+  - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
+    revision: 09c092d652c78d05495bb83b367f3f9cc750cd59
+sha1_hash: 1064293db76bc01acc5ab7d82c88da7de6be6ed0
