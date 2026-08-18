@@ -68,6 +68,8 @@ sources:
       - name: ads
       - name: ads_basic_data_metrics_by_day
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: tiktok_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'cupra-main') }}"

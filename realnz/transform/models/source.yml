@@ -61,8 +61,10 @@ sources:
     schema: "{{ env_var('REFERENCE_TIKTOK_BIGQUERY_DATASET', 'tiktok_raw__mountain') }}"
     tables:
       - name: ads
-      - name: ads_basic_data_metrics_by_day
+      - name: ads_basic_data_metrics_by_day 
       - name: ads_video_play_metrics_by_day
+      - name: campaigns
+      - name: ad_groups
 
   - name: hivestack_raw__mountain
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'real-nz-main') }}"

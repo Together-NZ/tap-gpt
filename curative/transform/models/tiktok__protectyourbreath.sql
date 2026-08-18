@@ -1,7 +1,7 @@
 {{ config(
     materialized='table',
 ) }}
-WITH {{ tiktok.tk_ads(source_name='tiktok_raw__protectyourbreath', table_name='ads') }},
+WITH {{ tiktok.tk_ads(source_name='tiktok_raw__protectyourbreath', ad_table_name='ads', campaign_table_name='campaigns', adgroup_table_name='ad_groups') }},
 {{ tiktok.tk_basic_metrics_by_day(source_name='tiktok_raw__protectyourbreath', table_name='ads_basic_data_metrics_by_day') }},
 {{ tiktok.tk_video_metrics_by_day(source_name='tiktok_raw__protectyourbreath', table_name='ads_video_play_metrics_by_day') }},
 {{ tiktok.tk_final_calculation() }}
