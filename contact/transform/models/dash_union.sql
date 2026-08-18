@@ -1,4 +1,8 @@
-{{ config(materialized='table') }}
+{{ config(
+    materialized='table',
+    partition_by={'field': 'date', 'data_type': 'date'},
+    cluster_by=['campaign_name_selection', 'channel', 'funnel', 'publisher'],
+) }}
 
 WITH final_result AS (
     {{ dash_table_general_process.dash_union_non_search(

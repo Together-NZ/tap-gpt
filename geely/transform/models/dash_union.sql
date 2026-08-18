@@ -1,5 +1,7 @@
 {{ config(
     materialized='table',
+    partition_by={'field': 'date', 'data_type': 'date'},
+    cluster_by=['campaign_name_selection', 'channel', 'funnel', 'publisher'],
 ) }}
 WITH final_result AS ((SELECT SAFE_CAST(metrics_value_per_conversion AS FLOAT64) AS metrics_value_per_conversion,
 SAFE_CAST(segments_conversion_action AS STRING) AS segments_conversion_action,
