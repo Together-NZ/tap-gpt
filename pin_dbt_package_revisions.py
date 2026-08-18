@@ -43,7 +43,7 @@ CANONICAL_REVISIONS: dict[str, str] = {
     "Impact-CI-DV360_models": "v1.0.0",
     "Impact-CI-ttd_models": "v1.0.1",
     "Impact-CI-google_ads_models": "v1.0.0",
-    "Impact-CI-ga4_models": "v1.0.0",
+    "Impact-CI-ga4_models": "v1.0.1",
     "Impact-CI-cm360-models": "v1.0.0",
     "Impact-CI-dash_table_general_process": "v1.0.3",
     "Impact-CI-snapchat_models": "v1.0.0",

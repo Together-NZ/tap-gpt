@@ -1,8 +1,8 @@
-{{
-    config(
-        materialized='table',
-    )
-}}
+{{ config(
+    materialized='table',
+    partition_by={'field': 'date', 'data_type': 'date'},
+    cluster_by=['campaign_name_selection', 'publisher', 'channel', 'funnel'],
+) }}
 WITH 
 table1 AS (SELECT
   -- keep your dimensions here
