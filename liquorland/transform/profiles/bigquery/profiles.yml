@@ -37,3 +37,4 @@ meltano:
       client_secret: "{{ env_var('DBT_BIGQUERY_CLIENT_SECRET', '') }}"
       token_uri: "{{ env_var('DBT_BIGQUERY_TOKEN_URI', '') }}"
       keyfile: "{{ env_var('DBT_BIGQUERY_KEYFILE', '') }}"
+      location: australia-southeast1

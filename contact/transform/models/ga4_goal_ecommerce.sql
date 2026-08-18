@@ -1,5 +1,6 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     partition_by={'field': 'date', 'data_type': 'date'},
     cluster_by=['campaign_name_selection', 'publisher', 'channel', 'funnel'],
 ) }}

@@ -1,4 +1,8 @@
-{{ config(materialized='table') }}
+{{ config(
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
+    partition_by={'field': 'date', 'data_type': 'date'},
+) }}
 
 WITH transformed AS (
     {{ ga4.ga4_goal_a(
