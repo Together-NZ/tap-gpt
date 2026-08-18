@@ -1,22 +1,22 @@
 packages:
   - git: https://github.com/Together-NZ/Impact-CI-hivestack_models.git
-    revision: 5d255147c00d76f229c68e935b719a1762b19052
+    revision: 61442db47b13ad4c6817aba352a95b22b0a471c9
   - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
-    revision: da95dd87a4fb08c31c1f43514098e6e348f73aa0
+    revision: 602161d20ec1aec61a2c8b0cd1caa84b3a924919
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
-    revision: cbf5ef0c76f16596809a8be896536352ee67e660
+    revision: 462390ca6be34baed48e167cd25dcf3d6e6368c4
   - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
-    revision: a572b16bf3aa86c6894891014e73e644b4927fae
+    revision: 7fd343c1855dcb5fea9ababb56eed2a98dfcf927
   - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
     revision: 4611a42dbde102320f593a85407b79fb1bf2edbd
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
-    revision: 893d551ae100c3cdb39917bb30462d1f322b22cf
+    revision: 4660f5b158a4f744eb5214d43af0cba3127fc949
   - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
     revision: c19c49d457874433aecd7aa988581fe30d5373db
   - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
     revision: 085cc208375d7672aef4c342b818823a6d43e674
   - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
-    revision: 7c1d2e4f9b5937389b9777b118c5ca6c1a634dac
+    revision: d6981bd9b2a6dcba22d905706e17e07d788d94e5
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
-    revision: 197e1fbfddda9277b87bf8acfcd7ea3770de7813
-sha1_hash: 129e2ebcde8d2490435a090f672b9f2c2edd816c
+    revision: 09c092d652c78d05495bb83b367f3f9cc750cd59
+sha1_hash: 89ba15951724dbf695ad35c4e7539e8119df40d9

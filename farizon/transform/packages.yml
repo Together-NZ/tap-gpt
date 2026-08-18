@@ -1,6 +1,6 @@
 packages:
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
-    revision: v1.0.0
+    revision: v2.0.4
   - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
 
   - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git

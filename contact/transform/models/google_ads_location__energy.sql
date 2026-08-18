@@ -2,6 +2,8 @@
     materialized='table',
     schema=env_var('GOOGLE_ADS_SEARCH_SUFFIX__ENERGY', 'google_ads_search_transformed__energy'),
     alias='google_ads_location__energy',
+    partition_by={'field': 'date', 'data_type': 'date'},
+    cluster_by=['campaign_name_selection', 'channel', 'funnel', 'publisher'],
 ) }}
 SELECT * FROM {{ source('google_ads_search', 'google_ads_location') }} 
 WHERE LOWER(campaign_name) NOT LIKE '%mobile%'

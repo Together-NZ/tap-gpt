@@ -10,7 +10,7 @@ packages:
     revision: v1.0.1
 
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
-    revision: v1.0.0
+    revision: v2.0.4
   - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
     revision: v1.0.0
   - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git

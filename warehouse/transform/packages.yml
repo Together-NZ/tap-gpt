@@ -13,7 +13,7 @@ packages:
 
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
   #warehouse specific version
-    revision: v1.1.1
+    revision: v1.1.3
     
   - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
     revision: v1.0.0
