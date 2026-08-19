@@ -19,4 +19,4 @@ packages:
     revision: eadf02a7c1b857a2a6290eb4cb5d762a0341c4e6
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: 09c092d652c78d05495bb83b367f3f9cc750cd59
-sha1_hash: a3d167466e0b175969f62ba7cb76ee19746bb289
+sha1_hash: 5a401bc86cea83f1123018b176cef0d781b0627a
