@@ -1,0 +1,42 @@
+compare_to,unmatched_fields,campaign_name,kw_sel,other_sel,kw_funnel,other_funnel,kw_channel,other_channel
+vs_channel,channel,(not set),(not set),(not set),OTHER,OTHER,Paid Social,Referral
+vs_channel,channel,(organic),(organic),(organic),OTHER,OTHER,Unknown,Email
+vs_channel,channel,(referral),(referral),(referral),OTHER,OTHER,Direct,Paid Search
+vs_channel,channel,576792_EDM Roady Eco 051124,EDM Roady Eco 051124,EDM Roady Eco 051124,OTHER,OTHER,Email,Unknown
+vs_channel,channel,667380_MSBC launch re-send,MSBC launch re-send,MSBC launch re-send,OTHER,OTHER,Email,Paid Search
+vs_channel,selection,PMAX - RLNZ005 - Book - NZ - Queenstown - Walter Peak,PMAX - RLNZ005 - Book - NZ - Queenstown - Walter Peak,RLNZ005 - PMax - Book - NZ - Queenstown - Walter Peak,Book,Book,Paid Search,Paid Search
+vs_channel,selection,PMAX - RLNZ005 - Book - NZ - Te Anau - Glowworm Caves,PMAX - RLNZ005 - Book - NZ - Te Anau - Glowworm Caves,RLNZ005 - PMax - Book - NZ - Te Anau - Glowworm Caves,Book,Book,Paid Search,Paid Search
+vs_channel,channel,RLNZ0004_Tourism Summer 2025_META_SOCIAL_COMPARE_UGC,Tourism Summer 2025,Tourism Summer 2025,Compare,Compare,Paid Social,Unknown
+vs_channel,channel,RLNZ0004_Tourism Summer 2025_META_SOCIAL_COMPARE_Walter Peak,Tourism Summer 2025,Tourism Summer 2025,Compare,Compare,Paid Social,Unknown
+vs_channel,channel,RLNZ0004_Tourism Summer 2025_META_SOCIAL_EXPLORE_Doubtful Sound,Tourism Summer 2025,Tourism Summer 2025,Explore,Explore,Paid Social,Unknown
+vs_channel,channel,RLNZ0004_Tourism Summer 2025_META_SOCIAL_EXPLORE_Walter Peak RLNZ0004_Tourism Summer 2025_META_SOCIAL_EXPLORE_Walter Peak,Tourism Summer 2025,Tourism Summer 2025,OTHER,OTHER,Paid Social,Unknown
+vs_channel,channel,RLNZ0007_Winter 25_META_SOCIAL_EXPLORE_Walter Peak_AU,Winter 25,Winter 25,Explore,Explore,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse 25_META_SOCIAL_COMPARE_Walter Peak NZ,AOPowerhouse 25,AOPowerhouse 25,OTHER,OTHER,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_DV360_YT_EXPLORE_Doubtful Sounds NZ,AOPowerhouse,AOPowerhouse,OTHER,OTHER,Paid Search,Paid Display
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_BOOK_Doubtful Sound AU,AOPowerhouse,AOPowerhouse,Book,Book,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_BOOK_Doubtful Sound NZ,AOPowerhouse,AOPowerhouse,Book,Book,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_BOOK_Milford Sound AU,AOPowerhouse,AOPowerhouse,Book,Book,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_BOOK_Walter Peak AU,AOPowerhouse,AOPowerhouse,Book,Book,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_BOOK_Walter Peak NZ,AOPowerhouse,AOPowerhouse,Book,Book,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_BOOK_Walter Peak*U,AOPowerhouse,AOPowerhouse,OTHER,OTHER,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_COMPARE_Milford Sound NZ,AOPowerhouse,AOPowerhouse,Compare,Compare,Unknown,Owned Social
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_COMPARE_Walter Peak AU,AOPowerhouse,AOPowerhouse,Compare,Compare,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_COMPARE_Walter Peak NZ,AOPowerhouse,AOPowerhouse,Compare,Compare,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_EXPLORE_Doubtful Sound NZ,AOPowerhouse,AOPowerhouse,OTHER,OTHER,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_EXPLORE_Milford Sound NZ,AOPowerhouse,AOPowerhouse,OTHER,OTHER,Paid Social,Unknown
+vs_channel,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_EXPLORE_Walter Peak NZ,AOPowerhouse,AOPowerhouse,OTHER,OTHER,Paid Social,Unknown
+vs_channel,selection,Search - RLNZ005 - Book - NZ - Doubtful,Search - RLNZ005 - Book - NZ - Doubtful,RLNZ005 - Search - Book - NZ - Doubtful,Book,Book,Paid Search,Paid Search
+vs_channel,selection,Search - RLNZ005 - Book - NZ - Milford - Day Cruise,Search - RLNZ005 - Book - NZ - Milford - Day Cruise,RLNZ005 - Search - Book - NZ - Milford - Day Cruise,Book,Book,Paid Search,Paid Search
+vs_channel,selection,Search - RLNZ005 - Book - NZ - Milford - Overnight Cruise,Search - RLNZ005 - Book - NZ - Milford - Overnight Cruise,RLNZ005 - Search - Book - NZ - Milford - Overnight Cruise,Book,Book,Paid Search,Paid Search
+vs_channel,selection,Search - RLNZ005 - Book - NZ - Milford - Track Transfers,Search - RLNZ005 - Book - NZ - Milford - Track Transfers,RLNZ005 - Search - Book - NZ - Milford - Track Transfers,Book,Book,Paid Search,Paid Search
+vs_channel,selection,Search - RLNZ005 - Book - NZ - Queenstown - Walter Peak,Search - RLNZ005 - Book - NZ - Queenstown - Walter Peak,RLNZ005 - Search - Book - NZ - Queenstown - Walter Peak,Book,Book,Paid Search,Paid Search
+vs_channel,selection,Search - RLNZ005 - Book - NZ - Te Anau - Glowworm Caves,Search - RLNZ005 - Book - NZ - Te Anau - Glowworm Caves,RLNZ005 - Search - Book - NZ - Te Anau - Glowworm Caves,Book,Book,Paid Search,Paid Search
+vs_channel,channel,as-npt105112517,as-npt105112517,as-npt105112517,OTHER,OTHER,Unknown,Direct
+vs_channel,channel,autumn25,autumn25,autumn25,OTHER,OTHER,Owned Social,Unknown
+vs_channel,channel,locals_overnights_remarketing_25,overnights,overnights,OTHER,OTHER,Paid Social,Owned Social
+vs_channel,channel,locals_overnights_traffic_25,overnights,overnights,OTHER,OTHER,Paid Social,Unknown
+vs_channel,channel,nz-holiday-giveaway-24-thl,nz-holiday-giveaway-24-thl,nz-holiday-giveaway-24-thl,OTHER,OTHER,Paid Social,Owned Social
+vs_channel,channel,stackadapt-pixel-campaign,stackadapt-pixel-campaign,stackadapt-pixel-campaign,OTHER,OTHER,Paid Social,Owned Social
+vs_channel,channel,wat-cometolife-rlnz0002,wat-cometolife-rlnz0002,wat-cometolife-rlnz0002,OTHER,OTHER,Paid Display,Direct
+vs_dash_union,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_COMPARE_Milford Sound AU,AOPowerhouse,AOPowerhouse,Compare,Compare,Unknown,Paid Social
+vs_dash_union,channel,RLNZ0020_AOPowerhouse_META_SOCIAL_COMPARE_Milford Sound NZ,AOPowerhouse,AOPowerhouse,Compare,Compare,Unknown,Paid Social

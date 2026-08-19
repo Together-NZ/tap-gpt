@@ -1,0 +1,15 @@
+client,project,model,mode,rows,bytes_mib,bq_seconds,wall_seconds,bytes_saved_pct_vs_full,wall_saved_pct_vs_full,ga4_package,notes
+realnz,real-nz-main,ga4_goal_a__mountain,full_refresh,825900,297.7,13.66,31,,,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+realnz,real-nz-main,ga4_goal_a__mountain,incremental_batched_at,,55.3,8.92,16,81.4,48.4,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+realnz,real-nz-main,ga4_goal_ecommerce__mountain,full_refresh,99600,70.9,14.78,29,,,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+realnz,real-nz-main,ga4_goal_ecommerce__mountain,incremental_batched_at,,56.3,9.49,16,20.6,44.8,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+realnz,real-nz-main,ga4_goal_a__tourism,full_refresh,1900000,565.8,13.25,27,,,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+realnz,real-nz-main,ga4_goal_a__tourism,incremental_batched_at,,71.3,9.12,17,87.4,37.0,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+contact,contact-energy-main,ga4_goal_a,full_refresh,4700000,2560.0,14.39,30,,,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+contact,contact-energy-main,ga4_goal_a,incremental_batched_at,,239.0,9.04,16,90.7,46.7,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+contact,contact-energy-main,ga4_goal_ecommerce,full_refresh,91800,35.7,11.93,26,,,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+contact,contact-energy-main,ga4_goal_ecommerce,incremental_batched_at,,21.9,7.65,14,38.7,46.2,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+barfoot,barfoot-and-thompson-main,ga4_goal_a,full_refresh,5700000,2355.2,13.13,24,,,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+barfoot,barfoot-and-thompson-main,ga4_goal_a,incremental_batched_at,,148.7,9.69,18,93.7,25.0,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+liquorland,liquorland-main,ga4_goal_a,full_refresh,408600,120.5,15.06,24,,,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days
+liquorland,liquorland-main,ga4_goal_a,incremental_batched_at,,59.1,7.85,14,51.0,41.7,v1.0.1,incremental uses _sdc_batched_at>=last 2 load days AND event date>=last 30 days

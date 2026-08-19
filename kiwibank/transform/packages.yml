@@ -5,7 +5,7 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-Linkedin_models.git
     revision: v1.0.0
   - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
-    revision: v1.0.0
+    revision: v1.0.3
   - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
     revision: v1.0.0
   - git: https://github.com/Together-NZ/Impact-CI-hivestack_models.git

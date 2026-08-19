@@ -12,9 +12,9 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
     revision: 085cc208375d7672aef4c342b818823a6d43e674
   - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
-    revision: d6981bd9b2a6dcba22d905706e17e07d788d94e5
+    revision: eadf02a7c1b857a2a6290eb4cb5d762a0341c4e6
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: 09c092d652c78d05495bb83b367f3f9cc750cd59
   - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
     revision: c19c49d457874433aecd7aa988581fe30d5373db
-sha1_hash: 78cc9693cc09ac0b7a7aa3438ed5f0a8d5e9e10f
+sha1_hash: f3757199d77bf09dad6f217c08b07a6ef0dcc098

@@ -1,4 +1,8 @@
-{{ config(materialized='table') }}
+{{ config(
+    materialized='table',
+    partition_by={'field': 'date', 'data_type': 'date'},
+    cluster_by=['campaign_name_selection', 'publisher', 'channel', 'funnel'],
+) }}
 
 {{ ga4.ga4_goal_channel(
     source_name='dash_union__great_journey',
