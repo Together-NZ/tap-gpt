@@ -1,0 +1,10 @@
+packages:
+  - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
+    revision: 93b5a57421730821952f4aff8b7526034d6ee57d
+  - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
+    revision: 673cfe1c2444081fc4f3b9608cfa483d7688262b
+  - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
+    revision: 085cc208375d7672aef4c342b818823a6d43e674
+  - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
+    revision: a7ade45d553f818988031a17e965a5c89a8119cd
+sha1_hash: 0659d87aafcfd5ce92ab44cca645b4ebebe7a25e

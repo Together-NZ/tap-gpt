@@ -14,4 +14,4 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-testing_sum.git
 
   - git: https://github.com/Together-NZ/Impact-CI-ga4_models.git
-    revision: v1.0.2
+    revision: v1.0.3
