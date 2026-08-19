@@ -123,11 +123,11 @@ plugins:
           description: Run DV360 models for WOP
 
         google_ads_beervana_models:
-          args: run --select google_ads_search__beervana google_ads_demand__beervana google_ads_keyword__beervana
+          args: run --select google_ads_search__beervana google_ads_demand__beervana google_ads_keyword__beervana google_ads_location__beervana
           description: Run Google Ads models for Beervana
           
         google_ads_wop_models:
-          args: run --select google_ads_search__wop google_ads_demand__wop google_ads_keyword__wop
+          args: run --select google_ads_search__wop google_ads_demand__wop google_ads_keyword__wop google_ads_location__wop
           description: Run Google Ads models for WOP
 
         ga4_beervana_goal_models:
