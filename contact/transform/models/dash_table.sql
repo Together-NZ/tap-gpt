@@ -43,6 +43,11 @@ WITH processed AS (
             source_name='cm360_transformed',
             table_name='cm360_direct_buy'
         ) }}
+        UNION ALL
+        {{ dash_table_general_process.reddit(
+            source_name='reddit_transformed',
+            table_name='reddit'
+        ) }}
     ),
     with_channel AS (
         SELECT * EXCEPT (publisher, channel),
