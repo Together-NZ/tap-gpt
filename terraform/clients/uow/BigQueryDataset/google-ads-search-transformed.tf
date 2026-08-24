@@ -1,4 +1,4 @@
-resource "google_bigquery_dataset" "ga4_smoke_barfoot_ga4_goal_a" {
+resource "google_bigquery_dataset" "google_ads_search_transformed" {
   access {
     role          = "OWNER"
     special_group = "projectOwners"
@@ -19,7 +19,7 @@ resource "google_bigquery_dataset" "ga4_smoke_barfoot_ga4_goal_a" {
     special_group = "projectWriters"
   }
 
-  dataset_id                 = "ga4_smoke_barfoot_ga4_goal_a"
+  dataset_id                 = "google_ads_search_transformed"
   delete_contents_on_destroy = false
 
   labels = {
@@ -28,6 +28,6 @@ resource "google_bigquery_dataset" "ga4_smoke_barfoot_ga4_goal_a" {
 
   location              = "australia-southeast1"
   max_time_travel_hours = "168"
-  project               = "barfoot-and-thompson-main"
+  project               = "uowaikato-main"
 }
-# terraform import google_bigquery_dataset.ga4_smoke_barfoot_ga4_goal_a projects/barfoot-and-thompson-main/datasets/ga4_smoke_barfoot_ga4_goal_a
+# terraform import google_bigquery_dataset.google_ads_search_transformed projects/uowaikato-main/datasets/google_ads_search_transformed

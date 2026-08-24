@@ -184,6 +184,6 @@ plugins:
       dash_union_models:
         args: run --select dash_union__centralized dash_union__wealth dash_union__general_insurance
       google_ads_models:
-        args: run --select +google_ads_search +google_ads_demand +google_ads_keyword +google_ads_location +bing_ads_search
+        args: run --select +google_ads_search +google_ads_demand +google_ads_keyword +google_ads_location +bing_ads_search +bing_ads_search_keyword
 elt:
   buffer_size: 52428800

@@ -20,5 +20,5 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: 09c092d652c78d05495bb83b367f3f9cc750cd59
   - git: https://github.com/Together-NZ/Impact-CI-Pinterest-models.git
-    revision: 9b471a47e4d1cf8534acacd793218ce38a02fc13
-sha1_hash: be45721d3e54051a98dda26f3940f00a702a6d7d
+    revision: 1a86cafee42573c45f26c04d7be16059eb962417
+sha1_hash: 5cd030a0df6695eb097957e3d9d95adf91aeba40

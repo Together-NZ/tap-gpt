@@ -24,7 +24,7 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-snapchat_models.git
     revision: v1.0.0
   - git: https://github.com/Together-NZ/Impact-CI-Pinterest-models.git
-    revision: v1.0.0
+    revision: v1.0.1
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
     revision: v2.0.6
 
