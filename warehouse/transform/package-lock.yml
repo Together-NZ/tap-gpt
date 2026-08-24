@@ -16,7 +16,7 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-snapchat_models.git
     revision: a2bf16764466e8242e6f04ea04270c8766c7ac88
   - git: https://github.com/Together-NZ/Impact-CI-Pinterest-models.git
-    revision: 9b471a47e4d1cf8534acacd793218ce38a02fc13
+    revision: 1a86cafee42573c45f26c04d7be16059eb962417
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
     revision: 4660f5b158a4f744eb5214d43af0cba3127fc949
   - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
@@ -27,4 +27,4 @@ packages:
     revision: eadf02a7c1b857a2a6290eb4cb5d762a0341c4e6
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: 09c092d652c78d05495bb83b367f3f9cc750cd59
-sha1_hash: 4f8c79c5a5c6070405a2233c0a297024dcdd1992
+sha1_hash: c9f2c63d890f0568703ca5c948ea3fcea11d8798
