@@ -23,6 +23,7 @@ packages:
 
   - git: https://github.com/Together-NZ/Impact-CI-snapchat_models.git
     revision: v1.0.0
+    # update version to newest campaign and ad name for pinterest
   - git: https://github.com/Together-NZ/Impact-CI-Pinterest-models.git
     revision: v1.0.1
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
