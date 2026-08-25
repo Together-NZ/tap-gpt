@@ -84,11 +84,13 @@ sources:
     schema: "{{ env_var('REFERENCE_CM360_RAW_BIGQUERY_DATASET', 'cm360_raw__kiwibank') }}"
     tables:
       - name: cm360_report_stream
+      - name: no_dv360_stream
 
   - name: cm360_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_CM360_TRANSFORMED_BIGQUERY_DATASET', 'cm360_transformed') }}"
     tables:
+      - name: cm360_direct_buy_no_dv360
       - name: cm360_direct_buy
 
   - name: dash_union__everyday_banking_retail_deposit

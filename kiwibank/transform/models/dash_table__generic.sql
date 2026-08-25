@@ -17,7 +17,7 @@ UNION ALL
 UNION ALL
 {{dash_table_general_process.hivestack(source_name='hivestack_transformed', table_name='hivestack')}} WHERE campaign_name LIKE '%000009%'
 UNION ALL
-{{dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy')}} WHERE campaign_name LIKE '%000009%'
+{{dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy_no_dv360')}} WHERE campaign_name LIKE '%000009%'
 UNION ALL
 {{dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd')}} WHERE campaign_name LIKE '%000009%'
 ),
