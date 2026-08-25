@@ -12,7 +12,7 @@ packages:
     revision: v2.0.1
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
     revision: v2.0.6
-  - git: https://github.com/Together-NZ/Impact-CI-google_ads_models.git
+  - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
     #kiwibank specific version
     revision: v1.2.4
     
