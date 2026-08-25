@@ -95,6 +95,10 @@ def set_env_vars_tiktok():
     return _base_env("tiktok_raw", "tiktok_transformed")
 
 
+def set_env_vars_reddit():
+    return _base_env("reddit_raw", "reddit_transformed")
+
+
 def set_env_vars_cm360():
     return _base_env("cm360_raw", "cm360_transformed")
 
@@ -260,6 +264,24 @@ with models.DAG(
         env_vars=set_env_vars_cm360(),
         get_logs=True,
     )
+    kube_reddit = KubernetesPodOperator(
+        name="contact-reddit-to-bq",
+        task_id="contact-reddit_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=[
+            "--environment=prod",
+            "run",
+            "tap-reddit-ads",
+            "target-bigquery",
+            "dbt-bigquery:reddit_models",
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_reddit(),
+        get_logs=True,
+    )
 
     def facebook_comparison_check(**context):
         env = get_meltano_env()
@@ -318,6 +340,25 @@ with models.DAG(
             )
         return result
 
+    def reddit_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name=PROJECT_NAME,
+            destination_table="reddit_transformed",
+            table_name="reddit",
+            source_name="reddit",
+            start_date=comparison_start_date,
+            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            secret_name=COMPARISON_SECRET,
+            project_id=env["PROJECT_ID"],
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError(
+                "Reddit data accuracy check failed — BQ data does not match source API."
+            )
+        return result
+
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
         python_callable=facebook_comparison_check,
@@ -336,11 +377,18 @@ with models.DAG(
         retries=0,
         trigger_rule="all_done",
     )
+    task_reddit_comparison = PythonOperator(
+        task_id="task_reddit_comparison",
+        python_callable=reddit_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
 
     kube_cm360 >> kube_dv360
     kube_cm360 >> kube_ttd
     kube_facebook >> task_facebook_comparison
     kube_dv360 >> [task_dv360_comparison_standard, task_dv360_comparison_youtube]
+    kube_reddit >> task_reddit_comparison
 
     kube_dash = KubernetesPodOperator(
         name="contact-dash-to-bq",
@@ -380,7 +428,7 @@ with models.DAG(
         get_logs=True,
     )
 
-    [kube_facebook, kube_dv360, kube_hivestack, kube_ttd] >> kube_dash
+    [kube_facebook, kube_dv360, kube_hivestack, kube_ttd, kube_reddit] >> kube_dash
     kube_dash >> kube_dash_search >> kube_dash_union
 
     for brand in BRANDS:

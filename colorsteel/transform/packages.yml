@@ -20,5 +20,6 @@ packages:
     revision: v1.0.3
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: v1.0.3    
+    #update pinterst version to newest campaign and ad name
   - git: https://github.com/Together-NZ/Impact-CI-Pinterest-models.git
     revision: v1.0.1

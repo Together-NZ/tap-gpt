@@ -35,6 +35,14 @@ sources:
     tables:
       - name: standard_streams
 
+  - name: reddit_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_REDDIT_BIGQUERY_DATASET', 'reddit_raw') }}"
+    tables:
+      - name: ads
+      - name: campaigns
+      - name: reports
+
   - name: hivestack_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
     schema: "{{ env_var('REFERENCE_HIVESTACK_BIGQUERY_DATASET', 'hivestack_raw') }}"
@@ -102,6 +110,12 @@ sources:
     schema: "{{ env_var('REFERENCE_TTD_TRANSFORMED_BIGQUERY_DATASET', 'ttd_transformed') }}"
     tables:
       - name: ttd
+
+  - name: reddit_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_REDDIT_TRANSFORMED_BIGQUERY_DATASET', 'reddit_transformed') }}"
+    tables:
+      - name: reddit
 
   - name: hivestack_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"

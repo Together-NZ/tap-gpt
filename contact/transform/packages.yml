@@ -25,3 +25,6 @@ packages:
 
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: v1.0.3
+
+  - git: git@github.com:Together-NZ/Impact-CI-reddit_models.git
+    revision: v1.0.0

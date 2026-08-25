@@ -28,6 +28,9 @@ environments:
           GOOGLE_ADS_SEARCH_SUFFIX__MOBILE: dbt_test_google_ads_search__mobile
           GOOGLE_ADS_SEARCH_SUFFIX__BROADBAND: dbt_test_google_ads_search__broadband
           GOOGLE_ADS_SEARCH_SUFFIX__ENERGY: dbt_test_google_ads_search__energy
+          REDDIT_SUFFIX: dbt_test_reddit
+          REFERENCE_REDDIT_BIGQUERY_DATASET: dbt_test_reddit
+          REFERENCE_REDDIT_TRANSFORMED_BIGQUERY_DATASET: dbt_test_reddit
           REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
           REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
           REFERENCE_GA4_CENTRAL_BIGQUERY_DATASET: dbt_test_ga4_transformed
@@ -93,6 +96,17 @@ plugins:
     pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
     config:
       start_date: ${START_DATE}
+  - name: tap-reddit-ads
+    namespace: tap-reddit-ads
+    pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git setuptools<82.0
+    executable: tap-reddit-ads
+    config:
+      refresh_token: ${TAP_REDDIT_ADS_REFRESH_TOKEN}
+      ad_account_id: ${TAP_REDDIT_ADS_AD_ACCOUNT_ID}
+      app_id: ${TAP_REDDIT_ADS_APP_ID}
+      client_secret: ${TAP_REDDIT_ADS_CLIENT_SECRET}
+      start_date: ${START_DATE}
+      end_date: ${END_DATE}
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -176,6 +190,8 @@ plugins:
         args: run --select facebook
       tiktok_models:
         args: run --select tiktok
+      reddit_models:
+        args: run --select +reddit
       hivestack_models:
         args: run --select hivestack
       ttd_models:
