@@ -146,7 +146,7 @@ plugins:
       method: oauth
     commands:
       cm360_models:
-        args: run --select +cm360_direct_buy
+        args: run --select +cm360_direct_buy +cm360_direct_buy_no_dv360
       facebook_models:
         args: run --select +facebook
       linkedin_models:
