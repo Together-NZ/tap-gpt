@@ -24,7 +24,7 @@ with_channel AS (
 SELECT * EXCEPT (publisher, channel),
 dc.publisher,
 dc.channel
-FROM dash_table as dt JOIN `together-internal.channel.publisher_channel` as dc
+FROM dash_table as dt LEFT JOIN `together-internal.channel.publisher_channel` as dc
 ON lower(dt.publisher) = lower(dc.publisher) 
 ),
 campaign_base AS (
@@ -47,7 +47,10 @@ duplicate_raw AS (
 deduplicate_raw AS (
        select * from duplicate_raw where row_number = 1
 )
-SELECT camb.* EXCEPT(campaign_name_raw),
+SELECT camb.* EXCEPT(campaign_name_raw,channel),
+CASE WHEN channel  IS  NOT NULL THEN channel
+WHEN channel IS NULL AND platform ='CM360' THEN 'Paid Display'
+ELSE 'Other' END AS channel,
 NULL AS campaign_id,
 NULL AS device,
 trim(CASE WHEN 
