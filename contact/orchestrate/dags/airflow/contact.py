@@ -137,11 +137,11 @@ def set_env_vars_ga4(goal):
         env["TAP_GA4_REPORTS"] = "./ecommerce_report.json"
         env["GA4_GOAL"] = "ecommerce_goal"
     elif goal == "purchase_energy":
-        env["TAP_GA4_REPORTS"] = "./purchase_energy_report.json"
-        env["GA4_GOAL"] = "purchase_energy_goal"
+        env["TAP_GA4_REPORTS"] = "./contact_purchase_energy_report.json"
+        env["GA4_GOAL"] = "contact_purchase_energy_report"
     elif goal == "purchase_broadband":
-        env["TAP_GA4_REPORTS"] = "./purchase_broadband_report.json"
-        env["GA4_GOAL"] = "purchase_broadband_goal"
+        env["TAP_GA4_REPORTS"] = "./contact_purchase_broadband_report.json"
+        env["GA4_GOAL"] = "contact_purchase_broadband_report"
     else:
         env["TAP_GA4_REPORTS"] = "./report.json"
         env["GA4_GOAL"] = "goal"
