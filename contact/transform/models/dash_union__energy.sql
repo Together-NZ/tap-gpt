@@ -6,5 +6,8 @@
 
 SELECT *
 FROM {{ source('dash_table', 'dash_union') }}
-WHERE LOWER(campaign_name) NOT LIKE '%broadband%'
-  AND LOWER(campaign_name) NOT LIKE '%mobile%'
+WHERE LOWER(campaign_name) NOT IN (
+  SELECT DISTINCT LOWER(campaign_name) FROM {{ source('dash_union_broadband', 'dash_union__broadband') }}
+  UNION ALL
+  SELECT DISTINCT LOWER(campaign_name) FROM {{ source('dash_union_mobile', 'dash_union__mobile') }}
+)

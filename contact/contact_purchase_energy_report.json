@@ -1,0 +1,25 @@
+[
+  {
+    "name": "contact_purchase_energy_report",
+    "dimensions": [
+      "date",
+      "sessionSourceMedium",
+      "sessionCampaignName",
+      "sessionManualAdContent",
+      "eventName"
+    ],
+    "metrics": [
+      "eventCount"
+    ],
+    "filters": [
+      {
+        "fieldName": "itemVariant",
+        "stringFilter": {
+          "matchType": "EXACT",
+          "value": "Electricity",
+          "caseSensitive": true
+        }
+      }
+    ]
+  }
+]

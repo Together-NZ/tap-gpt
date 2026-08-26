@@ -180,8 +180,14 @@ plugins:
         args: run --select ga4_goal_channel__broadband
       ga4_energy_final_models:
         args: run --select ga4_goal_channel__energy
+      ga4_final_no_purchases_models:
+        args: run --select ga4_goal_channel_no_purchases
       ga4_final_models:
         args: run --select ga4_goal_channel
+      ga4_purchase_broadband_models:
+        args: run --select ga4_goal_a_broadband_purchase ga4_goal_broadband_purchase
+      ga4_purchase_energy_models:
+        args: run --select ga4_goal_a_energy_purchase ga4_goal_energy_purchase
       cm360_models:
         args: run --select cm360_seralized cm360_direct_buy
       dv360_models:

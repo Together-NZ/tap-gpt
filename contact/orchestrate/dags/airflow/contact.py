@@ -136,6 +136,12 @@ def set_env_vars_ga4(goal):
     elif goal == "ecommerce":
         env["TAP_GA4_REPORTS"] = "./ecommerce_report.json"
         env["GA4_GOAL"] = "ecommerce_goal"
+    elif goal == "purchase_energy":
+        env["TAP_GA4_REPORTS"] = "./purchase_energy_report.json"
+        env["GA4_GOAL"] = "purchase_energy_goal"
+    elif goal == "purchase_broadband":
+        env["TAP_GA4_REPORTS"] = "./purchase_broadband_report.json"
+        env["GA4_GOAL"] = "purchase_broadband_goal"
     else:
         env["TAP_GA4_REPORTS"] = "./report.json"
         env["GA4_GOAL"] = "goal"
@@ -604,7 +610,7 @@ with models.DAG(
     [kube_dash, kube_dash_search] >> kube_dash_union
 
     ga4_task_list = []
-    for goal in ["goal", "session", "keyword", "ecommerce"]:
+    for goal in ["goal", "session", "keyword", "ecommerce", "purchase_energy", "purchase_broadband"]:
         kube_ga4 = KubernetesPodOperator(
             name=f"contact-ga4-to-bq-{goal}",
             task_id=f"contact_ga4_to_bigquery_{goal}",
@@ -625,7 +631,18 @@ with models.DAG(
         )
         ga4_task_list.append(kube_ga4)
         kube_dash_union >> kube_ga4
-
+    kube_ga4_final_no_purchases = KubernetesPodOperator(
+        name="contact-ga4-final-no-purchases-to-bq",
+        task_id="contact_ga4_final_no_purchases_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "invoke", "dbt-bigquery:ga4_final_no_purchases_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_ga4_final(),
+        get_logs=True,
+    )
     kube_ga4_final = KubernetesPodOperator(
         name="contact-ga4-final-to-bq",
         task_id="contact_ga4_final_to_bigquery",
@@ -639,7 +656,7 @@ with models.DAG(
         get_logs=True,
     )
     for task in ga4_task_list:
-        task >> kube_ga4_final
+        task >> kube_ga4_final_no_purchases >> kube_ga4_final
 
     for brand in BRANDS:
         kube_brand_dash_union = KubernetesPodOperator(

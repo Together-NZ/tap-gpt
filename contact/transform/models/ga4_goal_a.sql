@@ -19,19 +19,6 @@ SELECT
         WHEN LOWER(eventName) = 'purchase'
              AND LOWER(hostName) LIKE '%contactmobile%'
             THEN 'purchase_mobile'
-        WHEN LOWER(eventName) = 'purchase'
-             AND LOWER(hostName) LIKE '%journey.contact%'
-             AND (
-                 LOWER(serviceType) NOT LIKE '%broadband%'
-                 OR LOWER(serviceType) NOT LIKE '%gas%'
-                 OR serviceType NOT LIKE '%B%'
-             )
-            THEN 'purchase_energy'
-        WHEN LOWER(eventName) = 'purchase'
-             AND LOWER(hostName) LIKE '%journey.contact%'
-             AND (LOWER(serviceType) LIKE '%broadband%' OR serviceType LIKE '%B%')
-             AND LOWER(serviceType) NOT LIKE '%bottled%'
-            THEN 'purchase_broadband'
         ELSE eventName
     END AS eventName
 FROM transformed

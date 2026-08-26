@@ -6,4 +6,4 @@
 
 SELECT *
 FROM {{ source('dash_table', 'dash_union') }}
-WHERE LOWER(campaign_name) LIKE '%mobile%'
+WHERE LOWER(campaign_name) LIKE '%mobile%' AND (LOWER(campaign_name) NOT LIKE '%broadband%' AND LOWER(campaign_name) NOT LIKE '%electricity%')

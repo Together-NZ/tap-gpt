@@ -64,6 +64,8 @@ sources:
       - name: session_goal
       - name: keyword_goal
       - name: ecommerce_goal
+      - name: contact_purchase_broadband_report
+      - name: contact_purchase_energy_report
 
   - name: ga4_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
@@ -73,6 +75,8 @@ sources:
       - name: ga4_goal_channel_session
       - name: ga4_goal_a
       - name: ga4_goal_a_session
+
+
 
   - name: ga4_central
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
@@ -85,6 +89,9 @@ sources:
       - name: ga4_goal_channel_keyword
       - name: ga4_goal_ecommerce
       - name: ga4_goal_channel
+      - name: ga4_goal_channel_no_purchase
+      - name: ga4_goal_energy_purchase
+      - name: ga4_goal_broadband_purchase
 
   - name: facebook_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
