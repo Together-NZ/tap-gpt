@@ -23,7 +23,7 @@ UNION ALL
 )),
 with_channel AS (
 SELECT * EXCEPT (publisher, channel),
-dc.publisher,
+COALESCE(dc.publisher,dt.publisher) as publisher,
 dc.channel
 FROM dash_table as dt LEFT JOIN `together-internal.channel.publisher_channel` as dc
 ON lower(dt.publisher) = lower(dc.publisher) 
