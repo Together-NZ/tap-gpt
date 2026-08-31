@@ -4,7 +4,7 @@ packages:
   - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
     revision: 602161d20ec1aec61a2c8b0cd1caa84b3a924919
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
-    revision: 68e230991f2663da590f14cea1734240869c78a9
+    revision: 2b1d7cc72d4e6a0cf9b694a4f315e6b0c889cc6f
   - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
     revision: 7fd343c1855dcb5fea9ababb56eed2a98dfcf927
   - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
@@ -21,4 +21,4 @@ packages:
     revision: c19c49d457874433aecd7aa988581fe30d5373db
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: 09c092d652c78d05495bb83b367f3f9cc750cd59
-sha1_hash: 22294e669cd390b9329a584d5fbdf04c5470e025
+sha1_hash: 77c7baa97b49afefc98de2f4bc6d61c184ddcf64

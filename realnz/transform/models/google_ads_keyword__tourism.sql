@@ -8,5 +8,5 @@
 
 {{ google_ads.google_ads_search_keyword(
     client_id=5773966980,
-    funnels=['explore', 'compare', 'book', 'dream']
+    funnel_search_default='BOOK'
 ) }}
