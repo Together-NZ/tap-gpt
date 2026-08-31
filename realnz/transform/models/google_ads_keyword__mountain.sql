@@ -6,4 +6,7 @@
     cluster_by=['campaign_name_selection', 'channel', 'funnel', 'publisher'],
 ) }}
 
-{{ google_ads.google_ads_search_keyword(client_id=2977297812) }}
+{{ google_ads.google_ads_search_keyword(
+    client_id=2977297812,
+    funnels=['explore', 'compare', 'book', 'dream']
+) }}
