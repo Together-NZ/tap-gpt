@@ -61,5 +61,5 @@ WITH processed AS (
 )
 SELECT
     * EXCEPT(funnel, sub_brands),
-    CASE WHEN LOWER(campaign_name) LIKE '%awareness%' THEN 'WE' ELSE 'ME' END AS funnel
+    CASE WHEN LOWER(campaign_name) LIKE '%awareness%' OR (campaign_name) LIKE '%WE%' THEN 'WE' ELSE 'ME' END AS funnel
 FROM processed

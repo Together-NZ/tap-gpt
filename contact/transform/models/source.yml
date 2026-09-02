@@ -89,7 +89,7 @@ sources:
       - name: ga4_goal_channel_keyword
       - name: ga4_goal_ecommerce
       - name: ga4_goal_channel
-      - name: ga4_goal_channel_no_purchase
+      - name: ga4_goal_channel_no_purchases
       - name: ga4_goal_energy_purchase
       - name: ga4_goal_broadband_purchase
 
