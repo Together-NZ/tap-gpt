@@ -406,9 +406,16 @@ with models.DAG(
         'fraud_and_scams',
         'everyday_banking_join_kiwibank',
         'business_banking',
+        'customer_business',
         'ao_social_boosting',
         'home_loans',
         'generic',
+        "unattributed",
+    ]
+    social_only_brands = [
+        "generic",
+        "ao_social_boosting",
+        "customer_business",
         "unattributed",
     ]
 
@@ -450,7 +457,10 @@ with models.DAG(
             env_vars=set_env_vars_dash(brand),
         )
 
-        kube_dash_overall >> kube_dash >> kube_dash_search >> kube_dash_union
+        if brand in social_only_brands:
+            kube_dash_overall >> kube_dash >> kube_dash_union
+        else:
+            kube_dash_overall >> kube_dash >> kube_dash_search >> kube_dash_union
 
 
 # ---------------------------------------------------------------------------
@@ -524,10 +534,17 @@ with models.DAG(
         'fraud_and_scams',
         'everyday_banking_join_kiwibank',
         'business_banking',
+        'customer_business',
         'ao_social_boosting',
         'home_loans',
         'generic',
         'unattributed',
+    ]
+    social_only_brands = [
+        "generic",
+        "ao_social_boosting",
+        "customer_business",
+        "unattributed",
     ]
     bing_task_list = []
     for brand in brands:
@@ -624,7 +641,9 @@ with models.DAG(
                 env_vars=set_env_vars_google_ads_search(brand),
             )
             bing_task_list.append(kube_bing_ads)
-        
+
             [kube_google_ads,kube_tiktok,kube_bing_ads] >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final >> kube_ga4_brand
+        elif brand in social_only_brands:
+            kube_tiktok >> kube_dash >> kube_dash_union >> kube_ga4_final >> kube_ga4_brand
         else:
             [kube_google_ads,kube_tiktok] >> kube_dash >> kube_dash_search >> kube_dash_union >> kube_ga4_final >> kube_ga4_brand

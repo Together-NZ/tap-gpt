@@ -223,6 +223,8 @@ sources:
     tables:
       - name: google_ads_demand__business_banking
       - name: google_ads_search__business_banking
+      - name: google_ads_keyword__business_banking
+      - name: google_ads_location__business_banking
 
   - name: google_ads__credit_card
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
@@ -230,6 +232,8 @@ sources:
     tables:
       - name: google_ads_demand__credit_card
       - name: google_ads_search__credit_card
+      - name: google_ads_keyword__credit_card
+      - name: google_ads_location__credit_card
 
   - name: google_ads__everyday_banking_join_kiwibank
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
@@ -237,6 +241,8 @@ sources:
     tables:
       - name: google_ads_demand__everyday_banking_join_kiwibank
       - name: google_ads_search__everyday_banking_join_kiwibank
+      - name: google_ads_keyword__everyday_banking_join_kiwibank
+      - name: google_ads_location__everyday_banking_join_kiwibank
 
   - name: google_ads__everyday_banking_retail_deposit
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
@@ -246,6 +252,8 @@ sources:
       - name: google_ads_search__everyday_banking_retail_deposit1
       - name: google_ads_demand__everyday_banking_retail_deposit2
       - name: google_ads_search__everyday_banking_retail_deposit2
+      - name: google_ads_keyword__everyday_banking_retail_deposit
+      - name: google_ads_location__everyday_banking_retail_deposit
       - name: bing_ads_search__everyday_banking_retail_deposit
 
   - name: google_ads__fraud_and_scams
@@ -254,6 +262,8 @@ sources:
     tables:
       - name: google_ads_demand__fraud_and_scams
       - name: google_ads_search__fraud_and_scams
+      - name: google_ads_keyword__fraud_and_scams
+      - name: google_ads_location__fraud_and_scams
 
   - name: google_ads__home_loans
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
@@ -261,6 +271,8 @@ sources:
     tables:
       - name: google_ads_demand__home_loans
       - name: google_ads_search__home_loans
+      - name: google_ads_keyword__home_loans
+      - name: google_ads_location__home_loans
       - name: bing_ads_search__home_loans
 models:
   - name: facebook
