@@ -152,6 +152,13 @@ sources:
       - name: dash_table__business_banking
       - name: dash_union__business_banking
 
+  - name: dash_union__customer_business
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table__customer_business') }}"
+    tables:
+      - name: dash_table__customer_business
+      - name: dash_union__customer_business
+
   - name: dash_union_search__business_banking
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__business_banking') }}"
