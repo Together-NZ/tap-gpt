@@ -1,0 +1,58 @@
+version: 1
+send_anonymous_usage_stats: true
+project_id: tap-gpt
+default_environment: test
+environments:
+- name: test
+plugins:
+  extractors:
+  - name: tap-gpt
+    namespace: tap_gpt
+    pip_url: -e .
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    settings_group_validation:
+    - [api_token, start_date]
+    settings:
+    - name: api_token
+      kind: password
+      label: Auth Token
+      description: The token to authenticate against the API service
+      sensitive: true
+    - name: start_date
+      kind: date_iso8601
+      label: Start Date
+      description: The earliest record date to sync
+    - name: end_date
+      kind: date_iso8601
+      label: End Date
+      description: The latest record date to sync
+    config:
+      api_token: ${TAP_GPT_API_TOKEN}
+      start_date: ${TAP_GPT_START_DATE}
+      end_date: ${TAP_GPT_END_DATE}
+  loaders:
+  - name: target-jsonl
+    variant: andyh1203
+    pip_url: target-jsonl
+
+  - name: target-bigquery
+    variant: z3z1ma
+    pip_url: git+https://github.com/z3z1ma/target-bigquery.git setuptools<82.0
+    config:
+      dataset: ${BQ_DATASET}
+      project: together-internal
+      location: australia-southeast1
+      denormalized: false
+      schema_resolver_version: 2
+      column_name_transforms:
+        add_underscore_when_invalid: true
+        lower: true
+        snake_case: true
+      fail_fast: false
+      method: ${BQ_METHOD}
+      bucket: australia-southeast1-meltan-00c049c-bigquery-staging
