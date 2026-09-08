@@ -277,6 +277,7 @@ class AdInsightsStream(GptStream):
         th.Property("ad_group_id", th.StringType, description="Ad group ID"),
         th.Property("ad_id", th.StringType, description="Ad ID"),
         th.Property("ad_name", th.StringType, description="Ad name"),
+        th.Property("readable_time", th.StringType, description="Report date (YYYY-MM-DD)"),
         th.Property("start_time", th.IntegerType, description="Period start (unix timestamp)"),
         th.Property("end_time", th.IntegerType, description="Period end (unix timestamp)"),
         th.Property("impressions", th.IntegerType, description="Impressions"),
@@ -304,6 +305,7 @@ class AdInsightsStream(GptStream):
                     "ad.name",
                     "campaign.id",
                     "ad_group.id",
+                    "metadata.readable_time"
                 ],
                 "time_ranges[]": [
                     f'{{"type":"date_range","since":"{start_date}","until":"{end_date}"}}',
@@ -311,3 +313,42 @@ class AdInsightsStream(GptStream):
             },
         )
         return params
+    
+    
+class ConversionAdsStream(GptStream):
+    """Daily ad-level conversion performance metrics."""
+
+    name = "ad_conversions"
+    path = "/conversions/insights"
+    http_method = "POST"
+    primary_keys: t.ClassVar[list[str]] = ["entity_id", "date"]
+    records_jsonpath = "$.data[*]"
+    parent_stream_type = AdsStream
+
+    schema = th.PropertiesList(
+        th.Property("click_through_conversions", th.StringType, description="Click through conversions"),
+        th.Property("conversions", th.StringType, description="conversions"),
+        th.Property("date", th.StringType, description="date"),
+        th.Property("entity_id", th.StringType, description="Entity ID (Ad ID)"),
+        th.Property("view_through_conversions", th.StringType, description="View through conversions"),
+    ).to_dict()
+
+    def prepare_request_payload(
+        self,
+        context: t.Any | None,
+        next_page_token: t.Any | None,
+    ) -> dict[str, t.Any]:
+        start_date = str(self.config["start_date"])[:10]
+        configured_end = str(self.config.get("end_date") or date.today())[:10]
+        end_date = min(configured_end, date.today().isoformat())
+        ad_id = context['ad_id']
+        return {
+                "aggregation_level": "ad",
+                "time_granularity": "daily",
+                "time_ranges": [
+                    f'{{"type":"date_range","since":"{start_date}","until":"{end_date}"}}',
+                ],
+                "entity_ids": [ad_id]
+            }
+ 
+    

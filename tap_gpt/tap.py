@@ -43,6 +43,7 @@ class TapGpt(Tap):
             streams.AdGroupStream(self),
             streams.AdsStream(self),
             streams.AdInsightsStream(self),
+            streams.ConversionAdsStream(self)
         ]
 
 
