@@ -60,7 +60,7 @@ plugins:
       advertiser_id: ${TAP_DV360_ADVERTISER_ID}
       query_standard: dv360_standard.json
       query_youtube: dv360_youtube.json
-      service_account: together-meltano@together-internal.iam.gserviceaccount.com
+      service_account: together-warehouse-dv360@together-internal.iam.gserviceaccount.com
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -222,7 +222,7 @@ plugins:
       tiktok_noel_leeming_models:
         args: run --select +tiktok__noel_leeming
       google_ads_noel_leeming_models:
-        args: run --select +google_ads_search__noel_leeming +google_ads_demand__noel_leeming +google_ads_keyword__noel_leeming +google_ads_location__noel_leeming 
+        args: run --select +google_ads_search__noel_leeming +google_ads_demand__noel_leeming +google_ads_keyword__noel_leeming +google_ads_location__noel_leeming
       bing_ads_noel_leeming_models:
         args: run --select bing_ads_search__noel_leeming bing_ads_keyword__noel_leeming
       ga4_noel_leeming_goal_models:
