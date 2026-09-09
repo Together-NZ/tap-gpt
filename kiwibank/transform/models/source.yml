@@ -29,7 +29,7 @@ sources:
       - name: ad_insights
       - name: ads
       - name: campaigns
-      
+
   - name: gpt_transformed
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_GPT_TRANSFORMED_BIGQUERY_DATASET', 'gpt_transformed') }}"
@@ -176,6 +176,12 @@ sources:
       - name: dash_table__customer_business
       - name: dash_union__customer_business
 
+  - name: dash_union_search__customer_business
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__customer_business') }}"
+    tables:
+      - name: dash_table_search__customer_business
+
   - name: dash_union_search__business_banking
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
     schema: "{{ env_var('REFERENCE_DASH_UNION_BIGQUERY_DATASET', 'dash_table_search__business_banking') }}"
@@ -249,6 +255,15 @@ sources:
       - name: google_ads_search__business_banking
       - name: google_ads_keyword__business_banking
       - name: google_ads_location__business_banking
+
+  - name: google_ads__customer_business
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GOOGLE_ADS_TRANSFORMED_BIGQUERY_DATASET', 'google_ads_search_transformed__customer_business') }}"
+    tables:
+      - name: google_ads_demand__customer_business
+      - name: google_ads_search__customer_business
+      - name: google_ads_keyword__customer_business
+      - name: google_ads_location__customer_business
 
   - name: google_ads__credit_card
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"

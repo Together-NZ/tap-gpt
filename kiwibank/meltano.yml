@@ -241,6 +241,8 @@ plugins:
         args: run --select +google_ads_search__everyday_banking_join_kiwibank +google_ads_demand__everyday_banking_join_kiwibank +google_ads_keyword__everyday_banking_join_kiwibank +google_ads_location__everyday_banking_join_kiwibank
       google_ads_business_banking_models:
         args: run --select +google_ads_search__business_banking +google_ads_demand__business_banking +google_ads_keyword__business_banking +google_ads_location__business_banking
+      google_ads_customer_business_models:
+        args: run --select +google_ads_search__customer_business +google_ads_demand__customer_business +google_ads_keyword__customer_business +google_ads_location__customer_business
       google_ads_home_loans_models:
         args: run --select +google_ads_search__home_loans +google_ads_demand__home_loans +google_ads_keyword__home_loans +google_ads_location__home_loans
       google_ads_unattributed_models:
