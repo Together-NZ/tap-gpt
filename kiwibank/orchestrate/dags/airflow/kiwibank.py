@@ -70,6 +70,16 @@ def set_env_vars_facebook():
     env["DBT_BIGQUERY_DATASET"] = 'facebook_transformed'
     return env
 
+def set_env_vars_gpt():
+    env = get_meltano_env()
+    env["BQ_DATASET"] = "gpt_raw"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = 'oauth'
+    env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
+    env["DBT_BIGQUERY_DATASET"] = 'gpt_transformed'
+    env["TAP_GPT_API_TOKEN"]=env["KB_GPT_API_TOKEN"]
+    return env
+
 def set_env_vars_ttd():
     env = get_meltano_env()
     env["BQ_DATASET"] = "ttd_raw"
@@ -125,7 +135,6 @@ def set_env_vars_google_ads_search(brand):
     env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
     env["DBT_BIGQUERY_DATASET"] = f'google_ads_search_transformed__{brand}'
     return env
-
 
 def set_env_vars_ga4_overall(goal):
     env = get_meltano_env()
@@ -207,6 +216,19 @@ with models.DAG(
     default_args=default_args
 ) as dag_social:
 
+    kube_gpt = KubernetesPodOperator(
+        name="kb-gpt-to-bq",
+        task_id="kb-gpt_to_bigquery",
+        namespace="composer-user-workloads",
+        image=IMAGE,
+        arguments=["--environment=prod", "run", "tap-gpt", "target-bigquery",
+                    "dbt-bigquery:gpt_models"],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_gpt(),
+        get_logs=True
+    )
     kube_facebook = KubernetesPodOperator(
         name="kb-facebook-to-bq",
         task_id="kb-facebook_to_bigquery",
@@ -398,7 +420,7 @@ with models.DAG(
         get_logs=True
     )
     kube_cm360 >> kube_dv360 
-    [kube_facebook,kube_linkedin,kube_dv360,kube_hivestack,kube_ttd] >> kube_dash_overall
+    [kube_facebook,kube_linkedin,kube_dv360,kube_hivestack,kube_ttd,kube_gpt] >> kube_dash_overall
     task_list = []
     brands = [
         'everyday_banking_retail_deposit',
