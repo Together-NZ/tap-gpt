@@ -39,6 +39,7 @@ jobs:
   # 2. Second job: Detect which folders changed, get changed folders for project
   setup_project:
     runs-on: ubuntu-latest
+    if: github.head_ref == 'develope-existing-clients'
     permissions:
       contents: read
       pull-requests: read
