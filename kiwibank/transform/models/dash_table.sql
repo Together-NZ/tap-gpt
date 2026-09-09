@@ -139,8 +139,8 @@ FROM `kiwibank-main.google_ads_search_transformed__home_loans.google_ads_demand_
 UNION ALL 
 SELECT media_cost, impressions, clicks, creative_name, NULL AS audience_name, null ad_format, NULL AS ad_format_detail, 0 AS video_completion
 ,0 as video_25_completion,0 as video_50_completion,0 as video_75_completion, 0  as video_views,
-campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,conversions,
-platform FROM `kiwibank-main.gpt_transformed.gpt`
+campaign_name, publisher, campaign_descr, creative_descr, date(date) as date, conversions
+FROM `kiwibank-main.gpt_transformed.gpt`
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher, channel),
