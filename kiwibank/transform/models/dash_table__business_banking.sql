@@ -22,6 +22,11 @@ UNION ALL
 {{dash_table_general_process.cm360(source_name='cm360_transformed', table_name='cm360_direct_buy_no_dv360')}} WHERE campaign_name LIKE '%000006%'
 UNION ALL
 {{dash_table_general_process.ttd(source_name='ttd_transformed', table_name='ttd')}} WHERE campaign_name LIKE '%000006%'
+UNION ALL 
+SELECT media_cost, impressions, clicks, creative_name, NULL AS audience_name, null ad_format, NULL AS ad_format_detail, 0 AS video_completion
+,0 as video_25_completion,0 as video_50_completion,0 as video_75_completion, 0  as video_views,
+campaign_name, publisher, campaign_descr, creative_descr, date(date) as date,conversions,
+platform FROM `kiwibank-main.gpt_transformed.gpt` WHERE target_url LIKE '%000006%'
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher, channel),

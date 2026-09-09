@@ -40,6 +40,20 @@ plugins:
     - ads.*
     - campaigns.*
     - custom_conversions.*
+  - name: tap-gpt
+    namespace: tap-gpt
+    pip_url: git+https://github.com/Together-NZ/tap-gpt.git setuptools<82.0
+    executable: tap-gpt
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      api_token: ${TAP_GPT_API_TOKEN}
+      start_date: ${TAP_GPT_START_DATE}
+      end_date: ${TAP_GPT_END_DATE}
   - name: tap-linkedin-ads
     namespace: tap-linkedin-ads
     pip_url: git+https://github.com/Together-NZ/tap-linkedin.git setuptools<82.0
@@ -147,6 +161,8 @@ plugins:
     commands:
       cm360_models:
         args: run --select +cm360_direct_buy +cm360_direct_buy_no_dv360
+      gpt_models:
+        args: run --select +gpt
       facebook_models:
         args: run --select +facebook
       linkedin_models:
