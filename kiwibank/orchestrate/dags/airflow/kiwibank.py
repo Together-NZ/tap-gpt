@@ -78,6 +78,7 @@ def set_env_vars_gpt():
     env["DBT_BIGQUERY_PROJECT"] = 'kiwibank-main'
     env["DBT_BIGQUERY_DATASET"] = 'gpt_transformed'
     env["TAP_GPT_API_TOKEN"]=env["KB_GPT_API_TOKEN"]
+    env["TAP_GPT_START_DATE"]=env["START_DATE"]
     return env
 
 def set_env_vars_ttd():
