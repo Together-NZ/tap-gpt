@@ -50,7 +50,7 @@ def get_meltano_env():
     meltano_env = {**meltano_env_common, **meltano_env_unique, **meltano_env_ga4}
     yesterday = datetime.datetime.now(local_tz) - datetime.timedelta(days=14)
     start_date_str = yesterday.strftime("%Y-%m-%d")
-
+#
     meltano_env["START_DATE"] = start_date_str
     meltano_env["BQ_METHOD"] = "batch_job"
 
