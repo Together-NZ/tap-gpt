@@ -1,0 +1,107 @@
+name: Reusable workflow for detecting changed dags
+on:
+  workflow_call:
+    outputs:
+      matrix:
+        value: ${{ jobs.setup_dag.outputs.matrix }}
+      project:
+        value: ${{ jobs.setup_dag.outputs.project }}
+      dag:
+        value: ${{ jobs.setup_dag.outputs.dag }}
+
+jobs:
+  setup_dag:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      matrix: ${{ steps.publish-dag-matrix.outputs.matrix }}
+      project: ${{ steps.dag-filter-out.outputs.project }}
+      dag: ${{ steps.dag-filter-out.outputs.dag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+      - name: Filter changed folders
+        if: github.event_name == 'pull_request'
+        id: dag-pr-filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            dag:
+              - "**/orchestrate/**"
+            project:
+              - "**"
+              - "!README.md"
+              - "!.github/**"
+              - "!.cursor/**"
+              - "!terraform/**"
+              - "!**/orchestrate/**"
+       
+
+      # record the folder change if the change are not dag file 
+      - name: Get changed folders (PR)
+        id: set-dag-matrix
+        if: github.event_name == 'pull_request' && steps.dag-pr-filter.outputs.dag == 'true'
+        run: |
+          FOLDERS=$(git diff --name-only HEAD^ HEAD \
+            | grep '/orchestrate/' \
+            | cut -d/ -f1 | sort -u \
+            | while read dir; do
+                case "$dir" in .* ) continue ;; esac
+                [ -d "$dir" ] && echo "$dir"
+              done \
+            | jq -R . | jq -s -c .)
+          echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+
+      - name: Matrix for manual DAG upload (single client)
+        id: set-dag-matrix-manual
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.upload_airflow_dag == 'true'
+        run: |
+          CLIENT="${{ github.event.inputs.client_folder }}"
+          CLIENT="${CLIENT#/}"
+          CLIENT="${CLIENT%/}"
+          DAG="${CLIENT}/orchestrate/dags/airflow/${CLIENT}.py"
+          if [ ! -f "$DAG" ]; then
+            echo "Missing DAG file: $DAG"
+            exit 1
+          fi
+          echo "matrix=$(jq -nc --arg f "$CLIENT" '[$f]')" >> $GITHUB_OUTPUT
+
+      - name: Publish DAG matrix for downstream jobs
+        id: publish-dag-matrix
+        if: always()
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_DAG_MATRIX: ${{ steps.set-dag-matrix.outputs.matrix }}
+          MANUAL_DAG_MATRIX: ${{ steps.set-dag-matrix-manual.outputs.matrix }}
+          DAG_FILTER: ${{ steps.dag-pr-filter.outputs.dag }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.upload_airflow_dag }}" = "true" ]; then
+              if [ -z "${MANUAL_DAG_MATRIX}" ]; then
+                echo "DAG upload was requested but matrix is empty."
+                exit 1
+              fi
+              echo "matrix=${MANUAL_DAG_MATRIX}" >> $GITHUB_OUTPUT
+            else
+              echo "matrix=[]" >> $GITHUB_OUTPUT
+            fi
+          elif [ "$DAG_FILTER" = "true" ] && [ -n "${PR_DAG_MATRIX}" ]; then
+            echo "matrix=${PR_DAG_MATRIX}" >> $GITHUB_OUTPUT
+          else
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Expose filter outputs for DAG job (PR vs manual)
+        id: dag-filter-out
+        if: always()
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "project=${{ steps.dag-pr-filter.outputs.project }}" >> $GITHUB_OUTPUT
+            echo "dag=${{ steps.dag-pr-filter.outputs.dag }}" >> $GITHUB_OUTPUT
+          else
+            echo "project=false" >> $GITHUB_OUTPUT
+            echo "dag=false" >> $GITHUB_OUTPUT
+          fi

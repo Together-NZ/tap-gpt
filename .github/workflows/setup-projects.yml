@@ -1,0 +1,138 @@
+
+on:
+  workflow_call:
+    # no input needed
+    outputs:
+      matrix:
+        value: ${{ jobs.setup_project.outputs.matrix }}
+      project:
+        value: ${{ jobs.setup_project.outputs.project }}
+      dag:
+        value: ${{ jobs.setup_project.outputs.dag }}
+jobs:
+  
+  setup_project:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: read
+    outputs:
+      matrix: ${{ steps.publish-matrix.outputs.matrix }}
+      project: ${{ steps.job-filter-out.outputs.project }}
+      dag: ${{ steps.job-filter-out.outputs.dag }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+
+      - name: Validate manual workflow inputs
+        if: github.event_name == 'workflow_dispatch'
+        run: |
+          if [ "${{ github.event.inputs.build_docker }}" != "true" ] && [ "${{ github.event.inputs.upload_airflow_dag }}" != "true" ]; then
+            echo "Select at least one of: build_docker, upload_airflow_dag"
+            exit 1
+          fi
+
+      - name: Filter changed folders
+        if: github.event_name == 'pull_request'
+        id: pr-filter
+        uses: dorny/paths-filter@v4
+        with:
+          filters: |
+            dag:
+              - "**/orchestrate/**"
+            project:
+              - "**"
+              - "!README.md"
+              - "!.github/**"
+              - "!.cursor/**"
+              - "!terraform/**"
+              - "!**/orchestrate/**"
+
+   
+
+      # record the folder change if the change are not dag file 
+      - name: Get changed folders
+        id: set-matrix
+        if: github.event_name == 'pull_request' && steps.pr-filter.outputs.project == 'true'
+        run: |
+          FOLDERS=$(git diff --name-only HEAD^ HEAD \
+            | grep -v '/orchestrate/' \
+            | grep -v 'terraform/' \
+            | grep -v 'README.md' \
+            | grep -v 'terraform/' \
+            | grep -v '.github/' \
+            | grep -v '.cursor/' \
+            | grep -v '/ci_test.sh' \
+            | grep -v '/client_name.py' \
+            | grep -v '/ci_pre_test.sh' \
+            | grep -v '/docker_build.py' \
+            | grep -v '/dv360_youtube.json' \
+            | grep -v '/dv360_standard.json' \
+            | cut -d/ -f1 | sort -u \
+            | while read dir; do
+                # Skip dot-dirs (.cursor, .github, .dev, …) — not client Docker builds
+                case "$dir" in .* ) continue ;; esac
+                [ -d "$dir" ] && echo "$dir"
+              done \
+            | jq -R . | jq -s -c .)
+          echo "matrix=$FOLDERS" >> $GITHUB_OUTPUT
+
+      - name: Matrix for manual Docker build (single client)
+        id: set-matrix-manual
+        if: github.event_name == 'workflow_dispatch' && github.event.inputs.build_docker == 'true'
+        run: |
+          CLIENT="${{ github.event.inputs.client_folder }}"
+          CLIENT="${CLIENT#/}"
+          CLIENT="${CLIENT%/}"
+          if ! [[ "$CLIENT" =~ ^[a-zA-Z0-9_.-]+$ ]]; then
+            echo "Invalid client_folder: use only letters, numbers, ._-"
+            exit 1
+          fi
+          if [ ! -d "$CLIENT" ]; then
+            echo "No directory at repo root: $CLIENT"
+            exit 1
+          fi
+          if [ ! -f "$CLIENT/Dockerfile" ]; then
+            echo "No Dockerfile in $CLIENT/"
+            exit 1
+          fi
+          echo "matrix=$(jq -nc --arg f "$CLIENT" '[$f]')" >> $GITHUB_OUTPUT
+
+      - name: Publish matrix for downstream jobs
+        id: publish-matrix
+        if: always()
+        env:
+          EVENT_NAME: ${{ github.event_name }}
+          PR_MATRIX: ${{ steps.set-matrix.outputs.matrix }}
+          MANUAL_MATRIX: ${{ steps.set-matrix-manual.outputs.matrix }}
+          PROJECT: ${{ steps.pr-filter.outputs.project }}
+        run: |
+          if [ "$EVENT_NAME" = "workflow_dispatch" ]; then
+            if [ "${{ github.event.inputs.build_docker }}" = "true" ]; then
+              if [ -z "${MANUAL_MATRIX}" ]; then
+                echo "Docker build was requested but matrix is empty (set-matrix-manual failed?)."
+                exit 1
+              fi
+              echo "matrix=${MANUAL_MATRIX}" >> $GITHUB_OUTPUT
+            else
+              echo "matrix=[]" >> $GITHUB_OUTPUT
+            fi
+          elif [ "$PROJECT" = "true" ] && [ -n "${PR_MATRIX}" ]; then
+            echo "matrix=${PR_MATRIX}" >> $GITHUB_OUTPUT
+          else
+            echo "matrix=[]" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Expose filter outputs for job (PR vs manual)
+        id: job-filter-out
+        if: always()
+        run: |
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "project=${{ steps.pr-filter.outputs.project }}" >> $GITHUB_OUTPUT
+            echo "dag=${{ steps.pr-filter.outputs.dag }}" >> $GITHUB_OUTPUT
+          else
+            echo "project=false" >> $GITHUB_OUTPUT
+            echo "dag=false" >> $GITHUB_OUTPUT
+          fi

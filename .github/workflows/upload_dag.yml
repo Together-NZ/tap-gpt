@@ -1,0 +1,39 @@
+on:
+  workflow_call:
+    inputs:
+      matrix:
+        description: JSON array of client folders with DAG changes
+        required: true
+        type: string
+
+jobs:
+  upload_dag:
+    permissions:
+      id-token: write
+      contents: read
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        folder: ${{ fromJson(inputs.matrix) }}
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Authenticate to Google Cloud with Service Account
+        id: auth
+        uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: "projects/364275589560/locations/global/workloadIdentityPools/amp-pool-unique/providers/github-resource-pool"
+          service_account: "impact-ci-ci-cd-service-accoun@together-internal.iam.gserviceaccount.com"
+
+      - name: Setup gcloud
+        uses: google-github-actions/setup-gcloud@v2
+
+      - name: Upload the DAG
+        run: |
+          gcloud composer environments storage dags import \
+            --project=together-internal \
+            --location=australia-southeast1 \
+            --environment=meltano \
+            --source=${{ matrix.folder }}/orchestrate/dags/airflow/${{ matrix.folder }}.py
