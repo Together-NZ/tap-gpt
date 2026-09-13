@@ -96,6 +96,20 @@ plugins:
     pip_url: git+https://github.com/gthesheep/tap-tiktok.git setuptools<82.0
     config:
       start_date: ${START_DATE}
+  - name: tap-gpt
+    namespace: tap-gpt
+    pip_url: git+https://github.com/Together-NZ/tap-gpt.git setuptools<82.0
+    executable: tap-gpt
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      api_token: ${TAP_GPT_API_TOKEN}
+      start_date: ${TAP_GPT_START_DATE}
+      end_date: ${TAP_GPT_END_DATE}
   - name: tap-reddit-ads
     namespace: tap-reddit-ads
     pip_url: git+ssh://git@github.com/Together-NZ/tap-reddit-ads.git setuptools<82.0
@@ -146,6 +160,8 @@ plugins:
     variant: dbt-labs
     pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
+      gpt_models:
+        args: run --select gpt
       google_ads_models:
         args: run --select google_ads_search google_ads_demand google_ads_keyword google_ads_location bing_ads_search bing_ads_search_keyword
       google_ads_mobile_models:

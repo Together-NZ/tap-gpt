@@ -12,6 +12,23 @@ sources:
       - name: campaigns
       - name: custom_conversions
 
+  - name: gpt_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT','contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_BIGQUERY_DATASET','gpt_raw') }}"
+    tables:
+      - name: account
+      - name: ad_conversions
+      - name: ad_groups
+      - name: ad_insights
+      - name: ads
+      - name: campaigns
+
+  - name: gpt_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_TRANSFORMED_BIGQUERY_DATASET', 'gpt_transformed') }}"
+    tables:
+      - name: gpt
+
   - name: dv360_raw
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'contact-energy-main') }}"
     schema: "{{ env_var('REFERENCE_DV360_BIGQUERY_DATASET', 'dv360_raw') }}"

@@ -48,6 +48,12 @@ WITH processed AS (
             source_name='reddit_transformed',
             table_name='reddit'
         ) }}
+        UNION ALL
+        {{ dash_table_general_process.gpt(
+            source_name = 'gpt_transformed',
+            table_name='gpt'
+        )}}
+
     ),
     with_channel AS (
         SELECT * EXCEPT (publisher, channel),
