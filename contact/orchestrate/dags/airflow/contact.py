@@ -219,12 +219,11 @@ with models.DAG(
             "target-bigquery",
             "dbt-bigquery:gpt_models"
         ],
-        containter_resources = k8s_models.V1ResourceRequirements(
-            limits={"memory":"1000M","cpu":"500M"},
-            
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
         ),
-        env_vars = set_env_vars_gpt(),
-        get_logs=True
+        env_vars=set_env_vars_gpt(),
+        get_logs=True,
     )
     kube_dv360 = KubernetesPodOperator(
         name="contact-dv360-to-bq",
