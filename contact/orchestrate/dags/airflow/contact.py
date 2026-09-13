@@ -80,7 +80,11 @@ def set_env_vars_facebook():
 def set_env_vars_dv360():
     return _base_env("dv360_raw", "dv360_transformed")
 
-
+def set_env_vars_gpt():
+    env = _base_env("gpt_raw","gpt_transformed")
+    env["TAP_GPT_API_TOKEN"] = env["TAP_GPT_CONTACT_API_TOKEN"]
+    return env
+    
 def set_env_vars_ttd():
     env = _base_env("ttd_raw", "ttd_transformed")
     env["TAP_TTD_START_DATE"] = get_ttd_start_date()
@@ -202,6 +206,25 @@ with models.DAG(
         ),
         env_vars=set_env_vars_facebook(),
         get_logs=True,
+    )
+    kube_gpt = KubernetesPodOperator(
+        name="contact-gpt-to-bigquery",
+        task_id="contact_gpt_to_bigquery",
+        namespace="composer-user-workloads",
+        image = IMAGE,
+        arguments = [
+            "--environment=prod",
+            "run",
+            "tap-gpt",
+            "target-bigquery",
+            "dbt-bigquery:gpt_models"
+        ],
+        containter_resources = k8s_models.V1ResourceRequirements(
+            limits={"memory":"1000M","cpu":"500M"},
+            
+        ),
+        env_vars = set_env_vars_gpt(),
+        get_logs=True
     )
     kube_dv360 = KubernetesPodOperator(
         name="contact-dv360-to-bq",
@@ -434,7 +457,7 @@ with models.DAG(
         get_logs=True,
     )
 
-    [kube_facebook, kube_dv360, kube_hivestack, kube_ttd, kube_reddit] >> kube_dash
+    [kube_facebook, kube_dv360, kube_hivestack, kube_ttd, kube_reddit,kube_gpt] >> kube_dash
     kube_dash >> kube_dash_search >> kube_dash_union
 
     for brand in BRANDS:
