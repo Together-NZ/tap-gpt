@@ -267,8 +267,8 @@ with models.DAG(
         get_logs=True,
     )
     kube_gpt = KubernetesPodOperator(
-        name="contact-gpt-to-bigquery",
-        task_id="contact_gpt_to_bigquery",
+        name="beststart-gpt-to-bigquery",
+        task_id="beststart_gpt_to_bigquery",
         namespace="composer-user-workloads",
         image = IMAGE,
         arguments = [
