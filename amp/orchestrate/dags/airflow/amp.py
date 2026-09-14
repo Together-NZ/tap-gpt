@@ -164,7 +164,7 @@ with models.DAG(
                 container_resources=k8s_models.V1ResourceRequirements(
                     limits={"memory": "1000M", "cpu": "500m"},
                 ),
-                env_vars=set_env_vars_google_ads_ky_loc(),
+                env_vars=set_env_vars_google_ads_ky_loc(brand),
                 #base_container_name=f"meltano-{label}-google-ads-search",
                 get_logs = True
             )
