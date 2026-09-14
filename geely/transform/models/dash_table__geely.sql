@@ -11,6 +11,11 @@ UNION ALL
 {{ dash_table_general_process.linkedin(source_name='linkedin_transformed__geely', table_name='linkedin__geely') }}
 UNION ALL
 {{ dash_table_general_process.google_ads(source_name='google_ads_search_transformed__geely', table_name='google_ads_demand__geely') }}
+UNION ALL
+{{ dash_table_general_process.gpt(
+    source_name='gpt_transformed__geely',
+    table_name='gpt__geely'
+) }}
 ),
 with_channel AS (
 SELECT * EXCEPT (publisher, channel),

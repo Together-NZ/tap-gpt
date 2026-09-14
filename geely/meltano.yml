@@ -104,6 +104,20 @@ plugins:
     - ads.*
     - campaigns.*
     - custom_conversions.*
+  - name: tap-gpt
+    namespace: tap-gpt
+    pip_url: git+https://github.com/Together-NZ/tap-gpt.git setuptools<82.0
+    executable: tap-gpt
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      api_token: ${TAP_GPT_API_TOKEN}
+      start_date: ${START_DATE}
+      end_date: ${TAP_GPT_END_DATE}
   loaders:
   - name: target-jsonl
     variant: andyh1203
@@ -134,6 +148,8 @@ plugins:
     variant: dbt-labs
     pip_url: dbt-core~=1.9.2 dbt-bigquery~=1.9.1 setuptools<82.0
     commands:
+      gpt_geely_models:
+        args: run --select gpt__geely
       ttd_geely_models:
         args: run --select +ttd__geely
       ttd_lotus_models:

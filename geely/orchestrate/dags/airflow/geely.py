@@ -58,7 +58,17 @@ def get_ga4_start_date():
 
 def get_ttd_start_date():
     return (datetime.datetime.now(local_tz) - datetime.timedelta(days=30)).strftime("%Y-%m-%d")
-
+def set_env_vars_gpt(brand):
+    env=get_meltano_env()
+    env["BQ_DATASET"] = f"gpt_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"gpt_transformed__{brand}"
+    report_key = f"TAP_GPT_{brand}_API_TOKEN"
+    if report_key in env:
+        env["TAP_GPTD_API_TOKEN"] = env[report_key]
+    return env 
 
 # ---------------------------------------------------------------------------
 # DAG 1: Social / Display / Programmatic
@@ -138,6 +148,8 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
         env["DBT_BIGQUERY_DATASET"] = f"dash_table__{brand}"
         return env
+
+
 
     for brand in BRANDS:
         upstreams = []
@@ -256,6 +268,24 @@ with models.DAG(
                 trigger_rule="all_done",
             )
             kube_facebook >> task_facebook_comparison
+
+            kube_gpt = KubernetesPodOperator(
+                name="geely-gpt-to-bigquery",
+                task_id="geely_gpt_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-gpt",
+                    "target-bigquery",
+                    "dbt-bigquery:gpt_models",
+                ],
+                container_resources=KUBE_RESOURCES,
+                env_vars=set_env_vars_gpt(brand),
+                get_logs=True,
+            )
+            upstreams.append(kube_gpt)
 
         if brand == "lotus":
             kube_hivestack = KubernetesPodOperator(

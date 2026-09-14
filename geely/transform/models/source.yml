@@ -192,6 +192,23 @@ sources:
     tables:
       - name: dash_table_search__geely
 
+  - name: gpt_raw__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_BIGQUERY_DATASET', 'gpt_raw__geely') }}"
+    tables:
+      - name: account
+      - name: ad_conversions
+      - name: ad_groups
+      - name: ad_insights
+      - name: ads
+      - name: campaigns
+
+  - name: gpt_transformed__geely
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'geely-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_TRANSFORMED_BIGQUERY_DATASET', 'gpt_transformed__geely') }}"
+    tables:
+      - name: gpt__geely
+
 models:
   - name: ttd__geely
     config:
