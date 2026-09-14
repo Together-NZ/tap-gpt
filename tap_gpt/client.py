@@ -3,8 +3,6 @@
 from __future__ import annotations
 
 import decimal
-import json
-import time
 import typing as t
 
 import requests
@@ -15,8 +13,6 @@ from singer_sdk.streams import RESTStream
 
 if t.TYPE_CHECKING:
     from singer_sdk.helpers.types import Context
-
-_DEBUG_LOG = "/Users/peter/work/.cursor/debug-d9b7ce.log"
 
 
 class OpenAIAdsPaginator(BaseAPIPaginator[str | None]):
@@ -58,33 +54,9 @@ class GptStream(RESTStream):
 
     def get_new_paginator(self) -> BaseAPIPaginator:
         """Create a new pagination helper instance."""
-        # #region agent log
-        paginator = (
-            OpenAIAdsPaginator(None)
-            if self.records_jsonpath == "$.data[*]"
-            else SinglePagePaginator()
-        )
-        with open(_DEBUG_LOG, "a", encoding="utf-8") as f:
-            f.write(
-                json.dumps(
-                    {
-                        "sessionId": "d9b7ce",
-                        "runId": "post-fix",
-                        "hypothesisId": "H1",
-                        "location": "client.py:get_new_paginator",
-                        "message": "paginator created",
-                        "data": {
-                            "stream": self.name,
-                            "paginator_type": type(paginator).__name__,
-                            "records_jsonpath": self.records_jsonpath,
-                        },
-                        "timestamp": int(time.time() * 1000),
-                    },
-                )
-                + "\n",
-            )
-        # #endregion
-        return paginator
+        if self.records_jsonpath == "$.data[*]":
+            return OpenAIAdsPaginator(None)
+        return SinglePagePaginator()
 
     def get_url_params(
         self,
