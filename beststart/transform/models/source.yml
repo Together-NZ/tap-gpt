@@ -188,3 +188,20 @@ sources:
     schema: "{{ env_var('REFERENCE_DASH_SEARCH_HR_CAREER_BIGQUERY_DATASET', 'dash_table_search__hr_career') }}"
     tables:
       - name: dash_table_search__hr_career
+
+  - name: gpt_raw
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT','kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_BIGQUERY_DATASET','gpt_raw') }}"
+    tables:
+      - name: account
+      - name: ad_conversions
+      - name: ad_groups
+      - name: ad_insights
+      - name: ads
+      - name: campaigns
+
+  - name: gpt_transformed
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'kiwibank-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_TRANSFORMED_BIGQUERY_DATASET', 'gpt_transformed') }}"
+    tables:
+      - name: gpt

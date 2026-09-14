@@ -68,6 +68,22 @@ plugins:
       query_standard: dv360_standard.json
       query_youtube: dv360_youtube.json
       service_account: together-meltano@together-internal.iam.gserviceaccount.com
+
+  - name: tap-gpt
+    namespace: tap-gpt
+    pip_url: git+https://github.com/Together-NZ/tap-gpt.git setuptools<82.0
+    executable: tap-gpt
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      api_token: ${TAP_GPT_API_TOKEN}
+      start_date: ${TAP_GPT_START_DATE}
+      end_date: ${TAP_GPT_END_DATE}
+
   - name: tap-facebook
     variant: airbyte
     pip_url: git+https://github.com/MeltanoLabs/tap-airbyte-wrapper.git setuptools<82.0
@@ -108,6 +124,8 @@ plugins:
     variant: dbt-labs
     pip_url: dbt-core~=1.8.0 dbt-bigquery~=1.8.0 setuptools<82.0
     commands:
+      gpt_models:
+        args: run --select gpt
       google_ads_beststart_models:
         args: run --select google_ads_search__beststart google_ads_demand__beststart google_ads_demand2 google_ads_keyword__beststart google_ads_location__beststart
       google_ads_hr_career_models:

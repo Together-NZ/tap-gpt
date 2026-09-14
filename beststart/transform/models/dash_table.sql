@@ -44,6 +44,11 @@ WITH dash_table AS (
         source_name='cm360_transformed',
         table_name='cm360_direct_buy'
     ) }}
+    UNION ALL
+    {{ dash_table_general_process.gpt(
+        source_name='gpt_transformed',
+        table_name='gpt'
+    )}}
 ),
 with_channel AS (
     SELECT

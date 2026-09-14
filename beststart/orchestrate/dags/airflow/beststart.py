@@ -131,6 +131,20 @@ def set_env_vars_dash_search_union():
     return env
 
 
+def set_env_vars_gpt():
+    env = get_meltano_env()
+    env["BQ_DATASET"] = "gpt_raw"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = "gpt_transformed"
+    env["TAP_GPT_API_TOKEN"]=env["TAP_GPT_BESTSTART_API_TOKEN"]
+    return env
+
+
+
+
+
 def set_env_vars_ga4(goal):
     env = get_meltano_env()
     if goal == "session":
@@ -252,6 +266,24 @@ with models.DAG(
         env_vars=set_env_vars_cm360(),
         get_logs=True,
     )
+    kube_gpt = KubernetesPodOperator(
+        name="contact-gpt-to-bigquery",
+        task_id="contact_gpt_to_bigquery",
+        namespace="composer-user-workloads",
+        image = IMAGE,
+        arguments = [
+            "--environment=prod",
+            "run",
+            "tap-gpt",
+            "target-bigquery",
+            "dbt-bigquery:gpt_models"
+        ],
+        container_resources=k8s_models.V1ResourceRequirements(
+            limits={"memory": "1000M", "cpu": "500m"},
+        ),
+        env_vars=set_env_vars_gpt(),
+        get_logs=True,
+    )
     kube_dv360 = KubernetesPodOperator(
         name="beststart-dv360-to-bigquery",
         task_id="beststart-dv360_to_bigquery",
@@ -347,7 +379,7 @@ with models.DAG(
         task_dv360_standard_comparison,
         task_dv360_youtube_comparison,
     ] >> trigger_repair_dv360
-    [kube_facebook, kube_cm360, kube_dv360] >> kube_dash >> kube_dash_union
+    [kube_facebook, kube_cm360, kube_dv360,kube_gpt] >> kube_dash >> kube_dash_union
 
 
 # ---------------------------------------------------------------------------
