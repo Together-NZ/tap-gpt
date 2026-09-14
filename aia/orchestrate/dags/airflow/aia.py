@@ -476,32 +476,7 @@ with models.DAG(
         execution_timeout=timedelta(minutes=60)
         
     )
-
-    env = get_meltano_env()
-    search_list = {}
-    google_ads_search_list = ['brand_search_raw','dt']
-    key_list = ['marketing','brand']
-    for label in google_ads_search_list:
-        if label == 'dt':
-            env['DBT_BIGQUERY_DATASET'] = 'google_ads_search_transformed__marketing'
-            key = 'marketing'
-        else:
-            env['DBT_BIGQUERY_DATASET'] = 'google_ads_search_transformed__brand' 
-            key = 'brand'
-        kube_google_ads_search = KubernetesPodOperator(
-                name=f"aia-google-ads-search-to-bigquery-{key}",
-                task_id=f"aia-google_ads_search_to_bigquery-{key}",
-                namespace="composer-user-workloads",
-                image=IMAGE,
-                arguments=["--environment=prod", "invoke", "dbt-bigquery", "run", "--select", f"google_ads_search_{key}"],
-                container_resources=k8s_models.V1ResourceRequirements(
-                    limits={"memory": "1000M", "cpu": "500m"},
-                ),
-                env_vars=set_env_vars_google_ads_search(key),
-                
-                
-            )
-        search_list.setdefault(key,[]).append(kube_google_ads_search)
+ 
     kube_dash_search = KubernetesPodOperator(
         name="aia-dash-search-to-bigquery",
         task_id="aia-dash_search_to_bigquery",
