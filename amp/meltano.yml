@@ -184,6 +184,12 @@ plugins:
       dash_union_models:
         args: run --select dash_union__centralized dash_union__wealth dash_union__general_insurance
       google_ads_models:
-        args: run --select +google_ads_search +google_ads_demand +google_ads_keyword +google_ads_location +bing_ads_search +bing_ads_search_keyword
+        args: run --select +google_ads_search +google_ads_demand +bing_ads_search 
+
+      google_ads_search_wealth_models:
+        args: run --select google_ads_keyword__wealth google_ads_location__wealth bing_ads_search_keyword__wealth
+      google_ads_search_general_insurance_models:
+        args: run --select google_ads_keyword__general_insurance google_ads_location__general_insurance bing_ads_search_keyword__general_insurance
+
 elt:
   buffer_size: 52428800

@@ -43,7 +43,12 @@ default_args = {
     'retry_delay': datetime.timedelta(minutes=5),
     "start_date": datetime.datetime(2025, 1, 1, tzinfo=local_tz)
 }
-
+def set_env_vars_google_ads_ky_loc(brand):
+        env = get_meltano_env()
+        env["DBT_BIGQUERY_METHOD"] = 'oauth'
+        env["DBT_BIGQUERY_PROJECT"] = 'amp-main'
+        env["DBT_BIGQUERY_DATASET"] = f'google_ads_search_transformed__{brand}'
+        return env    
 def get_meltano_env():
     # Update meltano_env with dynamic dates
     meltano_env_unique = Variable.get("meltano_amp_main", deserialize_json=True)
@@ -75,6 +80,7 @@ with models.DAG(
         env["DBT_BIGQUERY_PROJECT"] = 'amp-main'
         env["DBT_BIGQUERY_DATASET"] = f'dash_table__{label}'
         return env
+    
     def set_env_vars_dash():
         env = get_meltano_env()
         env["DBT_BIGQUERY_METHOD"] = 'oauth'
@@ -120,6 +126,7 @@ with models.DAG(
                 #base_container_name=f"meltano-{label}-dash",
                 get_logs = True
         )
+    
     kube_dash_search = KubernetesPodOperator(
                 name="amp-dash-search-to-bigquery",
                 task_id="amp-dash-search_to_bigquery",
@@ -146,6 +153,21 @@ with models.DAG(
             #base_container_name=f"meltano-{label}-google-ads-search",
             get_logs = True
     )
+    brands = ['general_insurance','wealth']
+    for brand in brands:
+            kube_google_ads_location_keyword = KubernetesPodOperator(
+                name=f"amp-{brand}-google-ads-keyword-location-to-bigquery",
+                task_id=f"amp-{brand}-google-ads-keyword-location_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=["--environment=prod","invoke",f"dbt-bigquery:google_ads_search_{brand}_models"],
+                container_resources=k8s_models.V1ResourceRequirements(
+                    limits={"memory": "1000M", "cpu": "500m"},
+                ),
+                env_vars=set_env_vars_google_ads_ky_loc(),
+                #base_container_name=f"meltano-{label}-google-ads-search",
+                get_logs = True
+            )
     set_env_task_dash >> kube_dash
     set_env_task_dash_search >> kube_dash_search
     set_env_task_google_ads_search >> kube_google_ads_search
