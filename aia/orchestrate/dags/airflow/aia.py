@@ -589,10 +589,7 @@ with models.DAG(
     kube_facebook >> task_facebook_comparison
     kube_dv360 >> [task_dv360_standard_comparison, task_dv360_youtube_comparison]
 
-    # Search feed + dash stack
-    for index in key_list:
-        for task in search_list.get(index, []):
-            task >> kube_dash_search
+
 
     [
         kube_facebook,
