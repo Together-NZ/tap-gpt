@@ -81,7 +81,7 @@ plugins:
     - stream-maps
     config:
       api_token: ${TAP_GPT_API_TOKEN}
-      start_date: ${TAP_GPT_START_DATE}
+      start_date: ${START_DATE}
       end_date: ${TAP_GPT_END_DATE}
 
   - name: tap-facebook
