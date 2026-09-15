@@ -67,7 +67,7 @@ def set_env_vars_gpt(brand):
     env["DBT_BIGQUERY_DATASET"] = f"gpt_transformed__{brand}"
     report_key = f"TAP_GPT_{brand}_API_TOKEN"
     if report_key in env:
-        env["TAP_GPTD_API_TOKEN"] = env[report_key]
+        env["TAP_GPT_API_TOKEN"] = env[report_key]
     return env 
 
 # ---------------------------------------------------------------------------
