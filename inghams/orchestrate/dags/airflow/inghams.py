@@ -480,7 +480,7 @@ with models.DAG(
             table_name="tiktok__waitoa",
             source_name="tiktok",
             start_date=comparison_start_date,
-            end_date=datetime.datetime.now(local_tz).strftime("%Y-%m-%d"),
+            end_date=(datetime.datetime.now(local_tz) - timedelta(days=1)).strftime("%Y-%m-%d"),
             secret_name=COMPARISON_SECRET,
             project_id=meltano_env["PROJECT_ID"],
             brand="waitoa",
