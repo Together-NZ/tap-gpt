@@ -5,7 +5,7 @@ packages:
   - git: git@github.com:Together-NZ/Impact-CI-ttd_models.git
     revision: v1.0.1
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
-    revision: v3.0.4
+    revision: v3.0.1
   - git: https://github.com/Together-NZ/Impact-CI-facebook_models.git
     revision: v1.0.0
   - git: https://github.com/Together-NZ/Impact-CI-DV360_models.git
@@ -21,4 +21,4 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-cm360-models.git
     revision: v1.0.0  
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
-    revision: v1.0.3
+    revision: v1.0.4

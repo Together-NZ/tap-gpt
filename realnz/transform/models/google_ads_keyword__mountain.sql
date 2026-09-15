@@ -1,5 +1,6 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     schema=env_var('GOOGLE_ADS_SEARCH_SUFFIX', ''),
     alias='google_ads_keyword__mountain',
     partition_by={'field': 'date', 'data_type': 'date'},
