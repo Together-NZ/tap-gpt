@@ -7,4 +7,7 @@
     cluster_by=['campaign_name_selection', 'channel', 'funnel', 'publisher'],
 ) }}
 
-{{ google_ads.google_ads_search_location(client_id=2977297812) }}
+{{ google_ads.google_ads_search_location(
+    client_id=2977297812,
+    funnel_search_default='BOOK'
+) }}
