@@ -8,6 +8,6 @@
     source_name='ga4_raw',
     table_name='goal',
     plan_code=env_var('PLAN_CODE', 'bs'),
-    dash_union_source_name='dash_table',
-    dash_union_table_name='dash_union'
+    dash_union_source_name='dash_union__beststart',
+    dash_union_table_name='dash_union__beststart'
 ) }}

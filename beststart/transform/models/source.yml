@@ -164,18 +164,19 @@ sources:
       - name: google_ads_keyword__hr_career
       - name: google_ads_location__hr_career
 
-  - name: dash_table
+  - name: dash_union__beststart
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_TABLE_BIGQUERY_DATASET', 'dash_table') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_BESTSTART_BIGQUERY_DATASET', 'dash_table__beststart') }}"
     tables:
-      - name: dash_table
-      - name: dash_union
+      - name: dash_table__beststart
+      - name: dash_union__beststart
 
-  - name: dash_table_search
+  - name: dash_union__hr_career
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"
-    schema: "{{ env_var('REFERENCE_DASH_SEARCH_BIGQUERY_DATASET', 'dash_table_search') }}"
+    schema: "{{ env_var('REFERENCE_DASH_TABLE_HR_CAREER_BIGQUERY_DATASET', 'dash_table__hr_career') }}"
     tables:
-      - name: dash_table_search
+      - name: dash_table__hr_career
+      - name: dash_union__hr_career
 
   - name: dash_table_search__beststart
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'best-start-main') }}"

@@ -1,5 +1,7 @@
 {{ config(
     materialized='table',
+    schema='dash_table__beststart',
+    alias='dash_table__beststart',
 ) }}
 
 WITH dash_table AS (
@@ -23,11 +25,6 @@ WITH dash_table AS (
     {{ dash_table_general_process.google_ads(
         source_name='google_ads__beststart',
         table_name='google_ads_demand__beststart'
-    ) }}
-    UNION ALL
-    {{ dash_table_general_process.google_ads(
-        source_name='google_ads__hr_career',
-        table_name='google_ads_demand__hr_career'
     ) }}
     UNION ALL
     {{ dash_table_general_process.tiktok(

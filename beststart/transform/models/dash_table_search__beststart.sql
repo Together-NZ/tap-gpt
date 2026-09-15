@@ -1,5 +1,7 @@
 {{ config(
     materialized='table',
+    schema='dash_table_search__beststart',
+    alias='dash_table_search__beststart',
 ) }}
 
 WITH dash_table AS (

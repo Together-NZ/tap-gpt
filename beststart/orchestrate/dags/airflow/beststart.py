@@ -106,11 +106,11 @@ def set_env_vars_google_ads_search(label):
     return env
 
 
-def set_env_vars_dash():
+def set_env_vars_dash(brand):
     env = get_meltano_env()
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    env["DBT_BIGQUERY_DATASET"] = "dash_table"
+    env["DBT_BIGQUERY_DATASET"] = f"dash_table__{brand}"
     env["PLAN_CODE"] = "bs"
     return env
 
@@ -120,14 +120,6 @@ def set_env_vars_dash_search(label):
     env["DBT_BIGQUERY_METHOD"] = "oauth"
     env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
     env["DBT_BIGQUERY_DATASET"] = f"dash_table_search__{label}"
-    return env
-
-
-def set_env_vars_dash_search_union():
-    env = get_meltano_env()
-    env["DBT_BIGQUERY_METHOD"] = "oauth"
-    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
-    env["DBT_BIGQUERY_DATASET"] = "dash_table_search"
     return env
 
 
@@ -227,9 +219,8 @@ def make_repair_trigger(task_id, platform):
 
 # ---------------------------------------------------------------------------
 # DAG 1: Social / display
-# Flow: CM360 -> DV360; platforms -> dash_table -> dash_union.
-# Every client DAG ends with dash_table + dash_union; dash_table_search only
-# when the DAG also runs Google Ads (see DAG 2).
+# Flow: CM360 -> DV360; platforms -> dash_table__{brand} -> dash_union__{brand}.
+# dash_table_search__{brand} runs in the Google Ads DAG (DAG 2).
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="beststart-meltano-extraction-transformation-dbt",
@@ -302,45 +293,48 @@ with models.DAG(
         env_vars=set_env_vars_dv360(),
         get_logs=True,
     )
-    kube_dash = KubernetesPodOperator(
-        name="beststart-dash-to-bigquery",
-        task_id="beststart-dash_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        trigger_rule="all_done",
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_table",
-        ],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash(),
-        get_logs=True,
-    )
-    kube_dash_union = KubernetesPodOperator(
-        name="beststart-dash-union-to-bigquery",
-        task_id="beststart-dash_union_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_union",
-        ],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash(),
-        get_logs=True,
-    )
+    social_upstreams = [kube_facebook, kube_cm360, kube_dv360, kube_gpt]
+    for brand in BRANDS:
+        kube_dash = KubernetesPodOperator(
+            name=f"beststart-{brand}-dash-to-bigquery",
+            task_id=f"beststart-dash__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            trigger_rule="all_done",
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_table__{brand}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(brand),
+            get_logs=True,
+        )
+        kube_dash_union = KubernetesPodOperator(
+            name=f"beststart-{brand}-dash-union-to-bigquery",
+            task_id=f"beststart-dash_union__{brand}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_union__{brand}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(brand),
+            get_logs=True,
+        )
+        social_upstreams >> kube_dash >> kube_dash_union
 
     task_facebook_comparison = PythonOperator(
         task_id="task_facebook_comparison",
@@ -379,13 +373,11 @@ with models.DAG(
         task_dv360_standard_comparison,
         task_dv360_youtube_comparison,
     ] >> trigger_repair_dv360
-    [kube_facebook, kube_cm360, kube_dv360,kube_gpt] >> kube_dash >> kube_dash_union
-
 
 # ---------------------------------------------------------------------------
 # DAG 2: TikTok / Google Ads / dash search / GA4
-# Has Google Ads → includes dash_table_search (+ search union) as well as
-# dash_table + dash_union (required on every DAG).
+# Per brand: google_ads -> dash_table_search__{brand}; dash_table__{brand} +
+# dash_table_search__{brand} -> dash_union__{brand} -> GA4.
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="beststart-meltano-google-ads",
@@ -411,64 +403,6 @@ with models.DAG(
         env_vars=set_env_vars_tiktok(),
         get_logs=True,
     )
-    kube_dash = KubernetesPodOperator(
-        name="beststart-dash-to-bigquery",
-        task_id="beststart-dash_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        trigger_rule="all_done",
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_table",
-        ],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash(),
-        get_logs=True,
-    )
-    kube_dash_search_union = KubernetesPodOperator(
-        name="beststart-dash-search-union-to-bigquery",
-        task_id="beststart-dash_search_union_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_table_search",
-        ],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash_search_union(),
-        get_logs=True,
-    )
-    kube_dash_union = KubernetesPodOperator(
-        name="beststart-dash-union-to-bigquery",
-        task_id="beststart-dash_union_to_bigquery",
-        namespace="composer-user-workloads",
-        image=IMAGE,
-        arguments=[
-            "--environment=prod",
-            "invoke",
-            "dbt-bigquery",
-            "run",
-            "--select",
-            "dash_union",
-        ],
-        container_resources=k8s_models.V1ResourceRequirements(
-            limits={"memory": "1000M", "cpu": "500m"},
-        ),
-        env_vars=set_env_vars_dash(),
-        get_logs=True,
-    )
     kube_ga4_final = KubernetesPodOperator(
         name="beststart-ga4-final-to-bigquery",
         task_id="beststart-ga4_final_to_bigquery",
@@ -492,8 +426,7 @@ with models.DAG(
     )
     trigger_repair_tiktok = make_repair_trigger("trigger_repair_tiktok", "tiktok")
 
-    google_ads_tasks = []
-    dash_search_tasks = []
+    dash_union_by_brand = {}
     for label in BRANDS:
         kube_google_ads = KubernetesPodOperator(
             name=f"beststart-google-ads-search-to-bigquery-{label}",
@@ -530,9 +463,51 @@ with models.DAG(
             env_vars=set_env_vars_dash_search(label),
             get_logs=True,
         )
+        kube_dash = KubernetesPodOperator(
+            name=f"beststart-{label}-dash-to-bigquery",
+            task_id=f"beststart-dash__{label}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            trigger_rule="all_done",
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_table__{label}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(label),
+            get_logs=True,
+        )
+        kube_dash_union = KubernetesPodOperator(
+            name=f"beststart-{label}-dash-union-to-bigquery",
+            task_id=f"beststart-dash_union__{label}_to_bigquery",
+            namespace="composer-user-workloads",
+            image=IMAGE,
+            arguments=[
+                "--environment=prod",
+                "invoke",
+                "dbt-bigquery",
+                "run",
+                "--select",
+                f"dash_union__{label}",
+            ],
+            container_resources=k8s_models.V1ResourceRequirements(
+                limits={"memory": "1000M", "cpu": "500m"},
+            ),
+            env_vars=set_env_vars_dash(label),
+            get_logs=True,
+        )
         kube_google_ads >> kube_dash_search
-        google_ads_tasks.append(kube_google_ads)
-        dash_search_tasks.append(kube_dash_search)
+        kube_google_ads >> kube_dash
+        if label == "beststart":
+            kube_tiktok >> kube_dash
+        [kube_dash, kube_dash_search] >> kube_dash_union
+        dash_union_by_brand[label] = kube_dash_union
 
     ga4_tasks = []
     for goal in ["goal", "session", "keyword"]:
@@ -557,11 +532,8 @@ with models.DAG(
         ga4_tasks.append(kube_ga4)
 
     kube_tiktok >> task_tiktok_comparison >> trigger_repair_tiktok
-    [*google_ads_tasks, kube_tiktok] >> kube_dash
-    dash_search_tasks >> kube_dash_search_union
-    [kube_dash, kube_dash_search_union] >> kube_dash_union
     for task in ga4_tasks:
-        kube_dash_union >> task >> kube_ga4_final
+        dash_union_by_brand["beststart"] >> task >> kube_ga4_final
 
 
 # ---------------------------------------------------------------------------

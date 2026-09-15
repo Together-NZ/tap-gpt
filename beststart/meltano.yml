@@ -23,8 +23,10 @@ environments:
           REFERENCE_GOOGLE_ADS_HR_CAREER_BIGQUERY_DATASET: dbt_test_google_ads_search
           REFERENCE_GA4_RAW_BIGQUERY_DATASET: dbt_test_ga4_raw
           REFERENCE_GA4_TRANSFORMED_BIGQUERY_DATASET: dbt_test_ga4_transformed
-          REFERENCE_DASH_TABLE_BIGQUERY_DATASET: dbt_test_dash_table
-          REFERENCE_DASH_SEARCH_BIGQUERY_DATASET: dbt_test_dash_table_search
+          REFERENCE_DASH_TABLE_BESTSTART_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_TABLE_HR_CAREER_BIGQUERY_DATASET: dbt_test_dash_table
+          REFERENCE_DASH_SEARCH_BESTSTART_BIGQUERY_DATASET: dbt_test_dash_table_search
+          REFERENCE_DASH_SEARCH_HR_CAREER_BIGQUERY_DATASET: dbt_test_dash_table_search
           META_SUFFIX: dbt_test_facebook
           DV360_SUFFIX: dbt_test_dv360
           TIKTOK_SUFFIX: dbt_test_tiktok

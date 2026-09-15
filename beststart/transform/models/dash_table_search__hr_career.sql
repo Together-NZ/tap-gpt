@@ -1,5 +1,7 @@
 {{ config(
     materialized='table',
+    schema='dash_table_search__hr_career',
+    alias='dash_table_search__hr_career',
 ) }}
 
 WITH dash_table AS (
