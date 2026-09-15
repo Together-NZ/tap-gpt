@@ -113,6 +113,19 @@ def set_env_vars_ttd(brand):
     return env
 
 
+def set_env_vars_gpt(brand):
+    env = get_meltano_env()
+    env["BQ_DATASET"] = f"gpt_raw__{brand}"
+    env["BQ_METHOD"] = "batch_job"
+    env["DBT_BIGQUERY_METHOD"] = "oauth"
+    env["DBT_BIGQUERY_PROJECT"] = PROJECT_NAME
+    env["DBT_BIGQUERY_DATASET"] = f"gpt_transformed__{brand}"
+    token_key = f"TAP_GPT_{brand}_API_TOKEN"
+    if token_key in env:
+        env["TAP_GPT_API_TOKEN"] = env[token_key]
+    return env
+
+
 def set_env_vars_snapchat(brand):
     env = get_meltano_env()
     env["BQ_DATASET"] = f"snapchat_raw__{brand}"
@@ -501,7 +514,7 @@ with models.DAG(
 
 # ---------------------------------------------------------------------------
 # DAG 2: Social / Display / Programmatic (schedule: 05:00 NZST daily)
-# Flow: [facebook, dv360, cm360, snapchat (twh/twhs), pinterest, (hivestack+ttd for twh, ttd for noel_leeming)] >> dash >> dash_search >> dash_union
+# Flow: [facebook, dv360, cm360, snapchat (twh/twhs), pinterest, (hivestack+ttd for twh, ttd+gpt for noel_leeming)] >> dash >> dash_search >> dash_union
 # ---------------------------------------------------------------------------
 with models.DAG(
     dag_id="warehouse-social-display-programmatic",
@@ -695,8 +708,24 @@ with models.DAG(
                 env_vars=set_env_vars_ttd(brand),
                 get_logs=True,
             )
+            kube_gpt = KubernetesPodOperator(
+                name=f"warehouse-{brand}-gpt-to-bigquery",
+                task_id=f"warehouse-gpt__{brand}_to_bigquery",
+                namespace="composer-user-workloads",
+                image=IMAGE,
+                arguments=[
+                    "--environment=prod",
+                    "run",
+                    "tap-gpt",
+                    "target-bigquery",
+                    "dbt-bigquery:gpt_noel_leeming_models",
+                ],
+                container_resources=KUBE_RESOURCES,
+                env_vars=set_env_vars_gpt(brand),
+                get_logs=True,
+            )
             kube_cm360 >> kube_ttd
-            before_dash.append(kube_ttd)
+            before_dash.extend([kube_ttd, kube_gpt])
 
         kube_dash = KubernetesPodOperator(
             name=f"warehouse-{brand}-dash-to-bigquery",

@@ -1,6 +1,7 @@
 version: 2
 
 sources:
+
   - name: facebook_raw__twh
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
     schema: "{{ env_var('REFERENCE_META_BIGQUERY_DATASET', 'facebook_raw__twh') }}"
@@ -373,6 +374,23 @@ sources:
     schema: "{{ env_var('REFERENCE_TIKTOK_TRANSFORMED_BIGQUERY_DATASET', 'tiktok_transformed__noel_leeming') }}"
     tables:
       - name: tiktok__noel_leeming
+
+  - name: gpt_raw__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_BIGQUERY_DATASET', 'gpt_raw__noel_leeming') }}"
+    tables:
+      - name: account
+      - name: ad_conversions
+      - name: ad_groups
+      - name: ad_insights
+      - name: ads
+      - name: campaigns
+
+  - name: gpt_transformed__noel_leeming
+    database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"
+    schema: "{{ env_var('REFERENCE_GPT_TRANSFORMED_BIGQUERY_DATASET', 'gpt_transformed__noel_leeming') }}"
+    tables:
+      - name: gpt__noel_leeming
 
   - name: ga4_raw__noel_leeming
     database: "{{ env_var('DBT_BIGQUERY_PROJECT', 'warehouse-main') }}"

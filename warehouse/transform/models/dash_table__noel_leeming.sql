@@ -41,6 +41,11 @@ WITH dash_table AS (
         source_name='google_ads__noel_leeming',
         table_name='google_ads_demand__noel_leeming'
     ) }}
+    UNION ALL
+    {{ dash_table_general_process.gpt(
+        source_name='gpt_transformed__noel_leeming',
+        table_name='gpt__noel_leeming'
+    ) }}
 ),
 
 with_channel AS (

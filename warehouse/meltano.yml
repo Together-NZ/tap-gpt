@@ -123,6 +123,20 @@ plugins:
     config:
       start_date: ${START_DATE}
       advertiser_id: ${TAP_TIKTOK_ADVERTISER_ID}
+  - name: tap-gpt
+    namespace: tap-gpt
+    pip_url: git+https://github.com/Together-NZ/tap-gpt.git setuptools<82.0
+    executable: tap-gpt
+    capabilities:
+    - state
+    - catalog
+    - discover
+    - about
+    - stream-maps
+    config:
+      api_token: ${TAP_GPT_API_TOKEN}
+      start_date: ${START_DATE}
+      end_date: ${TAP_GPT_END_DATE}
   loaders:
     - name: target-bigquery
       variant: z3z1ma
@@ -235,6 +249,8 @@ plugins:
         args: run --select ga4_goal_ecommerce__noel_leeming
       ga4_noel_leeming_final_models:
         args: run --select ga4_goal_channel__noel_leeming
+      gpt_noel_leeming_models:
+        args: run --select gpt__noel_leeming
 
   files:
     - name: files-airflow

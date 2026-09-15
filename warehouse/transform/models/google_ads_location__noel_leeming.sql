@@ -1,5 +1,6 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     schema='google_ads_search_transformed__noel_leeming',
     alias='google_ads_location__noel_leeming',
     partition_by={'field': 'date', 'data_type': 'date'},

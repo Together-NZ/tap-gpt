@@ -1,5 +1,6 @@
 {{ config(
-    materialized='table',
+    materialized='incremental',
+    incremental_strategy='insert_overwrite',
     schema='google_ads_search_transformed__twhs',
     alias='google_ads_location__twhs',
     partition_by={'field': 'date', 'data_type': 'date'},
