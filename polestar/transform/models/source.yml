@@ -101,6 +101,8 @@ sources:
     tables:
       - name: google_ads_demand
       - name: google_ads_search
+      - name: google_ads_keyword
+      - name: google_ads_location
   
 
 

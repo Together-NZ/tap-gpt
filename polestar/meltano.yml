@@ -124,7 +124,7 @@ plugins:
         args: run --select  +cm360_direct_buy
         description: Run the CM360 ads model
       google_ads_models:
-        args: run --select +google_ads_search +google_ads_demand
+        args: run --select +google_ads_search +google_ads_demand +google_ads_keyword +google_ads_location
       facebook_models:
         args: run --select +facebook
       ttd_models:
