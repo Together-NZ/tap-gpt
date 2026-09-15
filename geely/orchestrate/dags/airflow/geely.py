@@ -279,7 +279,7 @@ with models.DAG(
                     "run",
                     "tap-gpt",
                     "target-bigquery",
-                    "dbt-bigquery:gpt_models",
+                    "dbt-bigquery:gpt_geely_models",
                 ],
                 container_resources=KUBE_RESOURCES,
                 env_vars=set_env_vars_gpt(brand),
