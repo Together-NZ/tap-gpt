@@ -5,4 +5,7 @@
     cluster_by=['campaign_name_selection', 'channel', 'funnel', 'publisher'],
 ) }}
 
-{{ google_ads.google_ads_search_location(client_id=9062715690) }}
+{{ google_ads.google_ads_search_location(
+    client_id=9062715690,
+    funnel_search_default='Consideration'
+) }}
