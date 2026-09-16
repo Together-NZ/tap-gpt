@@ -13,7 +13,7 @@ packages:
   - git: https://github.com/Together-NZ/Impact-CI-tiktok_models.git
     revision: v2.0.7
   - git: git@github.com:Together-NZ/Impact-CI-google_ads_models.git
-    revision: v3.0.6
+    revision: v3.0.7
     
   - git: https://github.com/Together-NZ/Impact-CI-dash_table_general_process.git
     revision: v2.0.0

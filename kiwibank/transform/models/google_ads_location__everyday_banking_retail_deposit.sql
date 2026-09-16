@@ -6,11 +6,17 @@
 ) }}
 
 (
-{{ google_ads.google_ads_search_location(client_id=3244960310) }}
+{{ google_ads.google_ads_search_location(
+    client_id=3244960310,
+    funnel_search_default='Choose'
+) }}
 )
 
 UNION ALL
 
 (
-{{ google_ads.google_ads_search_location(client_id=8385365194) }}
+{{ google_ads.google_ads_search_location(
+    client_id=8385365194,
+    funnel_search_default='Choose'
+) }}
 )
