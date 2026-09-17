@@ -230,6 +230,30 @@ with models.DAG(
         env_vars=set_env_vars_gpt(),
         get_logs=True
     )
+    def gpt_comparison_check(**context):
+        env = get_meltano_env()
+        trigger = ComparisonTrigger(
+            project_name="kiwibank-main",
+            destination_table="gpt_transformed",
+            table_name="gpt",
+            source_name="gpt",
+            start_date=comparison_start_date,
+            end_date=(datetime.datetime.now(local_tz)-timedelta(days=1)).strftime("%Y-%m-%d"),
+            secret_name="airflow-variables-meltano_kiwibank_main",
+            project_id=env["PROJECT_ID"]
+        )
+        result = trigger.compare_data()
+        if not result:
+            raise ValueError("GPT data accuracy check failed — BQ data does not match source API.")
+        return result
+    
+    task_gpt_comparison = PythonOperator(
+        task_id="task_gpt_comparison",
+        python_callable=gpt_comparison_check,
+        retries=0,
+        trigger_rule="all_done",
+    )
+    kube_gpt >> task_gpt_comparison
     kube_facebook = KubernetesPodOperator(
         name="kb-facebook-to-bq",
         task_id="kb-facebook_to_bigquery",
